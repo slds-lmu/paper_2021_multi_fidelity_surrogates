@@ -22,3 +22,4 @@ Suggests:
     farff
 Remotes:
     mlr-org/mlr3keras
+RoxygenNote: 7.1.1

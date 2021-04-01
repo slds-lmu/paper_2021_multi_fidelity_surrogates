@@ -4,7 +4,7 @@ library(paradox)
 classif.glmnet = ps(
   # alpha: [-Inf;0] L1, [1; Inf] L2, [0;1] elasticnet (15/15/70)% approx.
   p_dbl("alpha", lower = 0, upper = 1, default = 1, trafo = function(x) max(0, min(1, x))),
-  makeNumericVectorParam("s", len = 1L, lower = -10, upper = 10, default = 0, trafo = function(x) 2^x)
+  p_dbl("s", lower = -10, upper = 10, default = 0, trafo = function(x) 2^x)
 )
 
 classif.rpart = ps(
@@ -12,7 +12,6 @@ classif.rpart = ps(
   p_int("maxdepth", lower = 1, upper = 30, default = 30),
   p_int("minbucket", lower = 1, upper = 100, default = 1),
   p_int("minsplit", lower = 1, upper = 100, default = 20)
-  # Open Question: Use *surrogate* params? => Only in case we do not generally impute all missings.
 )
 
 
@@ -126,4 +125,3 @@ classif.kerasff = ps(
       p_fct(id = "init_seed", values = c(1L, 11L, 101L, 131L, 499L))
     )
 classif.kerasff.fixed_pars = list(early_stopping_patience = 0L, validation_split = 0, nthread = 1L)
- 
