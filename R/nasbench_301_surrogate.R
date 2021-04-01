@@ -128,16 +128,3 @@ run_fit = function(batchnorm = FALSE, dropout = FALSE, deeper = TRUE, wts_pow = 
   print(p1 + p2)
   return(list(y = t0, rsq_inbag = rib, hist = history))
 }
-
-run_with_mlflow = function(xs) {
-  mlflow::mlflow_start_run()
-  mlr3misc::imap(xs, function(value, name) {
-    mlflow::mlflow_log_param(name, as.character(value))
-  })
-  output = callr::r_safe(run_fit, xs)
-  mlr3misc::imap(output, function(value, name) {
-    mlflow::mlflow_log_metric(name, as.numeric(value))
-  })
-  mlflow::mlflow_end_run()
-  return(output)
-}

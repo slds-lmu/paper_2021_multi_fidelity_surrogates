@@ -104,4 +104,3 @@ run_with_mlflow = function(xs) {
   mlflow::mlflow_end_run()
   return(output)
 }
-
