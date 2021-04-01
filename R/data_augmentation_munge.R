@@ -1,13 +1,7 @@
-setwd("/Dokumente und Einstellungen/flo/Downloads/multifidelity_data/R/")
-library(distillery)
-library(mlr3)
-library(mlr3misc)
-library(data.table)
-
 augment_with_munge = function(data, target_vars, n_augment = 10000, n_max_train = 10000, stratify = "dataset") {
   library(mlr3learners)
   rng = lrn("regr.ranger")
-  
+
   news = map(unique(data[[stratify]]), function(stratum) {
     print(paste0("stratum:", stratum))
     dt = copy(data)[data[[stratify]] ==stratum,]
@@ -43,15 +37,13 @@ augment_with_munge = function(data, target_vars, n_augment = 10000, n_max_train 
 }
 
 make_embedding = function(task, embed_size = NULL, embed_dropout = 0, embed_batchnorm = FALSE, emb_multiplier = 1.6) {
-  library(checkmate)
-  
   typedt = task$feature_types
   data = as.matrix(task$data(cols = task$feature_names))
   target = task$data(cols = task$target_names)
-  
+
   embed_vars = typedt[typedt$type %in% c("ordered", "factor", "character"),]$id
   n_cont = nrow(typedt) - length(embed_vars)
-  
+
   # Embeddings for categorical variables: for each categorical:
   # - create a layer_input
   # - create an embedding
@@ -75,7 +67,7 @@ make_embedding = function(task, embed_size = NULL, embed_dropout = 0, embed_batc
       return(list(input = input, layers = layers))
     }, embed_vars)
   }
-  
+
   # Layer for the continuous variables
   # - apply batchnorm
   if (n_cont > 0) {
@@ -84,7 +76,7 @@ make_embedding = function(task, embed_size = NULL, embed_dropout = 0, embed_batc
     if (embed_batchnorm) layers = layers %>% layer_batch_normalization(input_shape = n_cont, axis = 1)
     embds = c(embds, list(cont = list(input = input, layers = layers)))
   }
-  
+
   # Concatenate all layers
   if (length(embds) >= 2)
     layers = layer_concatenate(unname(lapply(embds, function(x) x$layers)))

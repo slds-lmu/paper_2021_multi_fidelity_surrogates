@@ -7,3 +7,18 @@ Author: Who wrote it
 Maintainer: Who to complain to <yourfault@somewhere.net>
 Description: More about what it does (maybe more than one line)
 License: What license is it under?
+Imports:
+    data.table,
+    keras,
+    tensorflow,
+    mlr3,
+    mlr3misc,
+    paradox,
+    mlr3keras,
+    reticulate,
+    forcats,
+    checkmate
+Suggests:
+    farff
+Remotes:
+    mlr-org/mlr3keras

@@ -1,12 +1,4 @@
 run_fit = function(batchnorm = FALSE, dropout = FALSE, deeper = TRUE, wts_pow = 3L) {
-  reticulate::use_condaenv("mlr3keras", required = TRUE)
-  library(keras)
-  library(mlr3)
-  library(mlr3keras)
-  library(mlr3misc)
-  library(data.table)
-  library(forcats)
-
   ## -- Data
   n = 10^6
   dt = readRDS("metadata/nb_301_data.rds")
@@ -72,20 +64,20 @@ run_fit = function(batchnorm = FALSE, dropout = FALSE, deeper = TRUE, wts_pow = 
   # tf = reticulate::import("tensorflow")
   # mul = tf$constant(c(1, rt_range), "float32")
   # add = tf$constant(c(0, rt_min), "float32")
-  # 
+  #
   # Connect deep part and activate %>%
   model = model %>% layer_activation("sigmoid")
   # model = layer_lambda(model, function(x) {
   #   x * mul + add
   # })
-  
+
   model = keras_model(inputs = embd$inputs, outputs = model)
   model %>%
     compile(
       optimizer = optimizer_adam(3*10^-4),
       loss = "mean_squared_error"
     )
-  
+
   rs = reshape_data_embedding(ban[, val_accuracy := NULL])
   wts = y[,1]^wts_pow / sum(y[,1]^wts_pow) * nrow(y)
   cbs = list(cb_es(patience = 20L))
@@ -149,6 +141,3 @@ run_with_mlflow = function(xs) {
   mlflow::mlflow_end_run()
   return(output)
 }
-
-setwd("../Downloads/multifidelity_data")
-run_fit()
