@@ -35,3 +35,7 @@ classif.xgboost.dart = ps(
   p_dbl("rate_drop", lower = 0, upper = 1),
   p_dbl("skip_drop", lower =  0, upper = 1))
 classif.xgboost.dart.fixed_pars = list("nthread" = 1L, booster = "dart")
+
+preproc.pipeline <- pSS(
+  num.impute.selected.cpo: discrete [impute.mean, impute.median, impute.hist]  # numeric feature imputation to use
+)

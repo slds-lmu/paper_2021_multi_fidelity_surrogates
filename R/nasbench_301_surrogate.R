@@ -116,10 +116,6 @@ run_fit = function(batchnorm = FALSE, dropout = FALSE, deeper = TRUE, wts_pow = 
   ptest = as.matrix(predict(model, rs2$data))
   qp = quantile(ptest[,1], 0)
   t0 = mlr3measures::rsq(ytest[ptest[,1] > qp,1], ptest[ptest[,1] > qp,1])
-  # qp = quantile(ptest[,1], 0.5)
-  # t50 = mlr3measures::rsq(ytest[ptest[,1] > qp,1], ptest[ptest[,1] > qp,1])
-  # qp = quantile(ptest[,1], 0.8)
-  # t80 = mlr3measures::rsq(ytest[ptest[,1] > qp,1], ptest[ptest[,1] > qp,1])
 
   library(patchwork)
   library(ggplot2)
