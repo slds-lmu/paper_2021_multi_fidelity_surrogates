@@ -1,4 +1,4 @@
-run_fit = function(batchnorm = FALSE, dropout = FALSE, deeper = TRUE, wts_pow = 3L) {
+fit_nb301_surrogate = function(batchnorm = FALSE, dropout = FALSE, deeper = TRUE, wts_pow = 3L) {
   ## -- Data
   n = 10^6
   dt = readRDS("metadata/nb_301_data.rds")

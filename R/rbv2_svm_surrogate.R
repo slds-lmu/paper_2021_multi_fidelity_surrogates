@@ -1,4 +1,4 @@
-run_fit_svm = function(batchnorm = FALSE, dropout = FALSE, go_deeper = TRUE, wts_pow = 0L, optimizer = optimizer_adam(3e-4)) {
+fit_rbv2_svm_surrogate = function(batchnorm = FALSE, dropout = FALSE, go_deeper = TRUE, wts_pow = 0L, optimizer = optimizer_adam(3e-4)) {
   reticulate::use_condaenv("mlr3keras", required = TRUE)
   library(keras)
   library(mlr3)
@@ -7,7 +7,7 @@ run_fit_svm = function(batchnorm = FALSE, dropout = FALSE, go_deeper = TRUE, wts
   library(data.table)
   library(forcats)
   library(farff)
-  
+
   ## -- Data
   n = 10^6
   dt = data.table(readARFF("../metadata/rbv2_mlr_classif.svm.arff"))
@@ -48,19 +48,19 @@ run_fit_svm = function(batchnorm = FALSE, dropout = FALSE, go_deeper = TRUE, wts
   ban[, which(colnames(ban) %in% target_vars[-1]) := NULL]
   #ban = ban[1:10,]
   t = TaskRegr$new("ban", backend = ban, target = target_vars[1])
-  
+
   ## -- Hyperpars
   dropout_p = 0.5
   activation = "elu"
   input_shape =  list(t$ncol - 1L)
   output_shape = length(target_vars)
-  
+
   embd = make_embedding(t) # this returns the final layer AND the inputs. Inputs are needed to construct the model later on
   model = embd$layers
-  
+
   # Wide part: This is just a linear model
   wide = model %>% layer_dense(output_shape)
-  
+
   # Deep part: This is a 2 hidden layer NN
   units = c(256, 256)
   deep = model
@@ -74,7 +74,7 @@ run_fit_svm = function(batchnorm = FALSE, dropout = FALSE, go_deeper = TRUE, wts
         activation = activation
       )
   }
-  
+
   # Deeper part: This is a 4 hidden layer NN
   model = layer_add(inputs = list(wide, deep %>% layer_dense(units = output_shape)))
   deeper_concat = TRUE
@@ -99,16 +99,16 @@ run_fit_svm = function(batchnorm = FALSE, dropout = FALSE, go_deeper = TRUE, wts
       optimizer = optimizer,
       loss = "mean_squared_error"
     )
-  
+
   rs = reshape_data_embedding(ban[, which(colnames(ban) %in% target_vars[1]) := NULL])
-  
+
   # Save categorical lookup dict with model
   dicts = map(rs$fct_levels, function(x) {
     dt = data.table(level = x, int = seq_along(x) - 1L)
     setkey(dt, "level")
   })
   # saveRDS(dicts, "../metadata/rbv2_svm_dicts.rds")
-  
+
   wts = (1-y[,1])^wts_pow / sum((1-y[,1])^wts_pow) * nrow(y)
   cbs = list(cb_es(patience = 20L))
   history = model %>%
@@ -123,18 +123,18 @@ run_fit_svm = function(batchnorm = FALSE, dropout = FALSE, go_deeper = TRUE, wts
     )
   if (TRUE) {
     keras::save_model_hdf5(model, "rbv2_svm_wide_and_deeper_50.hdf5")
-  
+
     # In-sample
     p = predict(model, rs$data)
     rib = mlr3measures::rsq(y[,1], p[,1])
-    
+
     ytest = y_test
     x_test[, which(colnames(x_test) %in% target_vars) := NULL]
     rs2 = reshape_data_embedding(x_test)
     ptest = as.matrix(predict(model, rs2$data))
     qp = quantile(ptest[,1], 0)
     t0 = mlr3measures::rsq(ytest[ptest[,1] > qp,1], ptest[ptest[,1] > qp,1])
-  
+
     library(patchwork)
     library(ggplot2)
     p1 = ggplot(data.frame(x = ytest[,1], y = ptest[,1]), aes(x=x, y=y)) + geom_point() + geom_abline(slope = 1, color = "blue")
@@ -145,10 +145,3 @@ run_fit_svm = function(batchnorm = FALSE, dropout = FALSE, go_deeper = TRUE, wts
     list(y = min(history$metrics$loss))
   }
 }
-
-
-
-# setwd("../Downloads/multifidelity_data/R/")
-source("data_augmentation_munge.R")
-keras_to_onnx("rbv2_svm_wide_and_deeper_50.hdf5")
-
