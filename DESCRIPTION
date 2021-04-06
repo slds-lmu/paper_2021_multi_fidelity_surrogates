@@ -19,7 +19,12 @@ Imports:
     forcats,
     checkmate
 Suggests:
-    farff
+    ggplot2,
+    patchwork,
+    farff,
+    knitr,
+    rmarkdown
 Remotes:
     mlr-org/mlr3keras
 RoxygenNote: 7.1.1
+VignetteBuilder: knitr

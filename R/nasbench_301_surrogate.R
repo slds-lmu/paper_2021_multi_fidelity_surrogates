@@ -1,39 +1,56 @@
-fit_nb301_surrogate = function(batchnorm = FALSE, dropout = FALSE, deeper = TRUE, wts_pow = 3L) {
-  ## -- Data
-  n = 10^6
-  dt = readRDS("metadata/nb_301_data.rds")
-  set.seed(123L)
-  ban = dt[method != "rs", ]
-  ban = map_dtc(ban, function(x) {
-    if (is.logical(x)) x = as.numeric(x)
-    if (is.factor(x)) x = fct_drop(fct_explicit_na(x, "None"))
-    if (length(unique(x)) == 1) x = NULL
-    return(x)
-  })
-  ban = ban[sample(seq_len(nrow(ban)), min(n, nrow(ban))),]
-  ban[, val_accuracy := val_accuracy/100]
-  # ban[, runtime := log(runtime)]
-  rt_min = min(ban$runtime) * 0.5
-  rt_range = (max(ban$runtime) - min(ban$runtime)) * .9
-  ban[, runtime := ((runtime - rt_min) / rt_range)]
-  ban[, method :=NULL]
-  y = as.matrix(ban[, c("val_accuracy", "runtime")])
-  ban[, runtime := NULL]
-  t = TaskRegr$new("ban", backend = ban, target = "val_accuracy")
+fit_nb301_surrogate = function(config, wts_pow = 3L) {
 
-  ## -- Hyperpars
-  dropout_p = 0.5
-  activation = "relu"
-  input_shape =  list(t$ncol - 1L)
-  output_shape = 2L
+  data = preproc_data_nb301(config$path)
+  rs = reshape_data_embedding(data$xtrain)
 
-  embd = make_embedding(t)
+  embd = make_embedding_dt(data$xtrain, names(data$ytrain))
   model = embd$layers
+  input_shape =  list(ncol(data$xtrain) - ncol(data$ytrain))
+  output_shape = ncol(data$ytrain)
+  model = make_architecture(model, input_shape, output_shape)
+  
+  cbs = list(cb_es(patience = 20L))
+  history = model %>%
+    fit(
+      x = rs$data,
+      y = y,
+      batch_size = 512L,
+      validation_split = 0.2,
+      epochs = 150L,
+      sample_weight = weights_from_target(y),
+      callbacks = cbs
+    )
+  keras::save_model_hdf5(model, config$model_path, overwrite = TRUE)
 
-  wide = model %>% layer_dense(output_shape)
+  rs2 = reshape_data_embedding(data$xtest)
 
-  units = c(512, 512)
-  deep = model
+  ptest = as.matrix(predict(model, rs2$data))
+  for(nm in names(data$ytest)) {
+    cat("RSq.", nm, ":", mlr3measures::rsq(data$ytest[,nm], ptest[,nm]))
+  }
+  
+  if (plot) {
+    require_namespaces("ggplot2")
+    require_namespaces("patchwork")
+    require("ggplot2")
+    require("patchwork")
+    p1 = ggplot(data.frame(x = data$ytest[,1], y = ptest[,1]), aes(x=x, y=y)) +
+      geom_point() +
+      geom_abline(slope = 1, color = "blue") 
+    p2 = plot(history)
+    print(p1 + p2)
+  }
+}
+
+
+make_architecture = function(inputs, input_shape, output_shape,
+  activation = "relu", units = c(512, 512), dropout_p = 0.5,
+  batchnorm = FALSE, dropout = FALSE, deeper = TRUE) {
+  
+  # Wide part
+  wide = inputs %>% layer_dense(output_shape)
+  # Deep part
+  deep = inputs
   for (i in seq_len(length(units))) {
     if (batchnorm) deep = deep %>% layer_batch_normalization()
     if (dropout) deep = deep %>% layer_dropout(dropout_p)
@@ -44,60 +61,43 @@ fit_nb301_surrogate = function(batchnorm = FALSE, dropout = FALSE, deeper = TRUE
         activation = activation
       )
   }
-
   model = layer_add(inputs = list(wide, deep %>% layer_dense(units = output_shape)))
-  deeper_concat = TRUE
+  
   if (deeper) {
-      units = c(512, 512, 256, 128)
-      deeper = model
-      for (i in seq_len(length(units))) {
-      if (batchnorm) deeper = deeper %>% layer_batch_normalization()
-      if (dropout) deeper = deeper %>% layer_dropout(dropout_p)
-      deeper = deeper %>%
-        layer_dense(
-          units = units[i],
-          activation = activation
-        )
-    }
+    units = c(512, 512, 256, 128)
+    deeper = make_layers(inputs, units, batchnorm=batchnorm, dropout=dropout, dropout_p=dropout_p, activation=activation)
     model = layer_add(inputs = list(model, deeper %>% layer_dense(units = output_shape)))
   }
-  # tf = reticulate::import("tensorflow")
-  # mul = tf$constant(c(1, rt_range), "float32")
-  # add = tf$constant(c(0, rt_min), "float32")
-  #
-  # Connect deep part and activate %>%
   model = model %>% layer_activation("sigmoid")
-  # model = layer_lambda(model, function(x) {
-  #   x * mul + add
-  # })
-
   model = keras_model(inputs = embd$inputs, outputs = model)
   model %>%
     compile(
       optimizer = optimizer_adam(3*10^-4),
       loss = "mean_squared_error"
     )
+}
 
-  rs = reshape_data_embedding(ban[, val_accuracy := NULL])
-  wts = y[,1]^wts_pow / sum(y[,1]^wts_pow) * nrow(y)
-  cbs = list(cb_es(patience = 20L))
-  history = model %>%
-    fit(
-      x = rs$data,
-      y = y,
-      batch_size = 512L,
-      validation_split = 0.2,
-      epochs =150L,
-      sample_weight = wts,
-      callbacks = cbs
-    )
-
-  keras::save_model_hdf5(model, "wide_and_deeper_50.hdf5")
-
-  # In-sample
-  p = predict(model, rs$data)
-  rib = mlr3measures::rsq(y[,1], p[,1])
-
+preproc_data_nb301 = function(path, seed = 123L, n_max = 10^6) {
+  requireNamespace("mlr3misc")
+  dt = readRDS(path)
+  set.seed(123L)
+  
+  train = dt[method != "rs", ]
+  train = sample_max(train, nmax)
+  map_dtc(train, function(x) {
+    if (is.logical(x)) x = as.numeric(x)
+    if (is.factor(x)) x = fct_drop(fct_explicit_na(x, "None"))
+    if (length(unique(x)) == 1) x = NULL
+    return(x)
+  })
+  train[, val_accuracy := val_accuracy/100]
+  trafos = map(train[, "runtime"], scale_sigmoid)
+  train[, pmap(list(.SD, trafos), function(x, t) {t$trafo(x)}), names(trafos)]
+  y = as.matrix(train[, c("val_accuracy", "runtime")])
+  train[, method :=NULL]
+  train[, runtime := NULL]
+  
+  
   oob = dt[method == "rs", ]
   oob = map_dtc(oob, function(x) {
     if (is.logical(x)) x = as.numeric(x)
@@ -106,21 +106,16 @@ fit_nb301_surrogate = function(batchnorm = FALSE, dropout = FALSE, deeper = TRUE
     return(x)
   })
   oob[, val_accuracy := val_accuracy/100]
-  oob[, runtime := ((runtime - rt_min) / rt_range)]
-  if ("method" %in% names(oob)) oob[, method := NULL]
+  train[, pmap(list(.SD, trafos), function(x, t) {t$trafo(x)}), names(trafos)]
   ytest = as.matrix(oob[, c("val_accuracy", "runtime")])
+  oob[, method := NULL]
   oob[, runtime := NULL]
   oob[, val_accuracy := NULL]
-  rs2 = reshape_data_embedding(oob)
-
-  ptest = as.matrix(predict(model, rs2$data))
-  qp = quantile(ptest[,1], 0)
-  t0 = mlr3measures::rsq(ytest[ptest[,1] > qp,1], ptest[ptest[,1] > qp,1])
-
-  library(patchwork)
-  library(ggplot2)
-  p1 = ggplot(data.frame(x = ytest[,1], y = ptest[,1]), aes(x=x, y=y)) + geom_point() + geom_abline(slope = 1, color = "blue")
-  p2 = plot(history)
-  print(p1 + p2)
-  return(list(y = t0, rsq_inbag = rib, hist = history))
+  
+  list(
+    xtrain = train,
+    yrain = y,
+    xtest = oob,
+    ytest = ytest
+  )
 }
