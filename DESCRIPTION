@@ -14,6 +14,7 @@ Imports:
     mlr3,
     mlr3misc,
     paradox,
+    R6,
     mlr3keras,
     reticulate,
     forcats,
@@ -28,3 +29,4 @@ Remotes:
     mlr-org/mlr3keras
 RoxygenNote: 7.1.1
 VignetteBuilder: knitr
+Encoding: UTF-8
