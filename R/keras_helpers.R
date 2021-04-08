@@ -65,3 +65,10 @@ make_layers = function(input, units, batchnorm, dropout, dropoout_p, activation)
   }
   return(input)
 }
+
+keras_to_onnx = function(keras_model, onnx_model) {
+  k2o = reticulate::import("keras2onnx")
+  model = keras::load_model_hdf5(model_path)
+  onnx = k2o$convert_keras(model, model$name)
+  k2o$save_model(onnx, gsub("hdf5", "onnx", model_path))
+}

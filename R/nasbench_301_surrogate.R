@@ -1,9 +1,9 @@
-fit_nb301_surrogate = function(config, wts_pow = 3L) {
-
+fit_nb301_surrogate = function(config, wts_pow = 3L, overwrite = overwrite) {
   data = config$data
   rs = reshape_data_embedding(data$xtrain)
 
   embd = make_embedding_dt(data$xtrain, names(data$ytrain))
+
   model = embd$layers
   input_shape =  list(ncol(data$xtrain) - ncol(data$ytrain))
   output_shape = ncol(data$ytrain)
@@ -20,10 +20,12 @@ fit_nb301_surrogate = function(config, wts_pow = 3L) {
       sample_weight = weights_from_target(y),
       callbacks = cbs
     )
-  keras::save_model_hdf5(model, config$model_path, overwrite = TRUE)
+  # Save model
+  keras::save_model_hdf5(model, config$keras_model_path, overwrite = TRUE)
+  keras_to_onnx(config$keras_model_path, config$onnx_model_path)
 
+  # Test Data Metrics & Plots
   rs2 = reshape_data_embedding(data$xtest)
-
   ptest = as.matrix(predict(model, rs2$data))
   for(nm in names(data$ytest)) {
     cat("RSq.", nm, ":", mlr3measures::rsq(data$ytest[,nm], ptest[,nm]))
@@ -84,7 +86,7 @@ preproc_data_nb301 = function(path, seed = 123L, n_max = 10^6) {
   set.seed(123L)
 
   train = dt[method != "rs", ]
-  train = sample_max(train, nmax)
+  train = sample_max(train, n_max)
   map_dtc(train, function(x) {
     if (is.logical(x)) x = as.numeric(x)
     if (is.factor(x)) x = fct_drop(fct_explicit_na(x, "None"))

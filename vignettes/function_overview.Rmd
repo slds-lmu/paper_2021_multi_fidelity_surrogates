@@ -19,9 +19,6 @@ knitr::opts_chunk$set(
 We first load the config:
 
 ```{r}
-library(checkmate)
-library(paradox)
-library(data.table)
 devtools::load_all()
 cfg = BenchmarkConfigNB301$new(
   workdir = paste0(path.expand("~"), "/LRZ Sync+Share/multifidelity_data")
@@ -32,26 +29,4 @@ The `config` has an active binding `data`
 
 ```{r}
 head(cfg$data)
-```
-
-
-```{r}
-
-library(data.table)
-dt = readRDS("dt.rds")
-dt[Species == "virginica"]
-
-
-library(data.table)
-foobar = function() {
-  dt = readRDS("dt.rds")
-  dt[Species == "virginica"]
-}
-foobar()
-
-
-
-devtools::load_all()
-library(data.table)
-foobar()
 ```

@@ -1,3 +1,9 @@
+# Map a character to the correct integer using a dict
+char_to_int = function(x, param_name, dict) {
+  x[is.na(x)] = "None"
+  matrix(dict[[param_name]][x,]$int)
+}
+
 # Sample rows up to a maximum of nmax
 sample_max = function(dt, n_max) {
   dt[sample(seq_len(nrow(dt)), min(n_max, nrow(dt))),]
@@ -22,7 +28,7 @@ weights_from_target = function(y, minimize = TRUE, j = 1L, wts_pow = 0L) {
       yy = y[,j]
     }
     yy = yy^wts_pow
-    yy / sum(yy) * nrow(y)  
+    yy / sum(yy) * nrow(y)
   } else {
     rep(0, nrow(y))
   }
