@@ -26,7 +26,7 @@ We first load the config:
 library(checkmate)
 library(paradox)
 cfg = BenchmarkConfigNB301$new(
-  workdir = paste0(path.expand("~"), "/lrz_synchshare/multifidelity_data")
+  workdir = paste0(path.expand("~"), "/LRZ Sync+Share/multifidelity_data")
 )
 ```
 

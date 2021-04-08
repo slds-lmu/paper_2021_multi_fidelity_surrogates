@@ -4,7 +4,7 @@ BenchmarkConfig = R6Class("BenchmarkConfig",
     id = NULL,
     download_url = NULL,
     workdir = NULL,
-    subdirs = NULL,
+    subdir = NULL,
     param_set = NULL,
     dicts_file = NULL,
     keras_model_file = NULL,
@@ -14,11 +14,11 @@ BenchmarkConfig = R6Class("BenchmarkConfig",
     codomain = NULL,
     packages = NULL,
 
-    initialize = function(id, download_url, workdir, param_set, dicts_file, keras_model_file, onnx_model_file, budget_param, target_variables, codomain, packages) {
+    initialize = function(id, download_url, workdir, model_name, param_set, dicts_file, keras_model_file, onnx_model_file, budget_param, target_variables, codomain, packages) {
       self$id = assert_string(id)
       self$download_url = download_url
       self$workdir = workdir  # FIXME: strip latest "/", assert
-      self$subdirs = paste0(workdir, "/", c("metadata", "model", "paramsets"))
+      self$subdir = paste0(workdir, "/", model_name)
       self$param_set = assert_param_set(param_set)
       self$dicts_file = dicts_file
       self$keras_model_file = keras_model_file
@@ -56,9 +56,9 @@ BenchmarkConfig = R6Class("BenchmarkConfig",
     }
   ),
   active = list(
-    dicts_path = function() paste0(self$subdirs[1L], "/", self$dicts_file),
-    keras_model_path = function() paste0(self$subdirs[2L], "/", self$keras_model_file),
-    onnx_model_path = function() paste0(self$subdirs[2L], "/", self$onnx_model_file),
+    dicts_path = function() paste0(self$subdir, "/", self$dicts_file),
+    keras_model_path = function() paste0(self$subdir, "/", self$keras_model_file),
+    onnx_model_path = function() paste0(self$subdir, "/", self$onnx_model_file),
     objective = function() {
       ObjectiveONNX$new(
         model_path = self$onnx_model_path,
