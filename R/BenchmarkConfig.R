@@ -34,7 +34,8 @@ BenchmarkConfig = R6Class("BenchmarkConfig",
       self$packages = assert_character(packages, null.ok = TRUE)
     },
 
-    setup = function() {
+    setup = function(force_download = FALSE) {
+      assert_flag(force_download)
       if (!test_directory(self$workdir)) {
         dir.create(self$workdir, recursive = TRUE)
       }
@@ -43,19 +44,19 @@ BenchmarkConfig = R6Class("BenchmarkConfig",
         dir.create(self$subdir)
       }
 
-      if (!test_file_exists(self$param_set_path)) {
+      if (!test_file_exists(self$param_set_path) || force_download) {
         download.file(paste0(self$download_url, self$param_set_file), destfile = self$param_set_path)
       }
 
-      if (!test_file_exists(self$dicts_path)) {
+      if (!test_file_exists(self$dicts_path) || force_download) {
         download.file(paste0(self$download_url, self$dicts_file), destfile = self$dicts_path)
       }
 
-      if (!test_file_exists(self$keras_model_path)) {
+      if (!test_file_exists(self$keras_model_path) || force_download) {
         download.file(paste0(self$download_url, self$keras_model_file), destfile = self$keras_model_path)
       }
 
-      if (!test_file_exists(self$onnx_model_path)) {
+      if (!test_file_exists(self$onnx_model_path) || force_download) {
         download.file(paste0(self$download_url, self$onnx_model_file), destfile = self$onnx_model_path)
       }
 

@@ -35,6 +35,7 @@ library(mfsurrogates)
 cfg = BenchmarkConfigNB301$new(
   workdir = paste0(path.expand("~"), "/LRZ Sync+Share/multifidelity_data")
 )
+#cfg$setup()
 ```
 
 this config contains our `objective` which we can use to optimize.

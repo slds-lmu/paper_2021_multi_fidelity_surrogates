@@ -5,7 +5,7 @@ BenchmarkConfigNB301 = R6Class("BenchmarkConfigNB301",
     initialize = function(id = 'NASBench301', workdir) {
       super$initialize(
         id,
-        download_url = "https://syncandshare.lrz.de/getlink/fiSd4UWxmx9FRrQtdYeYrxEV/nb301/",
+        download_url = "https://syncandshare.lrz.de/dl/fiSd4UWxmx9FRrQtdYeYrxEV/nb301/",
         workdir = workdir,
         model_name = "nb301",
         param_set_file = "param_set.rds",
