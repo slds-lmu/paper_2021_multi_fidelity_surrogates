@@ -25,7 +25,7 @@ BenchmarkConfigNB301 = R6Class("BenchmarkConfigNB301",
   ),
   active = list(
     data = function() preproc_data_nb301(self$data_path),
-    param_set = function() readRDS(param_set_path),
+    param_set = function() readRDS(self$param_set_path)
   )
 )
 
