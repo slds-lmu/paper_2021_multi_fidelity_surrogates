@@ -1,12 +1,4 @@
 fit_rbv2_svm_surrogate = function(batchnorm = FALSE, dropout = FALSE, go_deeper = TRUE, wts_pow = 0L, optimizer = optimizer_adam(3e-4)) {
-  reticulate::use_condaenv("mlr3keras", required = TRUE)
-  library(keras)
-  library(mlr3)
-  library(mlr3keras)
-  library(mlr3misc)
-  library(data.table)
-  library(forcats)
-  library(farff)
 
   ## -- Data
   n = 10^6

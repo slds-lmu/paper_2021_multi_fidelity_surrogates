@@ -28,5 +28,5 @@ cfg = BenchmarkConfigNB301$new(
 The `config` has an active binding `data`
 
 ```{r}
-head(cfg$data)
+str(cfg$data, 1)
 ```
