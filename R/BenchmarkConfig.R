@@ -84,14 +84,14 @@ BenchmarkConfig = R6Class("BenchmarkConfig",
     onnx_model_path = function() {
       paste0(self$subdir, self$onnx_model_file)
     },
-    objective = function() {
+    objective = function(task = NULL, codomain = NULL) {
       ObjectiveONNX$new(
         model_path = self$onnx_model_path,
         trafo_dict = readRDS(self$dicts_path),
+        # Here
         domain = self$param_set,
         codomain = self$codomain
       )
     }
   )
 )
-
