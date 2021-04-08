@@ -1,5 +1,41 @@
-make_embedding_dt = function(dt, target, embed_size = NULL, embed_dropout = 0, embed_batchnorm = FALSE, emb_multiplier = 1.6) {
-  t = TaskRegr$new("train", backend = dt, targets = target[[1]])
+# Generic deep and wide architecture
+make_architecture = function(inputs, input_shape, output_shape,
+  model_config = list(
+    activation = "relu", deep = c(512, 512), deeper = c(512, 512, 256, 128),
+    dropout_p = 0.5, batchnorm = FALSE, dropout = FALSE, deeper = TRUE)
+  ){
+
+  # Wide part
+  wide = inputs %>% layer_dense(output_shape)
+  # Deep part
+  deep = inputs
+  for (i in seq_len(length(deep))) {
+    if (batchnorm) deep = deep %>% layer_batch_normalization()
+    if (dropout) deep = deep %>% layer_dropout(dropout_p)
+    deep = deep %>%
+      layer_dense(
+        units = units[i],
+        input_shape = if (i == 1) input_shape else NULL,
+        activation = activation
+      )
+  }
+  model = layer_add(inputs = list(wide, deep %>% layer_dense(units = output_shape)))
+
+  if (deeper) {
+    deeper = make_layers(inputs, deeper, batchnorm=batchnorm, dropout=dropout, dropout_p=dropout_p, activation=activation)
+    model = layer_add(inputs = list(model, deeper %>% layer_dense(units = output_shape)))
+  }
+  model = model %>% layer_activation("sigmoid")
+  model = keras_model(inputs = embd$inputs, outputs = model)
+  model %>%
+    compile(
+      optimizer = optimizer_adam(3*10^-4),
+      loss = "mean_squared_error"
+    )
+}
+
+make_embedding_dt = function(dt, embed_size = NULL, embed_dropout = 0, embed_batchnorm = FALSE, emb_multiplier = 1.6) {
+  t = TaskRegr$new("train", backend = dt[, tmp_target := runif(nrow(dt))], targets = "tmp_target")
   make_embedding(t, embed_size, embed_dropout, embed_batchnorm, emb_multiplier)
 }
 
@@ -64,4 +100,11 @@ make_layers = function(input, units, batchnorm, dropout, dropoout_p, activation)
       )
   }
   return(input)
+}
+
+keras_to_onnx = function(keras_model, onnx_model) {
+  k2o = reticulate::import("keras2onnx")
+  model = keras::load_model_hdf5(model_path)
+  onnx = k2o$convert_keras(model, model$name)
+  k2o$save_model(onnx, gsub("hdf5", "onnx", model_path))
 }

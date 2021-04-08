@@ -1,13 +1,12 @@
-fit_nb301_surrogate = function(config, wts_pow = 3L) {
-
+fit_nb301_surrogate = function(config, model_config, wts_pow = 3L, overwrite = TRUE) {
   data = config$data
   rs = reshape_data_embedding(data$xtrain)
+  embd = make_embedding_dt(data$xtrain)
 
-  embd = make_embedding_dt(data$xtrain, names(data$ytrain))
   model = embd$layers
   input_shape =  list(ncol(data$xtrain) - ncol(data$ytrain))
   output_shape = ncol(data$ytrain)
-  model = make_architecture(model, input_shape, output_shape)
+  model = make_architecture(model, input_shape, output_shape, model_config)
 
   cbs = list(cb_es(patience = 20L))
   history = model %>%
@@ -20,10 +19,12 @@ fit_nb301_surrogate = function(config, wts_pow = 3L) {
       sample_weight = weights_from_target(y),
       callbacks = cbs
     )
-  keras::save_model_hdf5(model, config$model_path, overwrite = TRUE)
+  # Save model
+  keras::save_model_hdf5(model, config$keras_model_path, overwrite = TRUE)
+  keras_to_onnx(config$keras_model_path, config$onnx_model_path)
 
+  # Test Data Metrics & Plots
   rs2 = reshape_data_embedding(data$xtest)
-
   ptest = as.matrix(predict(model, rs2$data))
   for(nm in names(data$ytest)) {
     cat("RSq.", nm, ":", mlr3measures::rsq(data$ytest[,nm], ptest[,nm]))
@@ -42,50 +43,14 @@ fit_nb301_surrogate = function(config, wts_pow = 3L) {
   }
 }
 
-
-make_architecture = function(inputs, input_shape, output_shape,
-  activation = "relu", units = c(512, 512), dropout_p = 0.5,
-  batchnorm = FALSE, dropout = FALSE, deeper = TRUE) {
-
-  # Wide part
-  wide = inputs %>% layer_dense(output_shape)
-  # Deep part
-  deep = inputs
-  for (i in seq_len(length(units))) {
-    if (batchnorm) deep = deep %>% layer_batch_normalization()
-    if (dropout) deep = deep %>% layer_dropout(dropout_p)
-    deep = deep %>%
-      layer_dense(
-        units = units[i],
-        input_shape = if (i == 1) input_shape else NULL,
-        activation = activation
-      )
-  }
-  model = layer_add(inputs = list(wide, deep %>% layer_dense(units = output_shape)))
-
-  if (deeper) {
-    units = c(512, 512, 256, 128)
-    deeper = make_layers(inputs, units, batchnorm=batchnorm, dropout=dropout, dropout_p=dropout_p, activation=activation)
-    model = layer_add(inputs = list(model, deeper %>% layer_dense(units = output_shape)))
-  }
-  model = model %>% layer_activation("sigmoid")
-  model = keras_model(inputs = embd$inputs, outputs = model)
-  model %>%
-    compile(
-      optimizer = optimizer_adam(3*10^-4),
-      loss = "mean_squared_error"
-    )
-}
-
-preproc_data_nb301 = function(path, seed = 123L, n_max = 10^6) {
-  require("mlr3misc")
-  require("data.table")
+preproc_data_nb301 = function(path, seed = 123L, n_max = 10^5) {
+  set.seed(seed)
   dt = readRDS(path)
-  set.seed(123L)
 
+  # Preproc train data
   train = dt[method != "rs", ]
-  train = sample_max(train, nmax)
-  map_dtc(train, function(x) {
+  train = sample_max(train, n_max)
+  train = map_dtc(train, function(x) {
     if (is.logical(x)) x = as.numeric(x)
     if (is.factor(x)) x = fct_drop(fct_explicit_na(x, "None"))
     if (length(unique(x)) == 1) x = NULL
@@ -93,12 +58,13 @@ preproc_data_nb301 = function(path, seed = 123L, n_max = 10^6) {
   })
   train[, val_accuracy := val_accuracy/100]
   trafos = map(train[, "runtime"], scale_sigmoid)
-  train[, pmap(list(.SD, trafos), function(x, t) {t$trafo(x)}), names(trafos)]
+  train[, names(trafos) := pmap(list(.SD, trafos), function(x, t) {t$trafo(x)}), .SDcols = names(trafos)]
   y = as.matrix(train[, c("val_accuracy", "runtime")])
   train[, method :=NULL]
   train[, runtime := NULL]
+  train[, val_accuracy := NULL]
 
-
+  # Preproc test data
   oob = dt[method == "rs", ]
   oob = map_dtc(oob, function(x) {
     if (is.logical(x)) x = as.numeric(x)
@@ -107,9 +73,9 @@ preproc_data_nb301 = function(path, seed = 123L, n_max = 10^6) {
     return(x)
   })
   oob[, val_accuracy := val_accuracy/100]
-  train[, pmap(list(.SD, trafos), function(x, t) {t$trafo(x)}), names(trafos)]
+  oob[, names(trafos) := pmap(list(.SD, trafos), function(x, t) {t$trafo(x)}), .SDcols = names(trafos)]
   ytest = as.matrix(oob[, c("val_accuracy", "runtime")])
-  oob[, method := NULL]
+  if ("method" %in% colnames(oob)) oob[, method := NULL]
   oob[, runtime := NULL]
   oob[, val_accuracy := NULL]
 
