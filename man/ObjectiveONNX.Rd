@@ -38,7 +38,8 @@ Creates a new instance of this [R6][R6::R6Class] class.
   trafo_dict,
   domain,
   codomain = NULL,
-  id = "function",
+  id = "ONNX",
+  active_session = TRUE,
   properties = character(),
   constants = ParamSet$new(),
   check_values = TRUE
@@ -49,7 +50,10 @@ Creates a new instance of this [R6][R6::R6Class] class.
 \if{html}{\out{<div class="arguments">}}
 \describe{
 \item{\code{model_path}}{(`character`)\cr
-Path to the onnx Model}
+Path to the onnx Model.}
+
+\item{\code{trafo_dict}}{(`character`)\cr
+Dictionary containing feature transformations before beeing fed to the NN.}
 
 \item{\code{id}}{(`character(1)`).}
 

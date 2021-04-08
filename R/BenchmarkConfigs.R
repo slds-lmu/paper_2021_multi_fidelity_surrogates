@@ -1,3 +1,4 @@
+#' @export
 BenchmarkConfigNB301 = R6Class("BenchmarkConfigNB301",
   inherit = BenchmarkConfig,
   public = list(
