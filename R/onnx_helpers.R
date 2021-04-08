@@ -1,4 +1,3 @@
-
 keras_to_onnx = function(model_path = "wide_and_deeper_50.hdf5") {
   k2o = reticulate::import("keras2onnx")
   model = keras::load_model_hdf5(model_path)
@@ -19,10 +18,18 @@ run_with_mlflow = function(xs) {
   return(output)
 }
 
+# # Map a character to the correct integer using a dict
+# char_to_int = function(x, param_name, dict) {
+#   x[is.na(x)] = "None"
+#   matrix(dict[[param_name]][x,]$int)
+# }
+
 # Map a character to the correct integer using a dict
 char_to_int = function(x, param_name, dict) {
   x[is.na(x)] = "None"
-  matrix(dict[[param_name]][x,]$int)
+  dt = dict[[param_name]]
+  rownames(dt) = dt$level
+  matrix(dt[x,]$int)
 }
 
 # Predict using a .onnx file
@@ -30,7 +37,6 @@ char_to_int = function(x, param_name, dict) {
 # - open session: 15 ms
 # - new session:  45 ms
 predict_onnx = function(model, data, dicts) {
-
   li = c(
     mlr3misc::imap(keep(data, is.character), char_to_int, dicts),
     continuous = list(reticulate::r_to_py(as.matrix(keep(data, is.numeric)))$astype("float32"))
@@ -38,4 +44,8 @@ predict_onnx = function(model, data, dicts) {
   rt = reticulate::import("onnxruntime")
   sess = rt$InferenceSession(model)
   sess$run(NULL, li)[[1]]
+}
+
+get_config = function() {
+  source(system.file(paste0("configs/", config), package = "mfsurrogates"))
 }

@@ -12,7 +12,6 @@
 "_PACKAGE"
 
 # FIXME: cleaner import above
-
 .onLoad = function(libname, pkgname) { # nolint
   # nocov start
   backports::import(pkgname)
