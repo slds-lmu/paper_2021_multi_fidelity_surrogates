@@ -1,4 +1,10 @@
+make_embedding_dt = function(dt, target, embed_size = NULL, embed_dropout = 0, embed_batchnorm = FALSE, emb_multiplier = 1.6) {
+  t = TaskRegr$new("train", backend = dt, targets = target[[1]])
+  make_embedding(t, embed_size, embed_dropout, embed_batchnorm, emb_multiplier)
+}
+
 make_embedding = function(task, embed_size = NULL, embed_dropout = 0, embed_batchnorm = FALSE, emb_multiplier = 1.6) {
+  requireNamespace("keras")
   typedt = task$feature_types
   data = as.matrix(task$data(cols = task$feature_names))
   target = task$data(cols = task$target_names)
@@ -45,4 +51,17 @@ make_embedding = function(task, embed_size = NULL, embed_dropout = 0, embed_batc
   else
     layers = unname(embds[[1]]$layers)
   return(list(inputs = lapply(embds, function(x) x$input), layers = layers))
+}
+
+make_layers = function(input, units, batchnorm, dropout, dropoout_p, activation) {
+  for (i in seq_len(length(units))) {
+    if (batchnorm) input = input %>% layer_batch_normalization()
+    if (dropout) input = input %>% layer_dropout(dropout_p)
+    input = input %>%
+      layer_dense(
+        units = units[i],
+        activation = activation
+      )
+  }
+  return(input)
 }

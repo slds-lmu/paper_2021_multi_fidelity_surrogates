@@ -14,12 +14,19 @@ Imports:
     mlr3,
     mlr3misc,
     paradox,
+    R6,
     mlr3keras,
     reticulate,
     forcats,
     checkmate
 Suggests:
-    farff
+    ggplot2,
+    patchwork,
+    farff,
+    knitr,
+    rmarkdown
 Remotes:
     mlr-org/mlr3keras
 RoxygenNote: 7.1.1
+VignetteBuilder: knitr
+Encoding: UTF-8

@@ -1,5 +1,5 @@
 augment_with_munge = function(data, target_vars, n_augment = 10000, n_max_train = 10000, stratify = "dataset") {
-  library(mlr3learners)
+  requireNamespace("mlr3learners")
   rng = lrn("regr.ranger")
 
   news = map(unique(data[[stratify]]), function(stratum) {
