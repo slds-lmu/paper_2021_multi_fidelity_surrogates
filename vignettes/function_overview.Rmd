@@ -37,7 +37,6 @@ head(cfg$data)
 
 ```{r}
 
-
 library(data.table)
 dt = readRDS("dt.rds")
 dt[Species == "virginica"]

@@ -83,7 +83,6 @@ preproc_data_nb301 = function(path, seed = 123L, n_max = 10^6) {
   dt = readRDS(path)
   set.seed(123L)
 
-  browser()
   train = dt[method != "rs", ]
   train = sample_max(train, nmax)
   map_dtc(train, function(x) {

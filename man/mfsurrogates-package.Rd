@@ -4,16 +4,7 @@
 \name{mfsurrogates-package}
 \alias{mfsurrogates}
 \alias{mfsurrogates-package}
-\title{import data.table
-import keras
-import tensorflow
-import mlr3
-import mlr3misc
-import paradox
-import mlr3keras
-import reticulate
-import forcats
-import checkmate}
+\title{mfsurrogates: What the package does (short line)}
 \description{
 More about what it does (maybe more than one line)
 }
