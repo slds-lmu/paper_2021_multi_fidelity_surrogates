@@ -31,6 +31,21 @@ dt = data.frame(
 knitr::kable(dt)
 ```
 
+Toy tets function:
+
+```{r, echo=FALSE}
+dt = data.frame(
+  instance = c("Branin"),
+  space = c("Num"),
+  dims = c(2L),
+  fidelity = c("fidelity"),
+  n_problems = c(1L)
+)
+knitr::kable(dt)
+```
+
+
+
 # Overview
 
 This should perhaps have a table of implemented surrogates

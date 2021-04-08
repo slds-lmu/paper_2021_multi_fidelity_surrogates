@@ -12,6 +12,12 @@ algorithms across several tasks.
 | NASBench301 | Cat+Dep |   35 | epochs   |           1 |
 | RBV2-SVM    | Mix+Dep |    7 | NA       |         100 |
 
+Toy tets function:
+
+| instance | space | dims | fidelity | n\_problems |
+|:---------|:------|-----:|:---------|------------:|
+| Branin   | Num   |    2 | fidelity |           1 |
+
 # Overview
 
 This should perhaps have a table of implemented surrogates
