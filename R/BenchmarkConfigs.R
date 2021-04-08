@@ -5,10 +5,10 @@ BenchmarkConfigNB301 = R6Class("BenchmarkConfigNB301",
     initialize = function(id = 'NASBench301', workdir) {
       super$initialize(
         id,
-        download_url = "https://syncandshare.lrz.de/getlink/fiWvjauTgurqRB8dXUfbgmXE",
+        download_url = "https://syncandshare.lrz.de/getlink/fiSd4UWxmx9FRrQtdYeYrxEV/nb301/",
         workdir = workdir,
         model_name = "nb301",
-        param_set = readRDS(paste0(workdir, "/nb301/param_set.rds")),
+        param_set_file = "param_set.rds",
         data_file = "data.rds",
         dicts_file = "dicts.rds",
         keras_model_file = "model.hdf5",
