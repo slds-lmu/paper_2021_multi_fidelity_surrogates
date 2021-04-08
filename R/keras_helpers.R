@@ -1,7 +1,9 @@
 # Generic deep and wide architecture
 make_architecture = function(inputs, input_shape, output_shape,
-  activation = "relu", deep = c(512, 512), deeper = c(512, 512, 256, 128),
-  dropout_p = 0.5, batchnorm = FALSE, dropout = FALSE, deeper = TRUE) {
+  model_config = list(
+    activation = "relu", deep = c(512, 512), deeper = c(512, 512, 256, 128),
+    dropout_p = 0.5, batchnorm = FALSE, dropout = FALSE, deeper = TRUE)
+  ){
 
   # Wide part
   wide = inputs %>% layer_dense(output_shape)

@@ -1,9 +1,8 @@
-fit_rbv2_svm_surrogate = function(batchnorm = FALSE, dropout = FALSE, go_deeper = TRUE, wts_pow = 0L, optimizer = optimizer_adam(3e-4)) {
+fit_rbv2_svm_surrogate = function(config, model_config, wts_pow = 3L, overwrite = TRUE) {
 
   ## -- Data
   n = 10^6
   dt = data.table(readARFF("../metadata/rbv2_mlr_classif.svm.arff"))
-  # dt = dt[dataset %in% c("Internet.Advertisements", "sylva_prior", "pc4", "pc3"),]
   target_vars = c("perf.mmce", "perf.logloss", "traintime", "predicttime")
   dt[, task_id := NULL]
   dt[, learner := NULL]

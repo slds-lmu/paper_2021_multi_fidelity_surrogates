@@ -20,6 +20,17 @@ several interesting machine learing algorithms across several tasks.
 
 
 
+```{r, echo=FALSE}
+dt = data.frame(
+  instance = c("NASBench301", "RBV2-SVM"),
+  space = c("Cat+Dep", "Mix+Dep"),
+  dims = c(35L, 7L),
+  fidelity = c("epochs", "NA"),
+  n_problems = c(1L, 100L)
+)
+knitr::kable(dt)
+```
+
 # Overview
 
 This should perhaps have a table of implemented surrogates
@@ -46,5 +57,28 @@ ins = OptimInstanceMultiCrit$new(
   objective = cfg$objective,
   terminator = trm("evals", n_evals = 10L)
  )
+# opt('random_search')$optimize(ins)
+```
+
+## RandomBotv2 - SVM
+
+We first load the config:
+
+```{r,eval=FALSE}
+library(mfsurrogates)
+cfg = BenchmarkConfigRBv2SVM$new(
+  workdir = paste0(path.expand("~"), "/LRZ Sync+Share/multifidelity_data")
+)
+```
+
+this config contains our `objective` which we can use to optimize.
+
+```{r,eval=FALSE}
+library("bbotk")
+library("data.table")
+ins = OptimInstanceMultiCrit$new(
+  objective = cfg$objective,
+  terminator = trm("evals", n_evals = 10L)
+)
 # opt('random_search')$optimize(ins)
 ```

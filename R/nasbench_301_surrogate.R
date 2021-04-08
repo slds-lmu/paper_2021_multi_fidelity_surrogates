@@ -1,4 +1,4 @@
-fit_nb301_surrogate = function(config, wts_pow = 3L, overwrite = overwrite) {
+fit_nb301_surrogate = function(config, model_config, wts_pow = 3L, overwrite = TRUE) {
   data = config$data
   rs = reshape_data_embedding(data$xtrain)
   embd = make_embedding_dt(data$xtrain)
@@ -6,7 +6,7 @@ fit_nb301_surrogate = function(config, wts_pow = 3L, overwrite = overwrite) {
   model = embd$layers
   input_shape =  list(ncol(data$xtrain) - ncol(data$ytrain))
   output_shape = ncol(data$ytrain)
-  model = make_architecture(model, input_shape, output_shape)
+  model = make_architecture(model, input_shape, output_shape, model_config)
 
   cbs = list(cb_es(patience = 20L))
   history = model %>%
