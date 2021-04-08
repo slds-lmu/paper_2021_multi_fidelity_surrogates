@@ -11,13 +11,13 @@ BenchmarkConfig = R6Class("BenchmarkConfig",
     dicts_file = NULL,
     keras_model_file = NULL,
     onnx_model_file = NULL,
-    param_set = NULL,    
+    param_set = NULL,
     budget_param = NULL,
     target_variables = NULL,
     codomain = NULL,
     packages = NULL,
 
-    initialize = function(id, download_url, workdir, model_name, param_set_file, data_file, dicts_file, keras_model_file, onnx_model_file, budget_param, target_variables, codomain, packages) {
+    initialize = function(id, download_url, workdir, model_name, param_set_file = NULL, data_file, dicts_file, keras_model_file, onnx_model_file, budget_param, target_variables, codomain, packages) {
       self$id = assert_string(id)
       self$download_url = download_url
       self$workdir = workdir  # FIXME: assure that this end on /
@@ -59,9 +59,6 @@ BenchmarkConfig = R6Class("BenchmarkConfig",
       if (!test_file_exists(self$onnx_model_path) || force_download) {
         download.file(paste0(self$download_url, self$onnx_model_file), destfile = self$onnx_model_path)
       }
-
-      self$param_set = readRDS(self$param_set_path)
-
       message("setup sucessful.")
     }
   ),
@@ -75,7 +72,9 @@ BenchmarkConfig = R6Class("BenchmarkConfig",
     param_set_path = function() {
       paste0(self$subdir, self$param_set_file)
     },
-
+    param_set = function() {
+      stop("Abstract")
+    },
     dicts_path = function() {
       paste0(self$subdir, self$dicts_file)
     },
