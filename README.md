@@ -12,7 +12,7 @@ algorithms across several tasks.
 | NASBench301 | Cat+Dep |   35 | epochs   |           1 |
 | RBV2-SVM    | Mix+Dep |    7 | NA       |         100 |
 
-Toy tets function:
+Toy test functions:
 
 | instance | space | dims | fidelity | n\_problems |
 |:---------|:------|-----:|:---------|------------:|

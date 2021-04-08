@@ -31,7 +31,7 @@ dt = data.frame(
 knitr::kable(dt)
 ```
 
-Toy tets function:
+Toy test functions:
 
 ```{r, echo=FALSE}
 dt = data.frame(
