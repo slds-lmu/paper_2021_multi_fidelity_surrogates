@@ -43,6 +43,30 @@ ins = OptimInstanceMultiCrit$new(
 # opt('random_search')$optimize(ins)
 ```
 
+## Branin
+
+We first load the config:
+
+``` r
+library(checkmate)
+library(paradox)
+library(mfsurrogates)
+cfg = BenchmarkConfigBranin$new()
+#plot(cfg, method = "rgl") # or ggplot2
+```
+
+this config contains our `objective` which we can use to optimize.
+
+``` r
+library("bbotk")
+library("data.table")
+ins = OptimInstanceSingleCrit$new(
+  objective = cfg$objective,
+  terminator = trm("evals", n_evals = 10L)
+ )
+# opt('random_search')$optimize(ins)
+```
+
 ## RandomBotv2 - SVM
 
 We first load the config:

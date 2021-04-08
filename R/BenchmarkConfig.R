@@ -21,7 +21,7 @@ BenchmarkConfig = R6Class("BenchmarkConfig",
       self$download_url = download_url
       self$workdir = workdir  # FIXME: assure that this end on /
       self$model_name = model_name
-      self$subdir = paste0(workdir, model_name, "/")
+      self$subdir = if (!is.null(workdir) && !is.null(model_name)) paste0(workdir, model_name, "/") else NULL
       self$param_set_file = param_set_file
       self$data_file = data_file
       self$dicts_file = dicts_file
@@ -59,6 +59,10 @@ BenchmarkConfig = R6Class("BenchmarkConfig",
         download.file(paste0(self$download_url, self$onnx_model_file), destfile = self$onnx_model_path)
       }
       message("setup sucessful.")
+    },
+
+    plot = function() {
+      stop("Abstract")
     }
   ),
   active = list(

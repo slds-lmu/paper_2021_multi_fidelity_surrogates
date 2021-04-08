@@ -2,7 +2,7 @@
 BenchmarkConfigNB301 = R6Class("BenchmarkConfigNB301",
   inherit = BenchmarkConfig,
   public = list(
-    initialize = function(id = 'NASBench301', workdir) {
+    initialize = function(id = "NASBench301", workdir) {
       super$initialize(
         id,
         download_url = "https://syncandshare.lrz.de/dl/fiSd4UWxmx9FRrQtdYeYrxEV/nb301/",
@@ -29,10 +29,99 @@ BenchmarkConfigNB301 = R6Class("BenchmarkConfigNB301",
   )
 )
 
+#' @export
+BenchmarkConfigBranin = R6Class("BenchmarkConfigBranin",
+  inherit = BenchmarkConfig,
+  public = list(
+    initialize = function(id = "Branin") {
+      super$initialize(
+        id,
+        download_url = NULL,
+        workdir = NULL,
+        model_name = NULL,
+        param_set_file = NULL,
+        data_file = NULL,
+        dicts_file = NULL,
+        keras_model_file = NULL,
+        onnx_model_file = NULL,
+        budget_param = "fidelity",
+        target_variables = "y",
+        codomain = ps(
+          y = p_dbl(lower = 0, upper = Inf, tags = "minimize")
+        ),
+        packages = NULL
+      )
+    },
+    plot = function(method = c("ggplot2", "rgl")) {
+      method = match.arg(method, choices = c("ggplot2", "rgl"))
+      objective = self$objective
+       design = generate_design_grid(objective$domain, param_resolutions = c(x1 = 100L, x2 = 100L, fidelity = 11))$data
+      for (f in unique(design$fidelity)) {
+        tmp = design[fidelity == f]
+        tmp = cbind(tmp, objective$eval_dt(tmp))
+        if (method == "ggplot2") {
+          # ggplot2
+          print(ggplot(tmp, aes(x = x1, y = x2, z = y)) +
+            geom_contour_filled() +
+            ggtitle(gsub("x", f, "fidelity of x")))
+        } else {
+          # rgl
+          col = colorspace::diverging_hcl(20)[cut(tmp$y, breaks = 20L)]
+          plot3d(x = tmp$x1, y = tmp$x2, z = tmp$y, col = col, xlab = "x1", ylab = "x2", zlab = "y", main = gsub("x", f, "fidelity of x"))
+        }
+      }
+    }
+  ),
+  active = list(
+    param_set = function() {
+      ps(
+        x1 = p_dbl(lower = -5, upper = 10),
+        x2 = p_dbl(lower = 0, upper = 15),
+        fidelity = p_dbl(lower = 0L, upper = 1L)
+      )
+    },
+    objective = function() {
+      ObjectiveRFunDt$new(
+        fun = function(xdt) {
+          a = 1
+          b = 5.1 / (4 * (pi ^ 2))
+          c = 5 / pi
+          r = 6
+          s = 10
+          t = 1 / (8 * pi)
+          data.table(y = log(a * ((xdt[["x2"]] - b * (xdt[["x1"]] ^ 2L) + c * xdt[["x1"]] - r) ^ 2) + ((s * (1 - t)) * cos(xdt[["x1"]])) + 51 + s + (5 * xdt[["fidelity"]] * xdt[["x1"]])))
+        },
+        domain = self$param_set,
+        codomain = self$codomain
+      )
+    }
+  )
+)
+
+plot.BenchmarkConfigBranin = function(bcf) {
+  objective = bcf$objective
+  design = generate_design_grid(objective$domain, param_resolutions = c(x1 = 100, x2 = 100, fidelity = 11))$data
+  for (f in unique(design$fidelity)) {
+    tmp = design[fidelity == f]
+    tmp = cbind(tmp, objective$eval_dt(tmp))
+    # ggplot2
+    #print(ggplot(tmp, aes(x = x1, y = x2, z = y)) +
+    #  geom_contour_filled() +
+    #  ggtitle(gsub("x", f, "fidelity of x")))
+    # rgl
+    col = colorspace::diverging_hcl(20)[cut(tmp$y, breaks = 20)]
+    plot3d(x = tmp$x1, y = tmp$x2, z = tmp$y, col = col, xlab = "x1", ylab = "x2", zlab = "y", main = gsub("x", f, "fidelity of x"))
+
+  }
+}
+
+    
+
+
 BenchmarkConfigRBv2SVM = R6Class("BenchmarkConfigRBv2SVM",
   inherit = BenchmarkConfig,
   public = list(
-    initialize = function(id = 'RBv2_SVM', workdir) {
+    initialize = function(id = "RBv2_SVM", workdir) {
       super$initialize(
         id,
         download_url = "https://syncandshare.lrz.de/dl/fiSd4UWxmx9FRrQtdYeYrxEV/rbv2_svm/",
@@ -71,7 +160,7 @@ BenchmarkConfigRBv2SVM = R6Class("BenchmarkConfigRBv2SVM",
 # BenchmarkConfigRBv2RF = R6Class("BenchmarkConfigRBv2RF",
 #   inherit = BenchmarkConfig,
 #   public = list(
-#     initialize = function(id = 'RBv2_SVM', workdir) {
+#     initialize = function(id = "RBv2_SVM", workdir) {
 #       super$initialize(
 #         id,
 #         download_url = "https://syncandshare.lrz.de/dl/fiSd4UWxmx9FRrQtdYeYrxEV/rbv2_svm/",
