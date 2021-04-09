@@ -30,6 +30,8 @@ BenchmarkConfigNB301 = R6Class("BenchmarkConfigNB301",
 )
 
 #' @export
+# with fidelity = 0 3 global optima that vanish until fidelity 1 only a single global optimum; idea from
+# Forrester, A., Sobester, A., & Keane, A. (2008). Engineering design via surrogate modelling: a practical guide. Wiley.
 BenchmarkConfigBranin = R6Class("BenchmarkConfigBranin",
   inherit = BenchmarkConfig,
   public = list(
@@ -98,24 +100,6 @@ BenchmarkConfigBranin = R6Class("BenchmarkConfigBranin",
   )
 )
 
-plot.BenchmarkConfigBranin = function(bcf) {
-  objective = bcf$objective
-  design = generate_design_grid(objective$domain, param_resolutions = c(x1 = 100, x2 = 100, fidelity = 11))$data
-  for (f in unique(design$fidelity)) {
-    tmp = design[fidelity == f]
-    tmp = cbind(tmp, objective$eval_dt(tmp))
-    # ggplot2
-    #print(ggplot(tmp, aes(x = x1, y = x2, z = y)) +
-    #  geom_contour_filled() +
-    #  ggtitle(gsub("x", f, "fidelity of x")))
-    # rgl
-    col = colorspace::diverging_hcl(20)[cut(tmp$y, breaks = 20)]
-    plot3d(x = tmp$x1, y = tmp$x2, z = tmp$y, col = col, xlab = "x1", ylab = "x2", zlab = "y", main = gsub("x", f, "fidelity of x"))
-
-  }
-}
-
-    
 
 
 BenchmarkConfigRBv2SVM = R6Class("BenchmarkConfigRBv2SVM",

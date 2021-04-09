@@ -21,6 +21,7 @@ Imports:
     checkmate
 Suggests:
     ggplot2,
+    rgl,
     patchwork,
     farff,
     knitr,
