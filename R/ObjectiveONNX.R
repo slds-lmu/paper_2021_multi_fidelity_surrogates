@@ -25,7 +25,7 @@ ObjectiveONNX = R6Class("ObjectiveONNX",
     #'   Dictionary containing feature transformations before beeing fed to the NN.
     #' @param id (`character(1)`).
     #' @param properties (`character()`).
-    initialize = function(model_path, trafo_dict, domain, codomain = NULL, id = "ONNX", active_session = TRUE,
+    initialize = function(model_path, trafo_dict, domain, full_codomain_names, codomain = NULL, id = "ONNX", active_session = TRUE,
       properties = character(), constants = ParamSet$new(), check_values = TRUE) {
       if (is.null(codomain)) {
         codomain = ParamSet$new(list(ParamDbl$new("y", tags = "minimize")))
@@ -51,7 +51,7 @@ ObjectiveONNX = R6Class("ObjectiveONNX",
         } else {
           session = self$session
         }
-        y = setNames(data.table(session$run(NULL, li)[[1]]), self$codomain$ids())
+        setNames(data.table(session$run(NULL, li)[[1L]]), nm = full_codomain_names)
       }
 
       super$initialize(id = id, fun = fun, domain = domain, codomain = codomain,

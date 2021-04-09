@@ -60,6 +60,21 @@ BenchmarkConfig = R6Class("BenchmarkConfig",
       }
       message("setup sucessful.")
     },
+    
+    get_objective = function(task = NULL, target_variables = NULL) {
+      assert_subset(target_variables, choices = self$target_variables, empty.ok = TRUE)
+      codomain = self$codomain$clone(deep = TRUE)
+      if (!is.null(target_variables)) {
+        codomain = ParamSet$new(codomain$params[target_variables])
+      }
+      ObjectiveONNX$new(
+        model_path = self$onnx_model_path,
+        trafo_dict = readRDS(self$dicts_path),
+        domain = self$param_set,
+        full_codomain_names = self$codomain$ids(),  # needed to set the names
+        codomain = codomain
+      )
+    },
 
     plot = function() {
       stop("Abstract")
@@ -86,15 +101,6 @@ BenchmarkConfig = R6Class("BenchmarkConfig",
     },
     onnx_model_path = function() {
       paste0(self$subdir, self$onnx_model_file)
-    },
-    objective = function(task = NULL, codomain = NULL) {
-      ObjectiveONNX$new(
-        model_path = self$onnx_model_path,
-        trafo_dict = readRDS(self$dicts_path),
-        # Here
-        domain = self$param_set,
-        codomain = self$codomain
-      )
     }
   )
 )

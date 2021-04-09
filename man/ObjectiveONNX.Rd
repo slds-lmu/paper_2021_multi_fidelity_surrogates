@@ -37,6 +37,7 @@ Creates a new instance of this [R6][R6::R6Class] class.
   model_path,
   trafo_dict,
   domain,
+  full_codomain_names,
   codomain = NULL,
   id = "ONNX",
   active_session = TRUE,

@@ -54,9 +54,26 @@ BenchmarkConfigBranin = R6Class("BenchmarkConfigBranin",
         packages = NULL
       )
     },
+
+    get_objective = function() {
+      ObjectiveRFunDt$new(
+        fun = function(xdt) {
+          a = 1
+          b = 5.1 / (4 * (pi ^ 2))
+          c = 5 / pi
+          r = 6
+          s = 10
+          t = 1 / (8 * pi)
+          data.table(y = log(a * ((xdt[["x2"]] - b * (xdt[["x1"]] ^ 2L) + c * xdt[["x1"]] - r) ^ 2) + ((s * (1 - t)) * cos(xdt[["x1"]])) + 51 + s + (5 * xdt[["fidelity"]] * xdt[["x1"]])))
+        },
+        domain = self$param_set,
+        codomain = self$codomain
+      )
+    },
+
     plot = function(method = c("ggplot2", "rgl")) {
       method = match.arg(method, choices = c("ggplot2", "rgl"))
-      objective = self$objective
+      objective = self$get_objective()
        design = generate_design_grid(objective$domain, param_resolutions = c(x1 = 100L, x2 = 100L, fidelity = 11))$data
       for (f in unique(design$fidelity)) {
         tmp = design[fidelity == f]
@@ -80,21 +97,6 @@ BenchmarkConfigBranin = R6Class("BenchmarkConfigBranin",
         x1 = p_dbl(lower = -5, upper = 10),
         x2 = p_dbl(lower = 0, upper = 15),
         fidelity = p_dbl(lower = 0L, upper = 1L)
-      )
-    },
-    objective = function() {
-      ObjectiveRFunDt$new(
-        fun = function(xdt) {
-          a = 1
-          b = 5.1 / (4 * (pi ^ 2))
-          c = 5 / pi
-          r = 6
-          s = 10
-          t = 1 / (8 * pi)
-          data.table(y = log(a * ((xdt[["x2"]] - b * (xdt[["x1"]] ^ 2L) + c * xdt[["x1"]] - r) ^ 2) + ((s * (1 - t)) * cos(xdt[["x1"]])) + 51 + s + (5 * xdt[["fidelity"]] * xdt[["x1"]])))
-        },
-        domain = self$param_set,
-        codomain = self$codomain
       )
     }
   )

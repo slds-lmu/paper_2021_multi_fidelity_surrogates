@@ -43,7 +43,7 @@ this config contains our `objective` which we can use to optimize.
 library("bbotk")
 library("data.table")
 ins = OptimInstanceMultiCrit$new(
-  objective = cfg$objective,
+  objective = cfg$get_objective(),
   terminator = trm("evals", n_evals = 10L)
  )
 # opt('random_search')$optimize(ins)
@@ -67,7 +67,7 @@ this config contains our `objective` which we can use to optimize.
 library("bbotk")
 library("data.table")
 ins = OptimInstanceSingleCrit$new(
-  objective = cfg$objective,
+  objective = cfg$get_objective(),
   terminator = trm("evals", n_evals = 10L)
  )
 # opt('random_search')$optimize(ins)
@@ -90,7 +90,7 @@ this config contains our `objective` which we can use to optimize.
 library("bbotk")
 library("data.table")
 ins = OptimInstanceMultiCrit$new(
-  objective = cfg$objective,
+  objective = cfg$get_objective(),
   terminator = trm("evals", n_evals = 10L)
 )
 # opt('random_search')$optimize(ins)
