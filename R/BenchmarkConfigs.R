@@ -32,6 +32,9 @@ BenchmarkConfigNB301 = R6Class("BenchmarkConfigNB301",
 #' @export
 # with fidelity = 0 3 global optima that vanish until fidelity 1 only a single global optimum; idea from
 # Forrester, A., Sobester, A., & Keane, A. (2008). Engineering design via surrogate modelling: a practical guide. Wiley.
+# fidelity 0: x*1 = (-pi, 12.275), x*2 = (pi, 2.275), x*3 = c(9.42478, 2.475) f(x) = 0.39789
+# fidelity 1: x*1 = (9.97247, 2.97574) f(x) = -48.05995
+# increasing fidelity gradually shifts x*3 to the global x*1
 BenchmarkConfigBranin = R6Class("BenchmarkConfigBranin",
   inherit = BenchmarkConfig,
   public = list(
@@ -49,7 +52,7 @@ BenchmarkConfigBranin = R6Class("BenchmarkConfigBranin",
         budget_param = "fidelity",
         target_variables = "y",
         codomain = ps(
-          y = p_dbl(lower = 0, upper = Inf, tags = "minimize")
+          y = p_dbl(lower = -Inf, upper = Inf, tags = "minimize")
         ),
         packages = NULL
       )
@@ -64,7 +67,7 @@ BenchmarkConfigBranin = R6Class("BenchmarkConfigBranin",
           r = 6
           s = 10
           t = 1 / (8 * pi)
-          data.table(y = log(a * ((xdt[["x2"]] - b * (xdt[["x1"]] ^ 2L) + c * xdt[["x1"]] - r) ^ 2) + ((s * (1 - t)) * cos(xdt[["x1"]])) + 51 + s + (5 * xdt[["fidelity"]] * xdt[["x1"]])))
+          data.table(y = (a * ((xdt[["x2"]] - b * (xdt[["x1"]] ^ 2L) + c * xdt[["x1"]] - r) ^ 2) + ((s * (1 - t)) * cos(xdt[["x1"]])) + s -(5 * xdt[["fidelity"]] * xdt[["x1"]])))
         },
         domain = self$param_set,
         codomain = self$codomain
@@ -79,14 +82,16 @@ BenchmarkConfigBranin = R6Class("BenchmarkConfigBranin",
         tmp = design[fidelity == f]
         tmp = cbind(tmp, objective$eval_dt(tmp))
         if (method == "ggplot2") {
+          requireNamespace("ggplot2")
           # ggplot2
-          print(ggplot(tmp, aes(x = x1, y = x2, z = y)) +
-            geom_contour_filled() +
-            ggtitle(gsub("x", f, "fidelity of x")))
+          print(ggplot2::ggplot(tmp, ggplot2::aes(x = x1, y = x2, z = y)) +
+            ggplot2::geom_contour_filled(bins = 50L, show.legend = FALSE) +
+            ggplot2::ggtitle(gsub("x", f, "fidelity of x")))
         } else {
+          requireNamespace("rgl")
           # rgl
-          col = colorspace::diverging_hcl(20)[cut(tmp$y, breaks = 20L)]
-          plot3d(x = tmp$x1, y = tmp$x2, z = tmp$y, col = col, xlab = "x1", ylab = "x2", zlab = "y", main = gsub("x", f, "fidelity of x"))
+          col = colorspace::diverging_hcl(20)[cut(tmp$y, breaks = 50L)]
+          rgl::plot3d(x = tmp$x1, y = tmp$x2, z = tmp$y, col = col, xlab = "x1", ylab = "x2", zlab = "y", main = gsub("x", f, "fidelity of x"))
         }
       }
     }
