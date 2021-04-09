@@ -58,6 +58,10 @@ BenchmarkConfigBranin = R6Class("BenchmarkConfigBranin",
       )
     },
 
+    setup = function() {
+      message("no setup necessary.")
+    },
+
     get_objective = function() {
       ObjectiveRFunDt$new(
         fun = function(xdt) {
