@@ -52,5 +52,5 @@ Collate:
     'helpers.R'
     'keras_helpers.R'
     'preproc_nasbench_301.R'
-    'preproc_rbv2_svm.R'
+    'preproc_rbv2.R'
     'zzz.R'

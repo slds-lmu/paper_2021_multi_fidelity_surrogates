@@ -2,7 +2,6 @@ augment_with_munge = function(data, target_vars, n_augment = 10000, n_max_train 
   require_namespaces(c("mlr3learners", "distillery"))
 
   rng = lrn("regr.ranger")
-
   if (is.null(stratify)) {
     stratum = FALSE
   } else {

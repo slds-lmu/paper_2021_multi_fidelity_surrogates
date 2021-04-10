@@ -53,8 +53,22 @@ cfg$fit_surrogate(model_config = model_config)
 
 **NOTE** per default, models are not saved. We can enable this by supplying `overwrite = TRUE`.
 
+The same holds for all other models:
+
 ```{r}
 cfg = cfgs('rbv2_svm', workdir = workdir)
-cfg$save_trafo_dict()
 ```
 
+```{r}
+cfg$fit_surrogate()
+```
+
+
+```{r}
+cfg = cfgs('rbv2_ranger', workdir = workdir)
+cfg$data
+```
+
+```{r}
+cfg$fit_surrogate()
+```

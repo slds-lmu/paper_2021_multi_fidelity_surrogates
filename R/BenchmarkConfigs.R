@@ -173,41 +173,52 @@ benchmark_configs$add("rbv2_svm", BenchmarkConfigRBv2SVM)
 
 
 
-# BenchmarkConfigRBv2RF = R6Class("BenchmarkConfigRBv2RF",
-#   inherit = BenchmarkConfig,
-#   public = list(
-#     initialize = function(id = "RBv2_SVM", workdir) {
-#       super$initialize(
-#         id,
-#         download_url = "https://syncandshare.lrz.de/dl/fiSd4UWxmx9FRrQtdYeYrxEV/rbv2_svm/",
-#         workdir = workdir,
-#         param_set_file = NULL,
-#         dicts_file = "dicts.rds",
-#         keras_model_file = "model.hdf5",
-#         onnx_model_file = "model.onnx",
-#         budget_param = "epoch",
-#         target_variables = c("perf.mmce", "perf.logloss", "traintime", "predicttime"),
-#         codomain = ps(
-#           perf.mmce = p_dbl(lower = 0, upper = 1, tags = "minimize"),
-#           perf.logloss = p_dbl(lower = 0, upper = 1, tags = "minimize"),
-#           traintime = p_dbl(lower = 0, upper = 1, tags = "minimize"),
-#           predicttime = p_dbl(lower = 0, upper = 1, tags = "minimize")
-#         ),
-#         packages = NULL
-#       )
-#     }
-#   ),
-#   active = list(
-#     param_set = function() {
-#       ps(
-#         kernel = p_fct(levels = c("linear", "polynomial", "radial")),
-#         cost =  p_dbl(lower = -12, upper = 12, trafo = function(x) 2^x),
-#         gamma = p_dbl(lower = -12, upper = 12, trafo = function(x) 2^x, depends = kernel == "radial"),
-#         tolerance = p_dbl(lower = -12, upper = -3, trafo = function(x) 2^x),
-#         degree = p_int(lower = 2, upper = 5, depends = kernel == "polynomial"),
-#         shrinking = p_lgl(),
-#         num.impute.selected.cpo = p_fct(levels = c("impute.mean", "impute.median", "impute.hist"))
-#       )
-#     }
-#   )
-# )
+BenchmarkConfigRBv2ranger = R6Class("BenchmarkConfigRBv2ranger",
+  inherit = BenchmarkConfig,
+  public = list(
+    initialize = function(id = "RBv2_ranger", workdir) {
+      super$initialize(
+        id,
+        download_url = "https://syncandshare.lrz.de/dl/fiSd4UWxmx9FRrQtdYeYrxEV/rbv2_svm/",
+        workdir = workdir,
+        model_name = "rbv2_ranger",
+        param_set_file = NULL,
+        data_file = "data.arff",
+        dicts_file = "dicts.rds",
+        keras_model_file = "model.hdf5",
+        onnx_model_file = "model.onnx",
+        budget_param = "epoch",
+        target_variables = c("perf.mmce", "perf.logloss", "traintime", "predicttime"),
+        codomain = ps(
+          perf.mmce = p_dbl(lower = 0, upper = 1, tags = "minimize"),
+          perf.logloss = p_dbl(lower = 0, upper = 1, tags = "minimize"),
+          traintime = p_dbl(lower = 0, upper = 1, tags = "minimize"),
+          predicttime = p_dbl(lower = 0, upper = 1, tags = "minimize")
+        ),
+        packages = NULL
+      )
+    }
+  ),
+  active = list(
+    param_set = function() {
+     ps(
+      num.trees = p_int(lower = 1, upper = 2000),
+      replace = p_lgl(),
+      sample.fraction = p_dbl(lower = 0.1, upper = 1),
+      mtry.power = p_int(lower = 0, upper = 1),
+      respect.unordered.factors = p_fct(levels = c("ignore", "order", "partition")),
+      min.node.size = p_int(lower = 1, upper = 100),
+      splitrule = p_fct(levels = c("gini", "extratrees")),
+      num.random.splits = p_int(lower = 1, upper = 100, default = 1L, depends = splitrule == "extratrees"),
+      num.impute.selected.cpo = p_fct(levels = c("impute.mean", "impute.median", "impute.hist"))
+    )
+    },
+    data = function(x) {
+      if(is.null(private$.data)) private$.data = preproc_data_rbv2_ranger(self)
+      private$.data
+    }
+  )
+)
+
+#' @include BenchmarkConfig.R
+benchmark_configs$add("rbv2_ranger", BenchmarkConfigRBv2ranger)
