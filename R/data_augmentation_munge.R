@@ -1,17 +1,27 @@
-augment_with_munge = function(data, target_vars, n_augment = 10000, n_max_train = 10000, stratify = "dataset") {
-  requireNamespace("mlr3learners")
+augment_with_munge = function(data, target_vars, n_augment = 10000, n_max_train = 10000, stratify = "task_id") {
+  require_namespaces(c("mlr3learners", "distillery"))
+
   rng = lrn("regr.ranger")
 
-  news = map(unique(data[[stratify]]), function(stratum) {
+  if (is.null(stratify)) {
+    stratum = FALSE
+  } else {
+    strats = unique(data[[stratify]])
+  }
+  news = map(strats, function(stratum) {
     print(paste0("stratum:", stratum))
-    dt = copy(data)[data[[stratify]] ==stratum,]
-    set(dt, j=stratify, value=NULL)
+    if (!stratum) {
+      dt = copy(data)
+    } else {
+      dt = copy(data)[data[[stratify]] == stratum,]
+      set(dt, j=stratify, value=NULL)
+    }
     dt[, which(colnames(dt) %in% target_vars[-1]) := NULL]
     t = TaskRegr$new("ban", backend = dt, target = target_vars[1])
     tm = t$clone()$filter(sample(t$row_ids, min(length(t$row_ids), n_augment)))
     orig_rows = tm$row_ids
     while (tm$nrow < n_augment + length(orig_rows)) {
-      x = munge_task(task = tm)
+      x = distillery::munge_task(task = tm)
       tm$rbind(x)
     }
     tm$filter(setdiff(tm$row_ids, orig_rows))

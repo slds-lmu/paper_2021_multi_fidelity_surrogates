@@ -107,9 +107,8 @@ We first load the config:
 
 ```{r,eval=FALSE}
 library(mfsurrogates)
-cfg = BenchmarkConfigRBv2SVM$new(
-  workdir = paste0(path.expand("~"), "/LRZ Sync+Share/multifidelity_data")
-)
+workdir = paste0(path.expand("~"), "/LRZ Sync+Share/multifidelity_data/")
+cfg = cfgs("rbv2_svm", workdir = workdir)
 ```
 
 this config contains our `objective` which we can use to optimize.
@@ -121,5 +120,5 @@ ins = OptimInstanceMultiCrit$new(
   objective = cfg$get_objective(),
   terminator = trm("evals", n_evals = 10L)
 )
-# opt('random_search')$optimize(ins)
+opt('random_search')$optimize(ins)
 ```

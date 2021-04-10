@@ -24,10 +24,16 @@ BenchmarkConfigNB301 = R6Class("BenchmarkConfigNB301",
     }
   ),
   active = list(
-    data = function() preproc_data_nb301(self$data_path),
+    data = function() {
+      if (is.null(private$.data)) private$.data = preproc_data_nb301(self)
+      private$.data
+    },
     param_set = function() readRDS(self$param_set_path)
   )
 )
+
+#' @include BenchmarkConfig.R
+benchmark_configs$add("nb301", BenchmarkConfigNB301)
 
 #' @export
 # with fidelity = 0 3 global optima that vanish until fidelity 1 only a single global optimum; idea from
@@ -111,6 +117,9 @@ BenchmarkConfigBranin = R6Class("BenchmarkConfigBranin",
   )
 )
 
+#' @include BenchmarkConfig.R
+benchmark_configs$add("branin", BenchmarkConfigBranin)
+
 
 
 BenchmarkConfigRBv2SVM = R6Class("BenchmarkConfigRBv2SVM",
@@ -121,7 +130,9 @@ BenchmarkConfigRBv2SVM = R6Class("BenchmarkConfigRBv2SVM",
         id,
         download_url = "https://syncandshare.lrz.de/dl/fiSd4UWxmx9FRrQtdYeYrxEV/rbv2_svm/",
         workdir = workdir,
+        model_name = "rbv2_svm",
         param_set_file = NULL,
+        data_file = "data.arff",
         dicts_file = "dicts.rds",
         keras_model_file = "model.hdf5",
         onnx_model_file = "model.onnx",
@@ -148,9 +159,19 @@ BenchmarkConfigRBv2SVM = R6Class("BenchmarkConfigRBv2SVM",
         shrinking = p_lgl(),
         num.impute.selected.cpo = p_fct(levels = c("impute.mean", "impute.median", "impute.hist"))
       )
+    },
+    data = function(x) {
+      if(is.null(private$.data)) private$.data = preproc_data_rbv2_svm(self)
+      private$.data
     }
   )
 )
+
+#' @include BenchmarkConfig.R
+benchmark_configs$add("rbv2_svm", BenchmarkConfigRBv2SVM)
+
+
+
 
 # BenchmarkConfigRBv2RF = R6Class("BenchmarkConfigRBv2RF",
 #   inherit = BenchmarkConfig,

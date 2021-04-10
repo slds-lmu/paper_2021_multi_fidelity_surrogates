@@ -60,7 +60,7 @@ BenchmarkConfig = R6Class("BenchmarkConfig",
       }
       message("setup sucessful.")
     },
-    
+
     get_objective = function(task = NULL, target_variables = NULL) {
       assert_subset(target_variables, choices = self$target_variables, empty.ok = TRUE)
       codomain = self$codomain$clone(deep = TRUE)
@@ -76,8 +76,24 @@ BenchmarkConfig = R6Class("BenchmarkConfig",
       )
     },
 
+    save_trafo_dict = function(overwrite = FALSE) {
+      if (overwrite) {
+        trafos = c(
+          map(keep(self$data$xtrain, is.factor), function(x) {
+            dt = data.table(level = levels(x), int = as.integer(factor(levels(x))), key = "level")
+            if ("None" %in% dt$level) dt = rbind(dt, data.table(level = "None", int = max(dt$int)+1L))
+            dt
+          }),
+          self$data$trafos
+        )
+        saveRDS(trafos, self$dicts_path)
+      }
+    },
     plot = function() {
       stop("Abstract")
+    },
+    fit_surrogate = function(model_config = default_model_config(), overwrite = FALSE, plot = TRUE) {
+      fit_surrogate(self, model_config, overwrite = overwrite, plot = plot)
     }
   ),
   active = list(
@@ -102,5 +118,30 @@ BenchmarkConfig = R6Class("BenchmarkConfig",
     onnx_model_path = function() {
       paste0(self$subdir, self$onnx_model_file)
     }
+  ),
+  private = list(
+    .data = NULL
   )
 )
+
+
+#' @title Dictionary of Configurations
+#'
+#' @usage NULL
+#' @format [R6::R6Class] object inheriting from [mlr3misc::Dictionary].
+#' @description
+#' A simple [mlr3misc::Dictionary] storing objects of class [BenchmarkConfig].
+#'
+#' For a more convenient way to retrieve and construct tasks, see [tsk()]/[tsks()].
+#'
+#' @section Methods:
+#' See [mlr3misc::Dictionary].
+#' @export
+benchmark_configs = R6Class("DictionaryTask",
+  inherit = mlr3misc::Dictionary,
+  cloneable = FALSE
+)$new()
+
+cfgs = function(.key, ...) {
+  mlr3misc::dictionary_sugar_get(benchmark_configs, .key, ...)
+}

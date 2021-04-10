@@ -1,0 +1,60 @@
+---
+title: "Fitting Surrogates"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{fitting_surrogates}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+```{r setup}
+reticulate::use_condaenv('mlr3keras', required = TRUE)
+devtools::load_all()
+```
+
+
+Creating a **BenchmarkConfig**:
+
+All benchmarks have an associated **BenchmarkConfig** that contains paths to relevant files and other configurations required.
+
+In order to fit surrogates or to get the objective we first instantiate the **Config** object.
+
+```{r}
+workdir = paste0(path.expand("~"), "/LRZ Sync+Share/multifidelity_data/")
+cfg = BenchmarkConfigNB301$new(workdir = workdir)
+```
+
+or alternatively use the sugar:
+
+```{r}
+cfg = cfgs('nb301', workdir = workdir)
+cfg$save_trafo_dict()
+```
+
+and start fitting a surrogate:
+
+```{r}
+cfg$fit_surrogate()
+```
+
+We can adjust the NeuralNet architecture and fitting parameters by supplying a `model_config`.
+
+```{r}
+model_config = default_model_config()
+cfg$fit_surrogate(model_config = model_config)
+```
+
+**NOTE** per default, models are not saved. We can enable this by supplying `overwrite = TRUE`.
+
+```{r}
+cfg = cfgs('rbv2_svm', workdir = workdir)
+cfg$save_trafo_dict()
+```
+

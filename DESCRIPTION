@@ -7,6 +7,15 @@ Author: Who wrote it
 Maintainer: Who to complain to <yourfault@somewhere.net>
 Description: More about what it does (maybe more than one line)
 License: What license is it under?
+Config/reticulate:
+  list(
+    packages = list(
+      list(package = "tensorflow", version = "2.3.1"),
+      list(package = "keras", version = "2.4")
+    )
+  )
+Depends:
+    R (>= 3.2)
 Imports:
     data.table,
     keras,
@@ -25,8 +34,23 @@ Suggests:
     patchwork,
     farff,
     knitr,
+    distillery,
     rmarkdown
 Remotes:
-    mlr-org/mlr3keras
+    mlr-org/mlr3keras,
+    pfistfl/distillery
 RoxygenNote: 7.1.1
 Encoding: UTF-8
+VignetteBuilder: knitr
+SystemRequirements: Keras >= 2.3 (https://keras.io)
+Collate: 
+    'BenchmarkConfig.R'
+    'BenchmarkConfigs.R'
+    'ObjectiveONNX.R'
+    'data_augmentation_munge.R'
+    'fit_surrogate.R'
+    'helpers.R'
+    'keras_helpers.R'
+    'preproc_nasbench_301.R'
+    'preproc_rbv2_svm.R'
+    'zzz.R'
