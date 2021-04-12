@@ -15,13 +15,14 @@ preproc_data_nb301 = function(config, seed = 123L, n_max = 10^5) {
   train[, val_accuracy := val_accuracy/100]
   trafos = map(train[, "runtime"], scale_sigmoid)
   train[, names(trafos) := pmap(list(.SD, trafos), function(x, t) {t$trafo(x)}), .SDcols = names(trafos)]
-  y = as.matrix(train[, c("val_accuracy", "runtime")])
+  y = as.matrix(train[, c("val_accuracy", "runtime"), with = FALSE])
   train[, method :=NULL]
   train[, runtime := NULL]
   train[, val_accuracy := NULL]
 
   # Preproc test data
   oob = dt[method == "rs", ]
+  oob = sample_max(oob, n_max)
   oob = map_dtc(oob, function(x) {
     if (is.logical(x)) x = as.numeric(x)
     if (is.factor(x)) x = fct_drop(fct_explicit_na(x, "None"))

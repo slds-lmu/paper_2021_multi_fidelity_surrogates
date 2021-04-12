@@ -27,7 +27,7 @@ All benchmarks have an associated **BenchmarkConfig** that contains paths to rel
 In order to fit surrogates or to get the objective we first instantiate the **Config** object.
 
 ```{r}
-workdir = paste0(path.expand("~"), "/LRZ Sync+Share/multifidelity_data/")
+workdir = paste0(path.expand("~"), "/..", "/LRZ Sync+Share/multifidelity_data/")
 cfg = BenchmarkConfigNB301$new(workdir = workdir)
 ```
 
@@ -35,7 +35,6 @@ or alternatively use the sugar:
 
 ```{r}
 cfg = cfgs('nb301', workdir = workdir)
-cfg$save_trafo_dict()
 ```
 
 and start fitting a surrogate:
@@ -48,6 +47,7 @@ We can adjust the NeuralNet architecture and fitting parameters by supplying a `
 
 ```{r}
 model_config = default_model_config()
+model_config$epochs = 1L
 cfg$fit_surrogate(model_config = model_config)
 ```
 
@@ -60,7 +60,7 @@ cfg = cfgs('rbv2_svm', workdir = workdir)
 ```
 
 ```{r}
-cfg$fit_surrogate()
+cfg$fit_surrogate(model_config)
 ```
 
 

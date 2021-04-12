@@ -1,3 +1,13 @@
+munge_data = function(data, target_vars, munge_n = NULL) {
+  if (!is.null(munge_n)) {
+    train = augment_with_munge(cbind(data$xtrain, data$ytrain), target_vars = target_vars, n_augment = munge_n)
+    data$ytrain = as.matrix(train[, target_vars, with = FALSE])
+    data$xtrain = train[, (target_vars) := NULL]
+  }
+  return(data)
+}
+
+
 augment_with_munge = function(data, target_vars, n_augment = 10000, n_max_train = 10000, stratify = "task_id") {
   require_namespaces(c("mlr3learners", "distillery"))
 

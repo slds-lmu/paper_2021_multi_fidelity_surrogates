@@ -1,6 +1,7 @@
 fit_surrogate = function(problem_config, model_config = default_model_config(), overwrite = FALSE, plot = TRUE) {
 
   data = problem_config$data
+  data = munge_data(data, target_vars = problem_config$target_variables, munge_n = model_config$munge_n)
   rs = reshape_data_embedding(data$xtrain)
   embd = make_embedding_dt(data$xtrain)
 
@@ -28,10 +29,22 @@ fit_surrogate = function(problem_config, model_config = default_model_config(), 
   # Test Data Metrics & Plots
   rs2 = reshape_data_embedding(data$xtest)
   ptest = as.matrix(predict(model, rs2$data))
-  for(nm in names(data$ytest)) {
-    cat("RSq.", nm, ":", mlr3measures::rsq(data$ytest[,nm], ptest[,nm]))
-  }
-
+  colnames(ptest) = cfg$target_variables
+  colnames(data$ytest) = cfg$target_variables
+  metrics = map_dtr(colnames(ptest), function(nms) {
+    x = data$ytest[, nms]
+    y = ptest[, nms]
+    data.table(
+      variable = nms,
+      rsq = mlr3measures::rsq(x,y),
+      roh = mlr3measures::srho(x,y),
+      # ktau = mlr3measures::ktau(x,y),
+      mae = mlr3measures::mae(x,y)
+    )
+  })
+  data.table::fwrite(metrics, paste0(cfg$subdir, "surrogate_test_metrics.csv"))
+  print(metrics)
+  
   if (plot) {
     require("ggplot2")
     require("patchwork")
@@ -39,7 +52,9 @@ fit_surrogate = function(problem_config, model_config = default_model_config(), 
       geom_point() +
       geom_abline(slope = 1, color = "blue")
     p2 = plot(history)
-    print(p1 + p2)
+    p = p1 + p2
+    print(p)
+    ggsave(paste0(cfg$subdir, "surrogate_test_metrics.pdf"), plot = p)
   }
 }
 
@@ -54,6 +69,7 @@ default_model_config = function() {
     batchnorm = TRUE,
     dropout = FALSE,
     dropout_p = FALSE,
-    epochs = 150L
+    epochs = 150L,
+    munge_n = NULL
   )
 }

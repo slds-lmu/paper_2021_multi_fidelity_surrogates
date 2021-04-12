@@ -2,6 +2,7 @@
 
 export(BenchmarkConfig)
 export(BenchmarkConfigBranin)
+export(BenchmarkConfigLCBench)
 export(BenchmarkConfigNB301)
 export(ObjectiveONNX)
 export(benchmark_configs)
