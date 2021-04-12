@@ -169,7 +169,7 @@ BenchmarkConfigLCBench = R6Class("BenchmarkConfigLCBench",
                                      ParamInt$new("num_layers", lower = 1L, upper = 5L),
                                      ParamDbl$new("max_units", lower = log(64L), upper = log(1024L)),
                                      ParamDbl$new("max_dropout", lower = 0, upper = 1)))
-                                   
+
                                    ps$trafo = function(x, param_set) {
                                      x$batch_size = as.integer(round(exp(x$batch_size)))
                                      x$learning_rate = exp(x$learning_rate)
@@ -469,7 +469,7 @@ BenchmarkConfigRBv2aknn = R6Class("BenchmarkConfigRBv2aknn",
                                         )
                                       },
                                       data = function(x) {
-                                        if(is.null(private$.data)) private$.data = preproc_data_rbv2_glmnet(self)
+                                        if(is.null(private$.data)) private$.data = preproc_data_rbv2_aknn(self)
                                         private$.data
                                       }
                                     )

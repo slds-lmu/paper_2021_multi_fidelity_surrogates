@@ -27,7 +27,7 @@ All benchmarks have an associated **BenchmarkConfig** that contains paths to rel
 In order to fit surrogates or to get the objective we first instantiate the **Config** object.
 
 ```{r}
-workdir = paste0(path.expand("~"), "/..", "/LRZ Sync+Share/multifidelity_data/")
+workdir = paste0(path.expand("~"), "/LRZ Sync+Share/multifidelity_data/")
 cfg = BenchmarkConfigNB301$new(workdir = workdir)
 ```
 
@@ -55,12 +55,25 @@ cfg$fit_surrogate(model_config = model_config)
 
 The same holds for all other models:
 
-```{r}
-cfg = cfgs('rbv2_svm', workdir = workdir)
-```
+
+
+## LCBench
 
 ```{r}
-cfg$fit_surrogate(model_config)
+cfg = cfgs('rbv2_svm', workdir = workdir)
+model_config = default_model_config()
+model_config$epochs = 1L
+cfg$fit_surrogate(model_config = model_config)
+```
+
+
+## SVM
+
+```{r}
+cfg = cfgs('rbv2_svm', workdir = workdir)
+model_config = default_model_config()
+model_config$epochs = 1L
+cfg$fit_surrogate(model_config = model_config)
 ```
 
 ## Ranger
@@ -69,8 +82,42 @@ cfg$fit_surrogate(model_config)
 cfg = cfgs('rbv2_ranger', workdir = workdir)
 model_config = default_model_config()
 model_config$epochs = 1L
+cfg$fit_surrogate(model_config = model_config, overwrite = TRUE)
 ```
 
+## GLMNET
+
 ```{r}
+cfg = cfgs('rbv2_glmnet', workdir = workdir)
+model_config = default_model_config()
+model_config$epochs = 1L
+cfg$fit_surrogate(model_config = model_config, overwrite = TRUE)
+```
+
+## RPART
+
+```{r}
+cfg = cfgs('rbv2_rpart', workdir = workdir)
+model_config = default_model_config()
+model_config$epochs = 1L
+cfg$fit_surrogate(model_config = model_config, overwrite = TRUE)
+```
+
+## XGBOOST
+
+```{r, eval = FALSE}
+cfg = cfgs('rbv2_xgboost', workdir = workdir)
+model_config = default_model_config()
+model_config$epochs = 1L
+cfg$fit_surrogate(model_config = model_config, overwrite = TRUE)
+```
+
+
+## Aproximate KNN (aknn)
+
+```{r, eval = FALSE}
+cfg = cfgs('rbv2_aknn', workdir = workdir)
+model_config = default_model_config()
+model_config$epochs = 1L
 cfg$fit_surrogate(model_config = model_config, overwrite = TRUE)
 ```

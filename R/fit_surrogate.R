@@ -44,7 +44,7 @@ fit_surrogate = function(problem_config, model_config = default_model_config(), 
   })
   data.table::fwrite(metrics, paste0(cfg$subdir, "surrogate_test_metrics.csv"))
   print(metrics)
-  
+
   if (plot) {
     require("ggplot2")
     require("patchwork")
@@ -66,7 +66,7 @@ default_model_config = function() {
     optimizer = optimizer_adam(3*10^-4),
     deep = TRUE,
     deeper = TRUE,
-    batchnorm = TRUE,
+    batchnorm = FALSE,
     dropout = FALSE,
     dropout_p = FALSE,
     epochs = 150L,
