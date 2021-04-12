@@ -40,11 +40,11 @@ preproc_data_rbv2_ranger = function(config, seed = 123L) {
   train = preproc_iid(train)
   trafos = c(
     map(train[, config$target_variables, with = FALSE], scale_sigmoid),
-    map(train[, c("num.trees", "min.node.size", 'num.random.splits'), with = FALSE], scale_base)
+    map(train[, c("num.trees", "min.node.size", 'num.random.splits'), with = FALSE], scale_base, base = 2L)
   )
   train[, names(trafos) := pmap(list(.SD, trafos), function(x, t) {t$trafo(x)}), .SDcols = names(trafos)]
-  y = matrix(train[, config$target_variables, with = FALSE])
-  train = train[, (config$target_variables) := NULL]
+  y = as.matrix(train[, config$target_variables, with = FALSE])
+  train = train[, config$target_variables := NULL]
 
   # Preproc test data
   oob = tt$test

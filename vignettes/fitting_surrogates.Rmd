@@ -63,12 +63,14 @@ cfg = cfgs('rbv2_svm', workdir = workdir)
 cfg$fit_surrogate(model_config)
 ```
 
+## Ranger
 
 ```{r}
 cfg = cfgs('rbv2_ranger', workdir = workdir)
-cfg$data
+model_config = default_model_config()
+model_config$epochs = 1L
 ```
 
 ```{r}
-cfg$fit_surrogate()
+cfg$fit_surrogate(model_config = model_config, overwrite = TRUE)
 ```
