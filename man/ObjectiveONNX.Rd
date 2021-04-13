@@ -39,11 +39,12 @@ Creates a new instance of this [R6][R6::R6Class] class.
   domain,
   full_codomain_names,
   codomain = NULL,
+  task = NULL,
   id = "ONNX",
   active_session = TRUE,
   properties = character(),
-  constants = ParamSet$new(),
-  check_values = TRUE
+  constants = NULL,
+  check_values = FALSE
 )}\if{html}{\out{</div>}}
 }
 
