@@ -59,3 +59,9 @@ preproc_iid = function(dt) {
   })
 }
 
+save_task_ids = function(cfg, min_evals = 100L) {
+  dt = cfg$data$xtest
+  cnts = dt[, .N, by = task_id]
+  print(cnts)
+  write(as.integer(as.character(unique(cnts[N >= min_evals,]$task_id))), paste0(cfg$subdir, "task_ids.txt"))
+}

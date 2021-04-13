@@ -89,7 +89,11 @@ cfg$fit_surrogate(model_config = model_config)
 cfg = cfgs('rbv2_svm', workdir = workdir)
 model_config = default_model_config()
 model_config$epochs = 1L
-cfg$fit_surrogate(model_config = model_config)
+#cfg$fit_surrogate(model_config = model_config)
+```
+
+```{r}
+save_task_ids(cfg)
 ```
 
 ## Ranger
@@ -98,7 +102,13 @@ cfg$fit_surrogate(model_config = model_config)
 cfg = cfgs('rbv2_ranger', workdir = workdir)
 model_config = default_model_config()
 model_config$epochs = 1L
-cfg$fit_surrogate(model_config = model_config, overwrite = TRUE)
+#cfg$fit_surrogate(model_config = model_config, overwrite = TRUE)
+```
+
+And we save the task_ids to a text file.
+
+```{r}
+save_task_ids(cfg)
 ```
 
 ## GLMNET
@@ -107,7 +117,11 @@ cfg$fit_surrogate(model_config = model_config, overwrite = TRUE)
 cfg = cfgs('rbv2_glmnet', workdir = workdir)
 model_config = default_model_config()
 model_config$epochs = 1L
-cfg$fit_surrogate(model_config = model_config, overwrite = TRUE)
+# cfg$fit_surrogate(model_config = model_config, overwrite = TRUE)
+```
+
+```{r}
+save_task_ids(cfg)
 ```
 
 ## RPART
@@ -116,7 +130,11 @@ cfg$fit_surrogate(model_config = model_config, overwrite = TRUE)
 cfg = cfgs('rbv2_rpart', workdir = workdir)
 model_config = default_model_config()
 model_config$epochs = 1L
-cfg$fit_surrogate(model_config = model_config, overwrite = TRUE)
+# cfg$fit_surrogate(model_config = model_config, overwrite = TRUE)
+```
+
+```{r}
+save_task_ids(cfg)
 ```
 
 ## XGBOOST
@@ -125,9 +143,12 @@ cfg$fit_surrogate(model_config = model_config, overwrite = TRUE)
 cfg = cfgs('rbv2_xgboost', workdir = workdir)
 model_config = default_model_config()
 model_config$epochs = 1L
-cfg$fit_surrogate(model_config = model_config, overwrite = TRUE)
+# cfg$fit_surrogate(model_config = model_config, overwrite = TRUE)
 ```
 
+```{r}
+save_task_ids(cfg)
+```
 
 ## Aproximate KNN (aknn)
 
@@ -135,5 +156,9 @@ cfg$fit_surrogate(model_config = model_config, overwrite = TRUE)
 cfg = cfgs('rbv2_aknn', workdir = workdir)
 model_config = default_model_config()
 model_config$epochs = 1L
-cfg$fit_surrogate(model_config = model_config, overwrite = TRUE)
+# cfg$fit_surrogate(model_config = model_config, overwrite = TRUE)
+```
+
+```{r}
+save_task_ids(cfg)
 ```

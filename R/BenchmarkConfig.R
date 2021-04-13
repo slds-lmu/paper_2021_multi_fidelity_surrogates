@@ -75,7 +75,6 @@ BenchmarkConfig = R6Class("BenchmarkConfig",
         codomain = codomain
       )
     },
-
     save_trafo_dict = function() {
         trafos = c(
           map(keep(self$data$xtrain, is.factor), function(x) {
@@ -87,11 +86,20 @@ BenchmarkConfig = R6Class("BenchmarkConfig",
         )
         saveRDS(trafos, self$dicts_path)
     },
+    get_task_id_param = function() {
+      if (startsWith(self$model_name, "rbv2")) {
+        levels = scan(paste0(self$subdir, "task_ids.txt"))
+        return(p_fct(levels = levels))
+      }
+      return(NULL)
+    },
     plot = function() {
       stop("Abstract")
     },
     fit_surrogate = function(model_config = default_model_config(), overwrite = FALSE, plot = TRUE) {
-      if (overwrite) self$save_trafo_dict()
+      if (overwrite) {
+        self$save_trafo_dict()
+      }
       fit_surrogate(self, model_config, overwrite = overwrite, plot = plot)
     }
   ),
@@ -141,6 +149,7 @@ benchmark_configs = R6Class("DictionaryTask",
   cloneable = FALSE
 )$new()
 
+#' @export
 cfgs = function(.key, ...) {
   mlr3misc::dictionary_sugar_get(benchmark_configs, .key, ...)
 }

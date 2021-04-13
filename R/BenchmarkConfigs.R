@@ -224,7 +224,8 @@ BenchmarkConfigRBv2SVM = R6Class("BenchmarkConfigRBv2SVM",
         tolerance = p_dbl(lower = -12, upper = -3, trafo = function(x) 2^x),
         degree = p_int(lower = 2, upper = 5, depends = kernel == "polynomial"),
         shrinking = p_lgl(),
-        num.impute.selected.cpo = p_fct(levels = c("impute.mean", "impute.median", "impute.hist"))
+        num.impute.selected.cpo = p_fct(levels = c("impute.mean", "impute.median", "impute.hist")),
+        task_id = self$get_task_id_param()
       )
     },
     data = function(x) {
@@ -275,7 +276,8 @@ BenchmarkConfigRBv2ranger = R6Class("BenchmarkConfigRBv2ranger",
         min.node.size = p_int(lower = 1, upper = 100),
         splitrule = p_fct(levels = c("gini", "extratrees")),
         num.random.splits = p_int(lower = 1, upper = 100, default = 1L, depends = splitrule == "extratrees"),
-        num.impute.selected.cpo = p_fct(levels = c("impute.mean", "impute.median", "impute.hist"))
+        num.impute.selected.cpo = p_fct(levels = c("impute.mean", "impute.median", "impute.hist")),
+        task_id = self$get_task_id_param()
       )
     },
     data = function(x) {
@@ -320,7 +322,8 @@ BenchmarkConfigRBv2glmnet = R6Class("BenchmarkConfigRBv2glmnet",
                                         ps(
                                           alpha = p_dbl(lower = 0, upper = 1, default = 1, trafo = function(x) max(0, min(1, x))),
                                           s = p_dbl(lower = -10, upper = 10, default = 0, trafo = function(x) 2^x),
-                                          num.impute.selected.cpo = p_fct(levels = c("impute.mean", "impute.median", "impute.hist"))
+                                          num.impute.selected.cpo = p_fct(levels = c("impute.mean", "impute.median", "impute.hist")),
+                                          task_id = self$get_task_id_param()
                                         )
                                       },
                                       data = function(x) {
@@ -375,7 +378,9 @@ BenchmarkConfigRBv2xgboost = R6Class("BenchmarkConfigRBv2xgboost",
                                           colsample_bytree = p_dbl(lower = 0.01, upper = 1, depends = booster %in% c("dart", "gbtree")),
                                           colsample_bylevel = p_dbl("", lower = 0.01, upper = 1, depends = booster %in% c("dart", "gbtree")),
                                           rate_drop = p_dbl(lower = 0, upper = 1, depends = booster == "dart"),
-                                          skip_drop = p_dbl(lower =  0, upper = 1, depends = booster == "dart")
+                                          skip_drop = p_dbl(lower =  0, upper = 1, depends = booster == "dart"),
+                                          num.impute.selected.cpo = p_fct(levels = c("impute.mean", "impute.median", "impute.hist")),
+                                          task_id = self$get_task_id_param()
                                         )
                                       },
                                       data = function(x) {
@@ -421,7 +426,8 @@ BenchmarkConfigRBv2rpart = R6Class("BenchmarkConfigRBv2rpart",
                                           maxdepth = p_int(lower = 1, upper = 30, default = 30),
                                           minbucket = p_int(lower = 1, upper = 100, default = 1),
                                           minsplit = p_int(lower = 1, upper = 100, default = 20),
-                                          num.impute.selected.cpo = p_fct(levels = c("impute.mean", "impute.median", "impute.hist"))
+                                          num.impute.selected.cpo = p_fct(levels = c("impute.mean", "impute.median", "impute.hist")),
+                                          task_id = self$get_task_id_param()
                                         )
                                       },
                                       data = function(x) {
@@ -469,7 +475,8 @@ BenchmarkConfigRBv2aknn = R6Class("BenchmarkConfigRBv2aknn",
                                           M = p_int(lower = 18, upper = 50),
                                           ef = p_dbl(lower = 3, upper = 8, trafo = function(x) round(2^x)),
                                           ef_construction = p_dbl(lower = 4, upper = 9, trafo = function(x) round(2^x)),
-                                          num.impute.selected.cpo = p_fct(levels = c("impute.mean", "impute.median", "impute.hist"))
+                                          num.impute.selected.cpo = p_fct(levels = c("impute.mean", "impute.median", "impute.hist")),
+                                          task_id = self$get_task_id_param()
                                         )
                                       },
                                       data = function(x) {
