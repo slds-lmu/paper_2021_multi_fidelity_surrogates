@@ -26,7 +26,8 @@ ObjectiveONNX = R6Class("ObjectiveONNX",
     #' @param id (`character(1)`).
     #' @param properties (`character()`).
     initialize = function(model_path, trafo_dict, domain, full_codomain_names, codomain = NULL, id = "ONNX", active_session = TRUE,
-      properties = character(), constants = ParamSet$new(), check_values = TRUE) {
+      properties = character(), constants = ParamSet$new(), check_values = FALSE) {
+      self$check_values = check_values
       if (is.null(codomain)) {
         codomain = ParamSet$new(list(ParamDbl$new("y", tags = "minimize")))
       }
@@ -53,7 +54,6 @@ ObjectiveONNX = R6Class("ObjectiveONNX",
         }
         setNames(data.table(session$run(NULL, li)[[1L]]), nm = full_codomain_names)
       }
-
       super$initialize(id = id, fun = fun, domain = domain, codomain = codomain,
         properties = properties, constants = constants, check_values = check_values)
     }
