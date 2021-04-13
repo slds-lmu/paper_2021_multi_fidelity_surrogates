@@ -34,11 +34,12 @@ fit_surrogate = function(problem_config, model_config = default_model_config(), 
   metrics = map_dtr(colnames(ptest), function(nms) {
     x = data$ytest[, nms]
     y = ptest[, nms]
+    smp = sample(length(x), 1000L)
     data.table(
       variable = nms,
       rsq = mlr3measures::rsq(x,y),
       roh = mlr3measures::srho(x,y),
-      # ktau = mlr3measures::ktau(x,y),
+      ktau = mlr3measures::ktau(x[smp],y[smp]), # on sample since this is slow.
       mae = mlr3measures::mae(x,y)
     )
   })
