@@ -63,6 +63,7 @@ BenchmarkConfig = R6Class("BenchmarkConfig",
 
     get_objective = function(task = NULL, target_variables = NULL) {
       assert_subset(target_variables, choices = self$target_variables, empty.ok = TRUE)
+      assert_subset(task, choices = self$get_task_id_param()$param$levels, empty.ok = TRUE)
       codomain = self$codomain$clone(deep = TRUE)
       if (!is.null(target_variables)) {
         codomain = ParamSet$new(codomain$params[target_variables])
@@ -72,7 +73,8 @@ BenchmarkConfig = R6Class("BenchmarkConfig",
         trafo_dict = readRDS(self$dicts_path),
         domain = self$param_set,
         full_codomain_names = self$codomain$ids(),  # needed to set the names
-        codomain = codomain
+        codomain = codomain,
+        task = task
       )
     },
     save_trafo_dict = function() {
@@ -88,7 +90,7 @@ BenchmarkConfig = R6Class("BenchmarkConfig",
     },
     get_task_id_param = function() {
       if (startsWith(self$model_name, "rbv2")) {
-        levels = scan(paste0(self$subdir, "task_ids.txt"))
+        levels = scan(paste0(self$subdir, "task_ids.txt"), quiet = TRUE)
         return(p_fct(levels = levels))
       }
       return(NULL)

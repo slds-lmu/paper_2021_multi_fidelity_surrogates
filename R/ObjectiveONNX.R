@@ -25,10 +25,26 @@ ObjectiveONNX = R6Class("ObjectiveONNX",
     #'   Dictionary containing feature transformations before beeing fed to the NN.
     #' @param id (`character(1)`).
     #' @param properties (`character()`).
-    initialize = function(model_path, trafo_dict, domain, full_codomain_names, codomain = NULL, id = "ONNX", active_session = TRUE,
-      properties = character(), constants = ParamSet$new(), check_values = TRUE) {
+    initialize = function(model_path, trafo_dict, domain, full_codomain_names, codomain = NULL, task = NULL, id = "ONNX", active_session = TRUE,
+      properties = character(), check_values = TRUE) {
       if (is.null(codomain)) {
         codomain = ParamSet$new(list(ParamDbl$new("y", tags = "minimize")))
+      }
+      if (!is.null(task)) {
+        task_id = domain$params$task_id
+        task_id$default = task
+        task_id$tags = c(task_id$tags, "constant")
+
+        # Drop the constant task_id from the domain
+        # FIXME: would be way easier if we could drop params from the paramset
+        new_domain = ParamSet$new(domain$params[names(domain$params) != "task_id"])
+        new_domain$trafo = domain$trafo
+        new_domain$deps = domain$deps
+        
+        constants = ParamSet$new(list(task_id))
+      } else {
+        new_domain = domain
+        constants = ParamSet$new()
       }
       # Store dictionary of feature transformations
       self$active_session = assert_flag(active_session)
@@ -39,6 +55,12 @@ ObjectiveONNX = R6Class("ObjectiveONNX",
         self$session = sess = rt$InferenceSession(model_path)
       }
       fun = function(xdt) {
+        # Handle constants in-place
+        if (!self$constants$is_empty) {
+          for (constant in self$constants$params) {
+            xdt[, constant$id := constant$default]
+          }
+        }
         li = c(
           mlr3misc::imap(mlr3misc::keep(xdt, is.character), char_to_int, self$trafo_dict),
           # Below is a little odd but required as-is since otherwise autoconvert to float64 happens
@@ -54,7 +76,7 @@ ObjectiveONNX = R6Class("ObjectiveONNX",
         setNames(data.table(session$run(NULL, li)[[1L]]), nm = full_codomain_names)
       }
 
-      super$initialize(id = id, fun = fun, domain = domain, codomain = codomain,
+      super$initialize(id = id, fun = fun, domain = new_domain, codomain = codomain,
         properties = properties, constants = constants, check_values = check_values)
     }
   )
