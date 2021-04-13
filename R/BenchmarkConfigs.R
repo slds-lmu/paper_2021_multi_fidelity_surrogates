@@ -139,10 +139,14 @@ BenchmarkConfigLCBench = R6Class("BenchmarkConfigLCBench",
                                      keras_model_file = "model.hdf5",
                                      onnx_model_file = "model.onnx",
                                      budget_param = "epoch",
-                                     target_variables = c("val_accuracy", "runtime"),
+                                     target_variables = c("val_accuracy", "val_cross_entropy","val_balanced_accuracy","test_cross_entropy","test_balanced_accuracy", "time"),
                                      codomain = ps(
                                        val_accuracy = p_dbl(lower = 0, upper = 1, tags = "maximize"),
-                                       runtime = p_dbl(lower = 0, upper = 1, tags = "minimize")
+                                       val_cross_entropy = p_dbl(lower = 0, upper = 1, tags = "maximize"),
+                                       val_balanced_accuracy = p_dbl(lower = 0, upper = 1, tags = "maximize"),
+                                       test_cross_entropy = p_dbl(lower = 0, upper = 1, tags = "maximize"),
+                                       test_balanced_accuracy = p_dbl(lower = 0, upper = 1, tags = "maximize"),
+                                       time = p_dbl(lower = 0, upper = 1, tags = "minimize")
                                      ),
                                      packages = NULL
                                    )
@@ -150,7 +154,7 @@ BenchmarkConfigLCBench = R6Class("BenchmarkConfigLCBench",
                                ),
                                active = list(
                                  data = function() {
-                                   if (is.null(private$.data)) private$.data = preproc_data_nb301(self)
+                                   if (is.null(private$.data)) private$.data = preproc_data_lcbench(self)
                                    private$.data
                                  },
                                  param_set = function() {
@@ -168,8 +172,8 @@ BenchmarkConfigLCBench = R6Class("BenchmarkConfigLCBench",
                                      ParamDbl$new("weight_decay", lower = 1e-5, upper = 1e-1),
                                      ParamInt$new("num_layers", lower = 1L, upper = 5L),
                                      ParamDbl$new("max_units", lower = log(64L), upper = log(1024L)),
-                                     ParamDbl$new("max_dropout", lower = 0, upper = 1)))
-
+                                     ParamDbl$new("max_dropout", lower = 0, upper = 1))
+                                   )
                                    ps$trafo = function(x, param_set) {
                                      x$batch_size = as.integer(round(exp(x$batch_size)))
                                      x$learning_rate = exp(x$learning_rate)

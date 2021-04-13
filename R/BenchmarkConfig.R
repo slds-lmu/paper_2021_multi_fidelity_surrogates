@@ -76,8 +76,7 @@ BenchmarkConfig = R6Class("BenchmarkConfig",
       )
     },
 
-    save_trafo_dict = function(overwrite = FALSE) {
-      if (overwrite) {
+    save_trafo_dict = function() {
         trafos = c(
           map(keep(self$data$xtrain, is.factor), function(x) {
             dt = data.table(level = levels(x), int = as.integer(factor(levels(x))), key = "level")
@@ -87,12 +86,12 @@ BenchmarkConfig = R6Class("BenchmarkConfig",
           self$data$trafos
         )
         saveRDS(trafos, self$dicts_path)
-      }
     },
     plot = function() {
       stop("Abstract")
     },
     fit_surrogate = function(model_config = default_model_config(), overwrite = FALSE, plot = TRUE) {
+      if (overwrite) self$save_trafo_dict()
       fit_surrogate(self, model_config, overwrite = overwrite, plot = plot)
     }
   ),

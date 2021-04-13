@@ -14,6 +14,22 @@ knitr::opts_chunk$set(
 )
 ```
 
+
+```{r, eval=FALSE}
+# One-time setup 
+library(reticulate)
+conda_create(
+  envname = "mlr3keras",
+  packages = c("pandas", "python=3.8")
+)
+keras::install_keras("conda", tensorflow="2.3.1", envname="mlr3keras")
+conda_install(
+  envname = "mlr3keras",
+  packages = c("keras2onnx", "onnxruntime"),
+  pip = TRUE
+)
+```
+
 ```{r setup}
 reticulate::use_condaenv('mlr3keras', required = TRUE)
 devtools::load_all()
@@ -27,7 +43,7 @@ All benchmarks have an associated **BenchmarkConfig** that contains paths to rel
 In order to fit surrogates or to get the objective we first instantiate the **Config** object.
 
 ```{r}
-workdir = paste0(path.expand("~"), "/LRZ Sync+Share/multifidelity_data/")
+workdir = paste0(path.expand("~"), "/..", "/LRZ Sync+Share/multifidelity_data/")
 cfg = BenchmarkConfigNB301$new(workdir = workdir)
 ```
 
@@ -60,7 +76,7 @@ The same holds for all other models:
 ## LCBench
 
 ```{r}
-cfg = cfgs('rbv2_svm', workdir = workdir)
+cfg = cfgs('lcbench', workdir = workdir)
 model_config = default_model_config()
 model_config$epochs = 1L
 cfg$fit_surrogate(model_config = model_config)
