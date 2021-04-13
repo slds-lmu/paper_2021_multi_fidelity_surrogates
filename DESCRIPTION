@@ -36,7 +36,8 @@ Suggests:
     farff,
     knitr,
     distillery,
-    rmarkdown
+    rmarkdown,
+    testthat (>= 3.0.0)
 Remotes:
     mlr-org/mlr3keras,
     pfistfl/distillery
@@ -57,3 +58,5 @@ Collate:
     'preproc_rbv2.R'
     'scalers.R'
     'zzz.R'
+Config/testthat/edition: 3
+Config/testthat/parallel: true

@@ -122,3 +122,25 @@ ins = OptimInstanceMultiCrit$new(
 )
 opt('random_search')$optimize(ins)
 ```
+
+
+## RandomBotv2 - rpart
+
+We first load the config:
+
+```{r,eval=FALSE}
+workdir = paste0(path.expand("~"), "/..", "/LRZ Sync+Share/multifidelity_data/")
+cfg = cfgs("rbv2_rpart", workdir = workdir)
+```
+
+this config contains our `objective` which we can use to optimize.
+
+```{r,eval=FALSE}
+library("bbotk")
+library("data.table")
+ins = OptimInstanceMultiCrit$new(
+  objective = cfg$get_objective(),
+  terminator = trm("evals", n_evals = 10L)
+)
+opt('random_search')$optimize(ins)
+```

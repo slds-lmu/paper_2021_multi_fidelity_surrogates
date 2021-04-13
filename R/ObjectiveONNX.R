@@ -39,11 +39,10 @@ ObjectiveONNX = R6Class("ObjectiveONNX",
         self$session = sess = rt$InferenceSession(model_path)
       }
       fun = function(xdt) {
-        browser()
         li = c(
           mlr3misc::imap(mlr3misc::keep(xdt, is.character), char_to_int, self$trafo_dict),
           # Below is a little odd but required as-is since otherwise autoconvert to float64 happens
-          continuous = list(reticulate::r_to_py(as.matrix(trafo_numerics(xdt, self$trafo_dict)))$astype("float32"))
+          continuous = list(reticulate::r_to_py(trafo_numerics(xdt, self$trafo_dict))$astype("float32"))
         )
 
         if (!self$active_session) {

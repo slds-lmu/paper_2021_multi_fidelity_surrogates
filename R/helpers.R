@@ -7,7 +7,7 @@ char_to_int = function(x, param_name, dict) {
 # Trafo numerics using a trafo dict and impute NA's
 trafo_numerics = function(xdt, trafo_dict) {
   l = mlr3misc::keep(xdt, is.numeric)
-  imap(l, function(x, nm) {
+  l = imap(l, function(x, nm) {
     x[is.na(x)] = 0
     if (nm %in% names(trafo_dict)) {
       trafo_dict[[nm]]$trafo(x)
@@ -15,6 +15,7 @@ trafo_numerics = function(xdt, trafo_dict) {
       x
     }
   })
+  do.call("cbind", l)
 }
 
 # Sample rows up to a maximum of nmax
