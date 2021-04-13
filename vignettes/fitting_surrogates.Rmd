@@ -110,6 +110,7 @@ save_task_ids(cfg)
 ```{r}
 cfg = cfgs('rbv2_ranger', workdir = workdir)
 model_config = default_model_config()
+model_config$epochs = 1L
 cfg$fit_surrogate(model_config = model_config, overwrite = TRUE)
 ```
 
@@ -119,12 +120,29 @@ And we save the task_ids to a text file.
 save_task_ids(cfg)
 ```
 
+and check whether this works 
+
+```{r}
+  obj = cfg$get_objective()
+  des = paradox::generate_design_random(cfg$param_set, 10)
+  data = rbindlist(des$transpose(FALSE))[,names(obj$domain$params), with=FALSE]
+  obj$eval_dt(data)
+```
+
+
 ## GLMNET
 
 ```{r}
 cfg = cfgs('rbv2_glmnet', workdir = workdir)
 model_config = default_model_config()
 cfg$fit_surrogate(model_config = model_config, overwrite = TRUE)
+```
+
+```{r}
+  obj = cfg$get_objective()
+  des = paradox::generate_design_random(cfg$param_set, 10)
+  data = rbindlist(des$transpose(FALSE))[,names(obj$domain$params), with=FALSE]
+  obj$eval_dt(data)
 ```
 
 ```{r}
@@ -140,6 +158,13 @@ cfg$fit_surrogate(model_config = model_config, overwrite = TRUE)
 ```
 
 ```{r}
+  obj = cfg$get_objective()
+  des = paradox::generate_design_random(cfg$param_set, 10)
+  data = rbindlist(des$transpose(FALSE))[,names(obj$domain$params), with=FALSE]
+  obj$eval_dt(data)
+```
+
+```{r}
 save_task_ids(cfg)
 ```
 
@@ -152,6 +177,13 @@ cfg$fit_surrogate(model_config = model_config, overwrite = TRUE)
 ```
 
 ```{r}
+  obj = cfg$get_objective()
+  des = paradox::generate_design_random(cfg$param_set, 10)
+  data = rbindlist(des$transpose(FALSE))[,names(obj$domain$params), with=FALSE]
+  obj$eval_dt(data)
+```
+
+```{r}
 save_task_ids(cfg)
 ```
 
@@ -161,6 +193,13 @@ save_task_ids(cfg)
 cfg = cfgs('rbv2_aknn', workdir = workdir)
 model_config = default_model_config()
 cfg$fit_surrogate(model_config = model_config, overwrite = TRUE)
+```
+
+```{r}
+  obj = cfg$get_objective()
+  des = paradox::generate_design_random(cfg$param_set, 10)
+  data = rbindlist(des$transpose(FALSE))[,names(obj$domain$params), with=FALSE]
+  obj$eval_dt(data)
 ```
 
 ```{r}

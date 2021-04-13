@@ -81,11 +81,13 @@ BenchmarkConfig = R6Class("BenchmarkConfig",
         trafos = c(
           map(keep(self$data$xtrain, is.factor), function(x) {
             dt = data.table(level = levels(x), int = as.integer(factor(levels(x))) - 1L, key = "level")
-            if ("None" %in% dt$level) dt = rbind(dt, data.table(level = "None", int = max(dt$int)+1L))
+            # if (!("None" %in% dt$level)) dt = rbind(dt, data.table(level = "None", int = max(dt$int)+1L))
             dt
           }),
           self$data$trafos
         )
+        cat("Trafo:\n")
+        print(trafos)
         saveRDS(trafos, self$dicts_path)
     },
     get_task_ids = function(eval=FALSE) {
