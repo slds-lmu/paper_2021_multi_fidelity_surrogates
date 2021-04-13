@@ -3,6 +3,7 @@ preproc_data_rbv2_svm = function(config, seed = 123L) {
   dt = data.table(farff::readARFF(config$data_path))
   dt[, c("dataset", "learner") := NULL]
   dt[, task_id := as.factor(task_id)]
+  dt[, shrinking := as.logical(shrinking)]
   tt = split_by_col(dt)
 
   train = tt$train
@@ -36,6 +37,7 @@ preproc_data_rbv2_ranger = function(config, seed = 123L) {
   dt = data.table(farff::readARFF(config$data_path))
   dt[, c("dataset", "learner") := NULL]
   dt[, task_id := as.factor(task_id)]
+  dt[, replace := as.logical(replace)]
   tt = split_by_col(dt)
 
   train = tt$train

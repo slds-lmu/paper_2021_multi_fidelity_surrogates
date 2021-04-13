@@ -1,5 +1,4 @@
 fit_surrogate = function(problem_config, model_config = default_model_config(), overwrite = FALSE, plot = TRUE) {
-
   data = problem_config$data
   data = munge_data(data, target_vars = problem_config$target_variables, munge_n = model_config$munge_n)
   rs = reshape_data_embedding(data$xtrain)
