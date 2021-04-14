@@ -7,10 +7,16 @@ This package contains several surrogates that approximate the
 hyperparameter response surface for several interesting machine learing
 algorithms across several tasks.
 
-| instance    | space   | dims | fidelity | n\_problems |
-|:------------|:--------|-----:|:---------|------------:|
-| NASBench301 | Cat+Dep |   35 | epochs   |           1 |
-| RBV2-SVM    | Mix+Dep |    7 | NA       |         100 |
+| instance    | space   | dims | ntargets | fidelity | n\_problems |
+|:------------|:--------|-----:|---------:|:---------|------------:|
+| NB301       | Cat+Dep |   34 |        2 | epochs   |           1 |
+| LCBench     | Mix     |    7 |        6 | epoch    |          35 |
+| RBv2SVM     | Mix+Dep |    7 |        4 | NA       |          98 |
+| RBv2rpart   | Mix     |    5 |        4 | NA       |          22 |
+| RBv2aknn    | Mix     |    6 |        4 | NA       |          33 |
+| RBv2glmnet  | Mix     |    3 |        4 | NA       |          56 |
+| RBv2ranger  | Mix+Dep |    9 |        4 | NA       |         114 |
+| RBv2xgboost | Mix+Dep |   14 |        4 | NA       |         119 |
 
 Toy test functions:
 
@@ -32,7 +38,7 @@ library(checkmate)
 library(paradox)
 library(mfsurrogates)
 workdir = "/tmp/multifidelity_data/"
-cfg = BenchmarkConfigNB301$new(workdir = workdir)
+cfg = cfgs("nb301", workdir = workdir)
 #cfg$setup()
 ```
 
@@ -45,7 +51,27 @@ ins = OptimInstanceMultiCrit$new(
   objective = cfg$get_objective(),
   terminator = trm("evals", n_evals = 10L)
 )
-# opt("random_search")$optimize(ins)
+#opt("random_search")$optimize(ins)
+```
+
+## LCBench
+
+We first load the config:
+
+``` r
+workdir = "/tmp/multifidelity_data/"
+cfg = cfgs("lcbench", workdir = workdir)
+#cfg$setup()
+```
+
+this config contains our `objective` which we can use to optimize.
+
+``` r
+ins = OptimInstanceMultiCrit$new(
+  objective = cfg$get_objective(),
+  terminator = trm("evals", n_evals = 10L)
+)
+#opt("random_search")$optimize(ins)
 ```
 
 ## Branin
@@ -53,23 +79,17 @@ ins = OptimInstanceMultiCrit$new(
 We first load the config:
 
 ``` r
-library(checkmate)
-library(paradox)
-library(mfsurrogates)
-cfg = BenchmarkConfigBranin$new()
-#plot(cfg, method = "rgl") # or ggplot2
+cfg = cfgs("branin")
 ```
 
 this config contains our `objective` which we can use to optimize.
 
 ``` r
-library("bbotk")
-library("data.table")
-ins = OptimInstanceSingleCrit$new(
+ins = OptimInstanceMultiCrit$new(
   objective = cfg$get_objective(),
   terminator = trm("evals", n_evals = 10L)
 )
-# opt("random_search")$optimize(ins)
+#opt("random_search")$optimize(ins)
 ```
 
 ## Shekel
@@ -77,22 +97,17 @@ ins = OptimInstanceSingleCrit$new(
 We first load the config:
 
 ``` r
-library(checkmate)
-library(paradox)
-library(mfsurrogates)
-cfg = BenchmarkConfigShekel$new()
+cfg = cfgs("shekel")
 ```
 
 this config contains our `objective` which we can use to optimize.
 
 ``` r
-library("bbotk")
-library("data.table")
 ins = OptimInstanceSingleCrit$new(
   objective = cfg$get_objective(),
   terminator = trm("evals", n_evals = 10L)
 )
-# opt("random_search")$optimize(ins)
+#opt("random_search")$optimize(ins)
 ```
 
 ## RandomBotv2 - svm
@@ -100,7 +115,6 @@ ins = OptimInstanceSingleCrit$new(
 We first load the config:
 
 ``` r
-library(mfsurrogates)
 workdir = "/tmp/multifidelity_data/"
 cfg = cfgs("rbv2_svm", workdir = workdir)
 ```
@@ -108,8 +122,6 @@ cfg = cfgs("rbv2_svm", workdir = workdir)
 this config contains our `objective` which we can use to optimize.
 
 ``` r
-library("bbotk")
-library("data.table")
 ins = OptimInstanceMultiCrit$new(
   objective = cfg$get_objective(),
   terminator = trm("evals", n_evals = 10L)
@@ -137,8 +149,6 @@ cfg = cfgs("rbv2_rpart", workdir = workdir)
 this config contains our `objective` which we can use to optimize.
 
 ``` r
-library("bbotk")
-library("data.table")
 ins = OptimInstanceMultiCrit$new(
   objective = cfg$get_objective(),
   terminator = trm("evals", n_evals = 10L)
@@ -158,8 +168,6 @@ cfg = cfgs("rbv2_aknn", workdir = workdir)
 this config contains our `objective` which we can use to optimize.
 
 ``` r
-library("bbotk")
-library("data.table")
 ins = OptimInstanceMultiCrit$new(
   objective = cfg$get_objective(),
   terminator = trm("evals", n_evals = 10L)
@@ -179,8 +187,6 @@ cfg = cfgs("rbv2_glmnet", workdir = workdir)
 this config contains our `objective` which we can use to optimize.
 
 ``` r
-library("bbotk")
-library("data.table")
 ins = OptimInstanceMultiCrit$new(
   objective = cfg$get_objective(),
   terminator = trm("evals", n_evals = 10L)
@@ -200,8 +206,6 @@ cfg = cfgs("rbv2_ranger", workdir = workdir)
 this config contains our `objective` which we can use to optimize.
 
 ``` r
-library("bbotk")
-library("data.table")
 ins = OptimInstanceMultiCrit$new(
   objective = cfg$get_objective(),
   terminator = trm("evals", n_evals = 10L)
@@ -221,8 +225,6 @@ cfg = cfgs("rbv2_xgboost", workdir = workdir)
 this config contains our `objective` which we can use to optimize.
 
 ``` r
-library("bbotk")
-library("data.table")
 ins = OptimInstanceMultiCrit$new(
   objective = cfg$get_objective(),
   terminator = trm("evals", n_evals = 10L)

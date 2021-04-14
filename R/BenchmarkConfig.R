@@ -15,6 +15,7 @@ BenchmarkConfig = R6Class("BenchmarkConfig",
     target_variables = NULL,
     codomain = NULL,
     packages = NULL,
+    # FIXME: think about easier way
     all_task_ids_file = "task_ids.txt",
     eval_task_ids_file = "task_ids.txt",
 
@@ -45,19 +46,19 @@ BenchmarkConfig = R6Class("BenchmarkConfig",
         dir.create(self$subdir)
       }
 
-      if (!test_file_exists(self$param_set_path) || force_download) {
+      if (!(is.null(self$param_set_file)) && (!test_file_exists(self$param_set_path) || force_download)) {
         download.file(paste0(self$download_url, self$param_set_file), destfile = self$param_set_path)
       }
 
-      if (!test_file_exists(self$dicts_path) || force_download) {
+      if (!(is.null(self$dicts_file)) && (!test_file_exists(self$dicts_path) || force_download)) {
         download.file(paste0(self$download_url, self$dicts_file), destfile = self$dicts_path)
       }
 
-      if (!test_file_exists(self$keras_model_path) || force_download) {
+      if (!is.null(self$keras_model_file) & (!test_file_exists(self$keras_model_path) || force_download)) {
         download.file(paste0(self$download_url, self$keras_model_file), destfile = self$keras_model_path)
       }
 
-      if (!test_file_exists(self$onnx_model_path) || force_download) {
+      if (!is.null( self$onnx_model_file) & (!test_file_exists(self$onnx_model_path) || force_download)) {
         download.file(paste0(self$download_url, self$onnx_model_file), destfile = self$onnx_model_path)
       }
       message("setup sucessful.")
