@@ -19,7 +19,7 @@ augment_with_munge = function(data, target_vars, n_augment = 10000, n_max_train 
   }
   news = map(strats, function(stratum) {
     print(paste0("stratum:", stratum))
-    if (!stratum) {
+    if (!is.character(stratum)) {
       dt = copy(data)
     } else {
       dt = copy(data)[data[[stratify]] == stratum,]
@@ -43,7 +43,7 @@ augment_with_munge = function(data, target_vars, n_augment = 10000, n_max_train 
       t = TaskRegr$new("ban", backend = dt, target = target_vars[i])
       l = rng$clone()
       l$train(t)
-      print(l$predict(t)$score(list(msr("regr.rsq"), msr("regr.rmse"))))
+      # print(l$predict(t)$score(list(msr("regr.rsq"), msr("regr.rmse"))))
       p = l$predict(tm)
       p$data$response
     })

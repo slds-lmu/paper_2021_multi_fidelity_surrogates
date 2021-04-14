@@ -139,6 +139,12 @@ and check whether this works
 ## GLMNET
 
 ```{r}
+workdir = paste0(path.expand("~"), "/..", "/LRZ Sync+Share/multifidelity_data/")
+cfg = cfgs('rbv2_glmnet', workdir = workdir)
+cfg$tune_surrogate()
+```
+
+```{r}
 cfg = cfgs('rbv2_glmnet', workdir = workdir)
 model_config = default_model_config()
 cfg$fit_surrogate(model_config = model_config, overwrite = TRUE)

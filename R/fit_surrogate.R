@@ -77,22 +77,21 @@ default_model_config = function() {
 }
 
 
-tune_surrogate = function(self) {
+tune_surrogate = function(self, tune_munge=TRUE) {
   p = ps(
     activation = p_fct(levels = c("elu", "relu")),
     deep_u = p_int(lower = 6, upper = 9, trafo = function(x) rep(2^x, 2)),
     deeper_u = p_int(lower = 6, upper = 9, trafo = function(x) 2^c(x,x,x-1, x-2)), 
     deep = p_lgl(),
     deeper = p_lgl(),
-    munge_n = p_int(lower = 1, upper = 4, trafo = function(x) {if (x == 1L) {NULL} else {10^x}}),
+    munge_n =   p_int(lower = 1, upper = ifelse(tune_munge, 4, 1), trafo = function(x) {if (x == 1L) {NULL} else {10^x}}),
     batchnorm = p_lgl()
   )
   opt = bbotk::opt("random_search")
-  obj = ObjectiveRFun$new(
+  obj = bbotk::ObjectiveRFun$new(
     fun = function(xs) {
       xs = mlr3misc::insert_named(default_model_config(), xs)
       xs$epochs = 1L
-      xs$munge_n = NULL
       ret = fit_surrogate(self, xs, plot = FALSE)
       list(rsq = ret[1,]$rsq, metrics = ret)
     }, 
@@ -100,6 +99,6 @@ tune_surrogate = function(self) {
     codomain = ps(rsq = p_dbl(lower = 0, upper = 1, tags = "maximize")),
     check_values = FALSE
   )
-  ins = bbotk::OptimInstanceSingleCrit$new(obj, terminator = trm("evals", n_evals = 10L))
+  ins = bbotk::OptimInstanceSingleCrit$new(obj, terminator = bbotk::trm("evals", n_evals = 10L))
   opt$optimize(ins)
 }
