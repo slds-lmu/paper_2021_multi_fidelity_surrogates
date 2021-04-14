@@ -201,7 +201,7 @@ benchmark_configs$add("shekel", BenchmarkConfigShekel)
   BenchmarkConfigLCBench = R6Class("BenchmarkConfigLCBench",
   inherit = BenchmarkConfig,
   public = list(
-   initialize = function(id = "NASBench301", workdir) {
+   initialize = function(id = "LCBench", workdir) {
      super$initialize(
        id,
        download_url = "https://syncandshare.lrz.de/dl/fiSd4UWxmx9FRrQtdYeYrxEV/lcbench/",
@@ -213,7 +213,7 @@ benchmark_configs$add("shekel", BenchmarkConfigShekel)
        keras_model_file = "model.hdf5",
        onnx_model_file = "model.onnx",
        budget_param = "epoch",
-       target_variables = c("val_accuracy", "val_cross_entropy","val_balanced_accuracy","test_cross_entropy","test_balanced_accuracy", "time"),
+       target_variables = c("val_accuracy", "val_cross_entropy", "val_balanced_accuracy", "test_cross_entropy", "test_balanced_accuracy", "time"),
        codomain = ps(
          val_accuracy = p_dbl(lower = 0, upper = 1, tags = "maximize"),
          val_cross_entropy = p_dbl(lower = 0, upper = 1, tags = "maximize"),
@@ -450,10 +450,10 @@ BenchmarkConfigRBv2xgboost = R6Class("BenchmarkConfigRBv2xgboost",
                                           lambda = p_dbl(lower = -10, upper = 10, trafo = function(x) 2^x),
                                           alpha = p_dbl(lower = -10, upper = 10, trafo = function(x) 2^x),
                                           subsample = p_dbl(lower = 0.1, upper = 1),
-                                          max_depth = p_int(lower = 1, upper = 15), depends = booster %in% c("dart", "gbtree"),
+                                          max_depth = p_int(lower = 1, upper = 15, depends = booster %in% c("dart", "gbtree")),
                                           min_child_weight = p_dbl(lower = 0, upper = 7, trafo = function(x) 2^x, depends = booster %in% c("dart", "gbtree")),
                                           colsample_bytree = p_dbl(lower = 0.01, upper = 1, depends = booster %in% c("dart", "gbtree")),
-                                          colsample_bylevel = p_dbl("", lower = 0.01, upper = 1, depends = booster %in% c("dart", "gbtree")),
+                                          colsample_bylevel = p_dbl(lower = 0.01, upper = 1, depends = booster %in% c("dart", "gbtree")),
                                           rate_drop = p_dbl(lower = 0, upper = 1, depends = booster == "dart"),
                                           skip_drop = p_dbl(lower =  0, upper = 1, depends = booster == "dart"),
                                           num.impute.selected.cpo = p_fct(levels = c("impute.mean", "impute.median", "impute.hist")),

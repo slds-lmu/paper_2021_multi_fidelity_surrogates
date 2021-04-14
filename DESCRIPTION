@@ -22,7 +22,7 @@ Imports:
     tensorflow,
     mlr3,
     mlr3misc,
-    paradox,
+    paradox (>= 0.7.1),
     R6,
     mlr3keras,
     reticulate,

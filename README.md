@@ -31,11 +31,9 @@ We first load the config:
 library(checkmate)
 library(paradox)
 library(mfsurrogates)
-cfg = BenchmarkConfigNB301$new(
-  workdir = "/tmp/"
-)
-cfg$setup()
-#> setup sucessful.
+workdir = "/tmp/multifidelity_data/"
+cfg = BenchmarkConfigNB301$new(workdir = workdir)
+#cfg$setup()
 ```
 
 this config contains our `objective` which we can use to optimize.
@@ -46,8 +44,8 @@ library("data.table")
 ins = OptimInstanceMultiCrit$new(
   objective = cfg$get_objective(),
   terminator = trm("evals", n_evals = 10L)
- )
-# opt('random_search')$optimize(ins)
+)
+# opt("random_search")$optimize(ins)
 ```
 
 ## Branin
@@ -70,8 +68,8 @@ library("data.table")
 ins = OptimInstanceSingleCrit$new(
   objective = cfg$get_objective(),
   terminator = trm("evals", n_evals = 10L)
- )
-# opt('random_search')$optimize(ins)
+)
+# opt("random_search")$optimize(ins)
 ```
 
 ## Shekel
@@ -93,17 +91,17 @@ library("data.table")
 ins = OptimInstanceSingleCrit$new(
   objective = cfg$get_objective(),
   terminator = trm("evals", n_evals = 10L)
- )
-# opt('random_search')$optimize(ins)
+)
+# opt("random_search")$optimize(ins)
 ```
 
-## RandomBotv2 - SVM
+## RandomBotv2 - svm
 
 We first load the config:
 
 ``` r
 library(mfsurrogates)
-workdir = paste0(path.expand("~"), "/LRZ Sync+Share/multifidelity_data/")
+workdir = "/tmp/multifidelity_data/"
 cfg = cfgs("rbv2_svm", workdir = workdir)
 ```
 
@@ -116,7 +114,7 @@ ins = OptimInstanceMultiCrit$new(
   objective = cfg$get_objective(),
   terminator = trm("evals", n_evals = 10L)
 )
-opt('random_search')$optimize(ins)
+#opt("random_search")$optimize(ins)
 ```
 
 Example to select target variables and a task:
@@ -132,7 +130,7 @@ objective$constants
 We first load the config:
 
 ``` r
-workdir = paste0(path.expand("~"), "/..", "/LRZ Sync+Share/multifidelity_data/")
+workdir = "/tmp/multifidelity_data/"
 cfg = cfgs("rbv2_rpart", workdir = workdir)
 ```
 
@@ -145,5 +143,89 @@ ins = OptimInstanceMultiCrit$new(
   objective = cfg$get_objective(),
   terminator = trm("evals", n_evals = 10L)
 )
-opt('random_search')$optimize(ins)
+#opt("random_search")$optimize(ins)
+```
+
+## RandomBotv2 - aknn
+
+We first load the config:
+
+``` r
+workdir = "/tmp/multifidelity_data/"
+cfg = cfgs("rbv2_aknn", workdir = workdir)
+```
+
+this config contains our `objective` which we can use to optimize.
+
+``` r
+library("bbotk")
+library("data.table")
+ins = OptimInstanceMultiCrit$new(
+  objective = cfg$get_objective(),
+  terminator = trm("evals", n_evals = 10L)
+)
+#opt("random_search")$optimize(ins)
+```
+
+## RandomBotv2 - glmnet
+
+We first load the config:
+
+``` r
+workdir = "/tmp/multifidelity_data/"
+cfg = cfgs("rbv2_glmnet", workdir = workdir)
+```
+
+this config contains our `objective` which we can use to optimize.
+
+``` r
+library("bbotk")
+library("data.table")
+ins = OptimInstanceMultiCrit$new(
+  objective = cfg$get_objective(),
+  terminator = trm("evals", n_evals = 10L)
+)
+#opt("random_search")$optimize(ins)
+```
+
+## RandomBotv2 - ranger
+
+We first load the config:
+
+``` r
+workdir = "/tmp/multifidelity_data/"
+cfg = cfgs("rbv2_ranger", workdir = workdir)
+```
+
+this config contains our `objective` which we can use to optimize.
+
+``` r
+library("bbotk")
+library("data.table")
+ins = OptimInstanceMultiCrit$new(
+  objective = cfg$get_objective(),
+  terminator = trm("evals", n_evals = 10L)
+)
+#opt("random_search")$optimize(ins)
+```
+
+## RandomBotv2 - xgboost
+
+We first load the config:
+
+``` r
+workdir = "/tmp/multifidelity_data/"
+cfg = cfgs("rbv2_xgboost", workdir = workdir)
+```
+
+this config contains our `objective` which we can use to optimize.
+
+``` r
+library("bbotk")
+library("data.table")
+ins = OptimInstanceMultiCrit$new(
+  objective = cfg$get_objective(),
+  terminator = trm("evals", n_evals = 10L)
+)
+#opt("random_search")$optimize(ins)
 ```
