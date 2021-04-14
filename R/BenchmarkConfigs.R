@@ -125,64 +125,64 @@ benchmark_configs$add("branin", BenchmarkConfigBranin)
 
 #' @export
 BenchmarkConfigLCBench = R6Class("BenchmarkConfigLCBench",
-                               inherit = BenchmarkConfig,
-                               public = list(
-                                 initialize = function(id = "NASBench301", workdir) {
-                                   super$initialize(
-                                     id,
-                                     download_url = "https://syncandshare.lrz.de/dl/fiSd4UWxmx9FRrQtdYeYrxEV/lcbench/",
-                                     workdir = workdir,
-                                     model_name = "lcbench",
-                                     param_set_file = "param_set.rds",
-                                     data_file = "data.rds",
-                                     dicts_file = "dicts.rds",
-                                     keras_model_file = "model.hdf5",
-                                     onnx_model_file = "model.onnx",
-                                     budget_param = "epoch",
-                                     target_variables = c("val_accuracy", "val_cross_entropy","val_balanced_accuracy","test_cross_entropy","test_balanced_accuracy", "time"),
-                                     codomain = ps(
-                                       val_accuracy = p_dbl(lower = 0, upper = 1, tags = "maximize"),
-                                       val_cross_entropy = p_dbl(lower = 0, upper = 1, tags = "maximize"),
-                                       val_balanced_accuracy = p_dbl(lower = 0, upper = 1, tags = "maximize"),
-                                       test_cross_entropy = p_dbl(lower = 0, upper = 1, tags = "maximize"),
-                                       test_balanced_accuracy = p_dbl(lower = 0, upper = 1, tags = "maximize"),
-                                       time = p_dbl(lower = 0, upper = 1, tags = "minimize")
-                                     ),
-                                     packages = NULL
-                                   )
-                                 }
-                               ),
-                               active = list(
-                                 data = function() {
-                                   if (is.null(private$.data)) private$.data = preproc_data_lcbench(self)
-                                   private$.data
-                                 },
-                                 param_set = function() {
-                                   ps = ParamSet$new(list(
-                                     ParamFct$new("OpenML_task_id", levels = c(
-                                       "3945",   "7593",  "34539", "126025", "126026", "126029", "146212", "167083",
-                                       "167104", "167149", "167152", "167161", "167168", "167181", "167184", "167185",
-                                       "167190", "167200", "167201", "168329", "168330", "168331", "168335", "168868",
-                                       "168908", "168910", "189354", "189862", "189865", "189866", "189873", "189905",
-                                       "189906", "189908", "189909")),
-                                     ParamInt$new("epoch", lower = 1L, upper = 52L, tags = "budget"),
-                                     ParamDbl$new("batch_size", lower = log(16L), upper = log(512L)),
-                                     ParamDbl$new("learning_rate", lower = log(1e-4), upper = log(1e-1)),
-                                     ParamDbl$new("momentum", lower = 0.1, upper = 0.9),
-                                     ParamDbl$new("weight_decay", lower = 1e-5, upper = 1e-1),
-                                     ParamInt$new("num_layers", lower = 1L, upper = 5L),
-                                     ParamDbl$new("max_units", lower = log(64L), upper = log(1024L)),
-                                     ParamDbl$new("max_dropout", lower = 0, upper = 1))
-                                   )
-                                   ps$trafo = function(x, param_set) {
-                                     x$batch_size = as.integer(round(exp(x$batch_size)))
-                                     x$learning_rate = exp(x$learning_rate)
-                                     x$max_units = as.integer(round(exp(x$max_units)))
-                                     x
-                                   }
-                                   ps
-                                 }
-                               )
+  inherit = BenchmarkConfig,
+  public = list(
+   initialize = function(id = "NASBench301", workdir) {
+     super$initialize(
+       id,
+       download_url = "https://syncandshare.lrz.de/dl/fiSd4UWxmx9FRrQtdYeYrxEV/lcbench/",
+       workdir = workdir,
+       model_name = "lcbench",
+       param_set_file = "param_set.rds",
+       data_file = "data.rds",
+       dicts_file = "dicts.rds",
+       keras_model_file = "model.hdf5",
+       onnx_model_file = "model.onnx",
+       budget_param = "epoch",
+       target_variables = c("val_accuracy", "val_cross_entropy","val_balanced_accuracy","test_cross_entropy","test_balanced_accuracy", "time"),
+       codomain = ps(
+         val_accuracy = p_dbl(lower = 0, upper = 1, tags = "maximize"),
+         val_cross_entropy = p_dbl(lower = 0, upper = 1, tags = "maximize"),
+         val_balanced_accuracy = p_dbl(lower = 0, upper = 1, tags = "maximize"),
+         test_cross_entropy = p_dbl(lower = 0, upper = 1, tags = "maximize"),
+         test_balanced_accuracy = p_dbl(lower = 0, upper = 1, tags = "maximize"),
+         time = p_dbl(lower = 0, upper = 1, tags = "minimize")
+       ),
+       packages = NULL
+     )
+   }
+  ),
+  active = list(
+   data = function() {
+     if (is.null(private$.data)) private$.data = preproc_data_lcbench(self)
+     private$.data
+   },
+   param_set = function() {
+     ps = ParamSet$new(list(
+       ParamFct$new("OpenML_task_id", levels = c(
+         "3945",   "7593",  "34539", "126025", "126026", "126029", "146212", "167083",
+         "167104", "167149", "167152", "167161", "167168", "167181", "167184", "167185",
+         "167190", "167200", "167201", "168329", "168330", "168331", "168335", "168868",
+         "168908", "168910", "189354", "189862", "189865", "189866", "189873", "189905",
+         "189906", "189908", "189909")),
+       ParamInt$new("epoch", lower = 1L, upper = 52L, tags = "budget"),
+       ParamDbl$new("batch_size", lower = log(16L), upper = log(512L)),
+       ParamDbl$new("learning_rate", lower = log(1e-4), upper = log(1e-1)),
+       ParamDbl$new("momentum", lower = 0.1, upper = 0.9),
+       ParamDbl$new("weight_decay", lower = 1e-5, upper = 1e-1),
+       ParamInt$new("num_layers", lower = 1L, upper = 5L),
+       ParamDbl$new("max_units", lower = log(64L), upper = log(1024L)),
+       ParamDbl$new("max_dropout", lower = 0, upper = 1))
+     )
+     ps$trafo = function(x, param_set) {
+       x$batch_size = as.integer(round(exp(x$batch_size)))
+       x$learning_rate = exp(x$learning_rate)
+       x$max_units = as.integer(round(exp(x$max_units)))
+       x
+     }
+     ps
+   }
+  )
 )
 #' @include BenchmarkConfig.R
 benchmark_configs$add("lcbench", BenchmarkConfigLCBench)
@@ -389,7 +389,6 @@ BenchmarkConfigRBv2xgboost = R6Class("BenchmarkConfigRBv2xgboost",
                                       }
                                     )
 )
-
 #' @include BenchmarkConfig.R
 benchmark_configs$add("rbv2_xgboost", BenchmarkConfigRBv2xgboost)
 

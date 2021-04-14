@@ -16,7 +16,7 @@ knitr::opts_chunk$set(
 
 
 ```{r, eval=FALSE}
-# One-time setup 
+# One-time setup
 library(reticulate)
 conda_create(
   envname = "mlr3keras",
@@ -161,4 +161,13 @@ model_config$epochs = 1L
 
 ```{r}
 save_task_ids(cfg)
+```
+
+
+## Determining task_ids for evaluation
+
+```{r}
+map(cfgs()$keys()[4:9], function(x) {
+  cfgs(x)$get_task_id_param()$levels
+})
 ```
