@@ -35,7 +35,7 @@ Toy test functions:
 ```{r, echo=FALSE}
 dt = data.frame(
   instance = c("Branin", "Shekel"),
-  space = c("Num", "NUM"),
+  space = c("Num", "Num"),
   dims = c(2L, 4L),
   fidelity = c("fidelity", "fidelity"),
   n_problems = c(1L, 1L)

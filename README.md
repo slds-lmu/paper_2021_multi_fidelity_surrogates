@@ -17,7 +17,7 @@ Toy test functions:
 | instance | space | dims | fidelity | n\_problems |
 |:---------|:------|-----:|:---------|------------:|
 | Branin   | Num   |    2 | fidelity |           1 |
-| Shekel   | NUM   |    4 | fidelity |           1 |
+| Shekel   | Num   |    4 | fidelity |           1 |
 
 # Overview
 
