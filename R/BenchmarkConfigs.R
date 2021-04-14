@@ -36,7 +36,6 @@ benchmark_configs$add("nb301", BenchmarkConfigNB301)
 
 
 
-
 #' @export
 # with fidelity = 0 3 global optima that vanish until fidelity 1 only a single global optimum; idea from
 # Forrester, A., Sobester, A., & Keane, A. (2008). Engineering design via surrogate modelling: a practical guide. Wiley.
@@ -51,7 +50,7 @@ BenchmarkConfigBranin = R6Class("BenchmarkConfigBranin",
         id,
         download_url = NULL,
         workdir = NULL,
-        model_name = NULL,
+        model_name = "branin",
         param_set_file = NULL,
         data_file = NULL,
         dicts_file = NULL,
@@ -89,7 +88,7 @@ BenchmarkConfigBranin = R6Class("BenchmarkConfigBranin",
     plot = function(method = c("ggplot2", "rgl")) {
       method = match.arg(method, choices = c("ggplot2", "rgl"))
       objective = self$get_objective()
-       design = generate_design_grid(objective$domain, param_resolutions = c(x1 = 100L, x2 = 100L, fidelity = 11))$data
+       design = generate_design_grid(objective$domain, param_resolutions = c(x1 = 100L, x2 = 100L, fidelity = 11L))$data
       for (f in unique(design$fidelity)) {
         tmp = design[fidelity == f]
         tmp = cbind(tmp, objective$eval_dt(tmp))
@@ -102,7 +101,7 @@ BenchmarkConfigBranin = R6Class("BenchmarkConfigBranin",
         } else {
           requireNamespace("rgl")
           # rgl
-          col = colorspace::diverging_hcl(20)[cut(tmp$y, breaks = 50L)]
+          col = colorspace::diverging_hcl(50L)[cut(tmp$y, breaks = 50L)]
           rgl::plot3d(x = tmp$x1, y = tmp$x2, z = tmp$y, col = col, xlab = "x1", ylab = "x2", zlab = "y", main = gsub("x", f, "fidelity of x"))
         }
       }
@@ -120,6 +119,80 @@ BenchmarkConfigBranin = R6Class("BenchmarkConfigBranin",
 )
 #' @include BenchmarkConfig.R
 benchmark_configs$add("branin", BenchmarkConfigBranin)
+
+
+
+#' @export
+# https://www.sfu.ca/~ssurjano/shekel.html
+# 4d function with m (default = 10) local minima
+# fidelity parameter replaces x4 (scaled from [0, 1] to [0, 4[)
+# global minumum at m = 10: x* = (4, 4, 4, 4) f(x) = -10.536
+BenchmarkConfigShekel = R6Class("BenchmarkConfigShekel",
+  inherit = BenchmarkConfig,
+  public = list(
+    initialize = function(id = "Shekel") {
+      super$initialize(
+        id,
+        download_url = NULL,
+        workdir = NULL,
+        model_name = "shekel",
+        param_set_file = NULL,
+        data_file = NULL,
+        dicts_file = NULL,
+        keras_model_file = NULL,
+        onnx_model_file = NULL,
+        budget_param = "fidelity",
+        target_variables = "y",
+        codomain = ps(
+          y = p_dbl(lower = -Inf, upper = Inf, tags = "minimize")
+        ),
+        packages = NULL
+      )
+    },
+
+    setup = function() {
+      message("no setup necessary.")
+    },
+
+    get_objective = function(m = 10L) {
+      assert_int(m, lower = 1L, upper = 20L)
+      ObjectiveRFunDt$new(
+        fun = function(xdt) {
+          xdt[["fidelity"]] =  4 * xdt[["fidelity"]]  # scale to from [0, 1] to [0, 4]
+          xdt_mat = as.matrix(xdt)
+          b = 0.1 * c(1, 2, 2, 4, 4, 6, 3, 7, 5, 5)
+          C = c(4.0, 1.0, 8.0, 6.0, 3.0, 2.0, 5.0, 8.0, 6.0, 7.0,
+                4.0, 1.0, 8.0, 6.0, 7.0, 9.0, 3.0, 1.0, 2.0, 3.6,
+                4.0, 1.0, 8.0, 6.0, 3.0, 2.0, 5.0, 8.0, 6.0, 7.0,
+                4.0, 1.0, 8.0, 6.0, 7.0, 9.0, 3.0, 1.0, 2.0, 3.6)
+          C = matrix(C, nrow = 4L, ncol = 10L, byrow = TRUE)
+          Ct = t(C)
+
+          data.table(y = map_dbl(seq_len(NROW(xdt_mat)), function(i) {
+            xxmat = matrix(rep(xdt_mat[i, ], times = m), nrow = m, ncol = 4L, byrow = TRUE)
+            inner = rowSums((xxmat - Ct[, 1:4]) ^ 2)
+             - sum(1 / (inner + b))
+          }))
+
+        },
+        domain = self$param_set,
+        codomain = self$codomain
+      )
+    }
+  ),
+  active = list(
+    param_set = function() {
+      ps(
+        x1 = p_dbl(lower = 0, upper = 10),
+        x2 = p_dbl(lower = 0, upper = 10),
+        x3 = p_dbl(lower = 0, upper = 10),
+        fidelity = p_dbl(lower = 0L, upper = 1L)
+      )
+    }
+  )
+)
+#' @include BenchmarkConfig.R
+benchmark_configs$add("shekel", BenchmarkConfigShekel)
 
 
 
@@ -150,6 +223,9 @@ BenchmarkConfigLCBench = R6Class("BenchmarkConfigLCBench",
        ),
        packages = NULL
      )
+   },
+   get_task_ids = function() {
+     self$param_set$params$OpenML_task_id$levels
    }
   ),
   active = list(
@@ -225,7 +301,7 @@ BenchmarkConfigRBv2SVM = R6Class("BenchmarkConfigRBv2SVM",
         degree = p_int(lower = 2, upper = 5, depends = kernel == "polynomial"),
         shrinking = p_lgl(),
         num.impute.selected.cpo = p_fct(levels = c("impute.mean", "impute.median", "impute.hist")),
-        task_id = self$get_task_id_param()
+        task_id = p_fct(levels = as.character(self$get_task_ids()))
       )
     },
     data = function(x) {
@@ -277,7 +353,7 @@ BenchmarkConfigRBv2ranger = R6Class("BenchmarkConfigRBv2ranger",
         splitrule = p_fct(levels = c("gini", "extratrees")),
         num.random.splits = p_int(lower = 1, upper = 100, default = 1L, depends = splitrule == "extratrees"),
         num.impute.selected.cpo = p_fct(levels = c("impute.mean", "impute.median", "impute.hist")),
-        task_id = self$get_task_id_param()
+        task_id = p_fct(levels = as.character(self$get_task_ids()))
       )
     },
     data = function(x) {
@@ -323,7 +399,7 @@ BenchmarkConfigRBv2glmnet = R6Class("BenchmarkConfigRBv2glmnet",
                                           alpha = p_dbl(lower = 0, upper = 1, default = 1, trafo = function(x) max(0, min(1, x))),
                                           s = p_dbl(lower = -10, upper = 10, default = 0, trafo = function(x) 2^x),
                                           num.impute.selected.cpo = p_fct(levels = c("impute.mean", "impute.median", "impute.hist")),
-                                          task_id = self$get_task_id_param()
+                                          task_id = p_fct(levels = as.character(self$get_task_ids()))
                                         )
                                       },
                                       data = function(x) {
@@ -380,7 +456,7 @@ BenchmarkConfigRBv2xgboost = R6Class("BenchmarkConfigRBv2xgboost",
                                           rate_drop = p_dbl(lower = 0, upper = 1, depends = booster == "dart"),
                                           skip_drop = p_dbl(lower =  0, upper = 1, depends = booster == "dart"),
                                           num.impute.selected.cpo = p_fct(levels = c("impute.mean", "impute.median", "impute.hist")),
-                                          task_id = self$get_task_id_param()
+                                          task_id = p_fct(levels = as.character(self$get_task_ids()))
                                         )
                                       },
                                       data = function(x) {
@@ -426,7 +502,7 @@ BenchmarkConfigRBv2rpart = R6Class("BenchmarkConfigRBv2rpart",
                                           minbucket = p_int(lower = 1, upper = 100, default = 1),
                                           minsplit = p_int(lower = 1, upper = 100, default = 20),
                                           num.impute.selected.cpo = p_fct(levels = c("impute.mean", "impute.median", "impute.hist")),
-                                          task_id = self$get_task_id_param()
+                                          task_id = p_fct(levels = as.character(self$get_task_ids()))
                                         )
                                       },
                                       data = function(x) {
@@ -475,7 +551,7 @@ BenchmarkConfigRBv2aknn = R6Class("BenchmarkConfigRBv2aknn",
                                           ef = p_dbl(lower = 3, upper = 8, trafo = function(x) round(2^x)),
                                           ef_construction = p_dbl(lower = 4, upper = 9, trafo = function(x) round(2^x)),
                                           num.impute.selected.cpo = p_fct(levels = c("impute.mean", "impute.median", "impute.hist")),
-                                          task_id = self$get_task_id_param()
+                                          task_id = p_fct(levels = as.character(self$get_task_ids()))
                                         )
                                       },
                                       data = function(x) {

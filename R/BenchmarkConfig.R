@@ -15,11 +15,13 @@ BenchmarkConfig = R6Class("BenchmarkConfig",
     target_variables = NULL,
     codomain = NULL,
     packages = NULL,
+    all_task_ids_file = "task_ids.txt",
+    eval_task_ids_file = "task_ids.txt",
 
     initialize = function(id, download_url, workdir, model_name, param_set_file = NULL, data_file, dicts_file, keras_model_file, onnx_model_file, budget_param, target_variables, codomain, packages) {
       self$id = assert_string(id)
       self$download_url = download_url
-      self$workdir = workdir  # FIXME: assure that this end on /
+      self$workdir = workdir  # FIXME: assure that this ends on /
       self$model_name = model_name
       self$subdir = if (!is.null(workdir) && !is.null(model_name)) paste0(workdir, model_name, "/") else NULL
       self$param_set_file = param_set_file
@@ -63,6 +65,7 @@ BenchmarkConfig = R6Class("BenchmarkConfig",
 
     get_objective = function(task = NULL, target_variables = NULL) {
       assert_subset(target_variables, choices = self$target_variables, empty.ok = TRUE)
+      assert_subset(task, choices = self$get_task_ids(), empty.ok = TRUE)
       codomain = self$codomain$clone(deep = TRUE)
       if (!is.null(target_variables)) {
         codomain = ParamSet$new(codomain$params[target_variables])
@@ -72,24 +75,32 @@ BenchmarkConfig = R6Class("BenchmarkConfig",
         trafo_dict = readRDS(self$dicts_path),
         domain = self$param_set,
         full_codomain_names = self$codomain$ids(),  # needed to set the names
-        codomain = codomain
+        codomain = codomain,
+        task = task
       )
     },
     save_trafo_dict = function() {
         trafos = c(
           map(keep(self$data$xtrain, is.factor), function(x) {
-            dt = data.table(level = levels(x), int = as.integer(factor(levels(x))), key = "level")
-            if ("None" %in% dt$level) dt = rbind(dt, data.table(level = "None", int = max(dt$int)+1L))
+            dt = data.table(level = levels(x), int = as.integer(factor(levels(x))) - 1L, key = "level")
+            # if (!("None" %in% dt$level)) dt = rbind(dt, data.table(level = "None", int = max(dt$int)+1L))
             dt
           }),
           self$data$trafos
         )
+        cat("Trafo:\n")
+        print(trafos)
         saveRDS(trafos, self$dicts_path)
     },
-    get_task_id_param = function() {
+    get_task_ids = function(eval=FALSE) {
+      if (eval) {
+        file = self$all_task_ids_file
+      } else {
+        file = self$eval_task_ids_file
+      }
       if (startsWith(self$model_name, "rbv2")) {
-        levels = scan(paste0(self$subdir, "task_ids.txt"))
-        return(p_fct(levels = levels))
+        levels = levels(as.factor(scan(paste0(self$subdir, file), quiet = TRUE)))
+        return(levels)
       }
       return(NULL)
     },
