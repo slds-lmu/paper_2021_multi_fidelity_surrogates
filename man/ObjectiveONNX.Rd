@@ -43,7 +43,7 @@ Creates a new instance of this [R6][R6::R6Class] class.
   active_session = TRUE,
   properties = character(),
   constants = ParamSet$new(),
-  check_values = TRUE
+  check_values = FALSE
 )}\if{html}{\out{</div>}}
 }
 

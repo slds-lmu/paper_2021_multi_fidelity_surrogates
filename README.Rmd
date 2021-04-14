@@ -13,12 +13,11 @@ knitr::opts_chunk$set(
 )
 ```
 
+
 # Surrogates for Multi-Fidelity Problems
 
 This package contains several surrogates that approximate the hyperparameter response surface for
 several interesting machine learing algorithms across several tasks.
-
-
 
 ```{r, echo=FALSE}
 dt = data.frame(
@@ -35,15 +34,14 @@ Toy test functions:
 
 ```{r, echo=FALSE}
 dt = data.frame(
-  instance = c("Branin"),
-  space = c("Num"),
-  dims = c(2L),
-  fidelity = c("fidelity"),
-  n_problems = c(1L)
+  instance = c("Branin", "Shekel"),
+  space = c("Num", "NUM"),
+  dims = c(2L, 4L),
+  fidelity = c("fidelity", "fidelity"),
+  n_problems = c(1L, 1L)
 )
 knitr::kable(dt)
 ```
-
 
 
 # Overview
@@ -100,6 +98,28 @@ ins = OptimInstanceSingleCrit$new(
 # opt('random_search')$optimize(ins)
 ```
 
+## Shekel
+
+We first load the config:
+
+```{r}
+library(checkmate)
+library(paradox)
+library(mfsurrogates)
+cfg = BenchmarkConfigShekel$new()
+```
+
+this config contains our `objective` which we can use to optimize.
+
+```{r}
+library("bbotk")
+library("data.table")
+ins = OptimInstanceSingleCrit$new(
+  objective = cfg$get_objective(),
+  terminator = trm("evals", n_evals = 10L)
+ )
+# opt('random_search')$optimize(ins)
+```
 
 ## RandomBotv2 - SVM
 
