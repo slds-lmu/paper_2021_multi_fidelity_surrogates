@@ -1,9 +1,9 @@
 # FIXME: This was not started yet
-preproc_data_lcbench = function(config, seed = 123L, n_max = 10^5) {
+preproc_data_lcbench = function(config, seed = 123L, n_max = 10^5, frac=.1) {
   set.seed(seed)
   path = config$data_path
   dt = readRDS(path)
-  tt = split_by_col(dt, by = "OpenML_task_id")
+  tt = split_by_col(dt, by = "OpenML_task_id", frac=frac)
   
   # Preproc train data
   train = tt$train
@@ -17,12 +17,17 @@ preproc_data_lcbench = function(config, seed = 123L, n_max = 10^5) {
   y = as.matrix(train[, config$target_variables, with = FALSE])
   train = train[, (config$target_variables) := NULL]
   
-  # Preproc test data
-  oob = tt$test
-  oob = preproc_iid(oob)
-  oob[, names(trafos) := pmap(list(.SD, trafos), function(x, t) {t$trafo(x)}), .SDcols = names(trafos)]
-  ytest = as.matrix(oob[, config$target_variables, with = FALSE])
-  oob = oob[, (config$target_variables) := NULL]
+  if (frac) {
+    # Preproc test data
+    oob = tt$test
+    oob = preproc_iid(oob)
+    oob[, names(trafos) := pmap(list(.SD, trafos), function(x, t) {t$trafo(x)}), .SDcols = names(trafos)]
+    ytest = as.matrix(oob[, config$target_variables, with = FALSE])
+    oob = oob[, (config$target_variables) := NULL]
+  } else {
+    oob = NULL
+    ytest = NULL
+  }
   
   list(
     xtrain = train,

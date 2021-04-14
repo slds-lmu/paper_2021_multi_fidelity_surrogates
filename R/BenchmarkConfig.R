@@ -112,6 +112,9 @@ BenchmarkConfig = R6Class("BenchmarkConfig",
         self$save_trafo_dict()
       }
       fit_surrogate(self, model_config, overwrite = overwrite, plot = plot)
+    },
+    tune_surrogate = function(model_config = default_model_config(), overwrite = FALSE, plot = TRUE) {
+      tune_surrogate(self)
     }
   ),
   active = list(

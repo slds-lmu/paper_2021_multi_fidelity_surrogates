@@ -76,10 +76,16 @@ The same holds for all other models:
 ## LCBench
 
 ```{r}
+workdir = paste0(path.expand("~"), "/..", "/LRZ Sync+Share/multifidelity_data/")
+cfg = cfgs('lcbench', workdir = workdir)
+cfg$tune_surrogate()
+```
+
+```{r}
 cfg = cfgs('lcbench', workdir = workdir)
 model_config = default_model_config()
 model_config$epochs = 1L
-cfg$fit_surrogate(model_config = model_config)
+cfg$fit_surrogate(model_config = model_config, overwrite = TRUE)
 ```
 
 
