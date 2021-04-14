@@ -36,7 +36,6 @@ benchmark_configs$add("nb301", BenchmarkConfigNB301)
 
 
 
-
 #' @export
 # with fidelity = 0 3 global optima that vanish until fidelity 1 only a single global optimum; idea from
 # Forrester, A., Sobester, A., & Keane, A. (2008). Engineering design via surrogate modelling: a practical guide. Wiley.
@@ -198,7 +197,7 @@ benchmark_configs$add("shekel", BenchmarkConfigShekel)
 
 
 #' @export
-  BenchmarkConfigLCBench = R6Class("BenchmarkConfigLCBench",
+BenchmarkConfigLCBench = R6Class("BenchmarkConfigLCBench",
   inherit = BenchmarkConfig,
   public = list(
    initialize = function(id = "LCBench", workdir) {
@@ -224,7 +223,7 @@ benchmark_configs$add("shekel", BenchmarkConfigShekel)
        ),
        packages = NULL
      )
-   }, 
+   },
    get_task_ids = function() {
      self$param_set$params$OpenML_task_id$levels
    }
@@ -466,7 +465,6 @@ BenchmarkConfigRBv2xgboost = R6Class("BenchmarkConfigRBv2xgboost",
                                       }
                                     )
 )
-
 #' @include BenchmarkConfig.R
 benchmark_configs$add("rbv2_xgboost", BenchmarkConfigRBv2xgboost)
 

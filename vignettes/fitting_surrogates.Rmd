@@ -16,7 +16,7 @@ knitr::opts_chunk$set(
 
 
 ```{r, eval=FALSE}
-# One-time setup 
+# One-time setup
 library(reticulate)
 conda_create(
   envname = "mlr3keras",
@@ -120,7 +120,7 @@ And we save the task_ids to a text file.
 save_task_ids(cfg)
 ```
 
-and check whether this works 
+and check whether this works
 
 ```{r}
   obj = cfg$get_objective()
@@ -206,14 +206,10 @@ cfg$fit_surrogate(model_config = model_config, overwrite = TRUE)
 save_task_ids(cfg)
 ```
 
-
-## Determining train and configuration task ids
+## Determining task_ids for evaluation
 
 ```{r}
-ll = setNames(map(cfgs()$keys(), function(x) {
-  cfgs(x, workdir = workdir)$get_task_ids()
-}), cfgs()$keys())
-ll = Filter(Negate(is.null), ll)
-table(unlist(ll))
+map(cfgs()$keys()[4:9], function(x) {
+  cfgs(x)$get_task_id_param()$levels
+})
 ```
-
