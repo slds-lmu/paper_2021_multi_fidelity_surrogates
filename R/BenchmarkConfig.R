@@ -15,14 +15,14 @@ BenchmarkConfig = R6Class("BenchmarkConfig",
     target_variables = NULL,
     codomain = NULL,
     packages = NULL,
-    # FIXME: think about easier way
+    # FIXME: think about easier an way
     all_task_ids_file = "task_ids.txt",
     eval_task_ids_file = "task_ids.txt",
 
     initialize = function(id, download_url, workdir, model_name, param_set_file = NULL, data_file, dicts_file, keras_model_file, onnx_model_file, budget_param, target_variables, codomain, packages) {
       self$id = assert_string(id)
       self$download_url = download_url
-      self$workdir = workdir  # FIXME: assure that this ends on /
+      self$workdir = if (!is.null(workdir)) if (!endsWith(workdir, "/")) paste0(workdir, "/") else workdir
       self$model_name = model_name
       self$subdir = if (!is.null(workdir) && !is.null(model_name)) paste0(workdir, model_name, "/") else NULL
       self$param_set_file = param_set_file
@@ -105,6 +105,13 @@ BenchmarkConfig = R6Class("BenchmarkConfig",
       }
       return(NULL)
     },
+    print = function(...) {
+      catf("BenchmarkConfig: <%s>", self$id)
+      catf('Target variables: "%s"', self$target_variables)
+      catf('Budget parameter: "%s"', self$budget_param)
+      self$param_set$print()
+      self$codomain$print()
+    },
     plot = function() {
       stop("Abstract")
     },
@@ -154,7 +161,7 @@ BenchmarkConfig = R6Class("BenchmarkConfig",
 #' @description
 #' A simple [mlr3misc::Dictionary] storing objects of class [BenchmarkConfig].
 #'
-#' For a more convenient way to retrieve and construct tasks, see [tsk()]/[tsks()].
+#' For a more convenient way to retrieve and construct benchmarks, see [cfgs()]/[cfgs()].
 #'
 #' @section Methods:
 #' See [mlr3misc::Dictionary].

@@ -25,8 +25,8 @@ dt = data.frame(
                "RBv2glmnet", "RBv2ranger", "RBv2xgboost"),
   space = c("Cat+Dep", "Mix", "Mix+Dep", "Mix", "Mix", "Mix", "Mix+Dep",
             "Mix+Dep"),
-  dims = c(34L, 7L, 7L, 5L, 6L, 3L, 9L, 14L),
-  ntargets = c(2L, 6L, 4L, 4L, 4L, 4L, 4L, 4L),
+  n_dims = c(34L, 7L, 7L, 5L, 6L, 3L, 9L, 14L),
+  n_targets = c(2L, 6L, 4L, 4L, 4L, 4L, 4L, 4L),
   fidelity = c("epochs", "epoch", "NA", "NA", "NA", "NA", "NA", "NA"),
   n_problems = c(1L, 35L, 98L, 22L, 33L, 56L, 114L, 119L)
 )
@@ -39,7 +39,8 @@ Toy test functions:
 dt = data.frame(
   instance = c("Branin", "Shekel"),
   space = c("Num", "Num"),
-  dims = c(2L, 4L),
+  n_dims = c(2L, 4L),
+  n_targets = c(1L, 1L),
   fidelity = c("fidelity", "fidelity"),
   n_problems = c(1L, 1L)
 )
@@ -54,18 +55,19 @@ This should perhaps have a table of implemented surrogates
 
 We first load the config:
 
-```{r}
+```{r,eval=FALSE}
 library(checkmate)
 library(paradox)
 library(mfsurrogates)
 workdir = "/tmp/multifidelity_data/"
 cfg = cfgs("nb301", workdir = workdir)
-#cfg$setup()
+cfg$setup()  # automatic download of files; necessary if you didn't download manually
+cfg
 ```
 
 this config contains our `objective` which we can use to optimize.
 
-```{r}
+```{r,eval=FALSE}
 library("bbotk")
 library("data.table")
 ins = OptimInstanceMultiCrit$new(
@@ -79,15 +81,15 @@ ins = OptimInstanceMultiCrit$new(
 
 We first load the config:
 
-```{r}
+```{r,eval=FALSE}
 workdir = "/tmp/multifidelity_data/"
 cfg = cfgs("lcbench", workdir = workdir)
-#cfg$setup()
+cfg$setup()
 ```
 
 this config contains our `objective` which we can use to optimize.
 
-```{r}
+```{r,eval=FALSE}
 ins = OptimInstanceMultiCrit$new(
   objective = cfg$get_objective(),
   terminator = trm("evals", n_evals = 10L)
@@ -99,13 +101,14 @@ ins = OptimInstanceMultiCrit$new(
 
 We first load the config:
 
-```{r}
+```{r,eval=FALSE}
 cfg = cfgs("branin")
+#cfg$plot()  # or method = "rgl"
 ```
 
 this config contains our `objective` which we can use to optimize.
 
-```{r}
+```{r,eval=FALSE}
 ins = OptimInstanceMultiCrit$new(
   objective = cfg$get_objective(),
   terminator = trm("evals", n_evals = 10L)
@@ -117,13 +120,13 @@ ins = OptimInstanceMultiCrit$new(
 
 We first load the config:
 
-```{r}
+```{r,eval=FALSE}
 cfg = cfgs("shekel")
 ```
 
 this config contains our `objective` which we can use to optimize.
 
-```{r}
+```{r,eval=FALSE}
 ins = OptimInstanceSingleCrit$new(
   objective = cfg$get_objective(),
   terminator = trm("evals", n_evals = 10L)
@@ -138,6 +141,7 @@ We first load the config:
 ```{r,eval=FALSE}
 workdir = "/tmp/multifidelity_data/"
 cfg = cfgs("rbv2_svm", workdir = workdir)
+cfg$setup()
 ```
 
 this config contains our `objective` which we can use to optimize.

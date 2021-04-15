@@ -7,23 +7,23 @@ This package contains several surrogates that approximate the
 hyperparameter response surface for several interesting machine learing
 algorithms across several tasks.
 
-| instance    | space   | dims | ntargets | fidelity | n\_problems |
-|:------------|:--------|-----:|---------:|:---------|------------:|
-| NB301       | Cat+Dep |   34 |        2 | epochs   |           1 |
-| LCBench     | Mix     |    7 |        6 | epoch    |          35 |
-| RBv2SVM     | Mix+Dep |    7 |        4 | NA       |          98 |
-| RBv2rpart   | Mix     |    5 |        4 | NA       |          22 |
-| RBv2aknn    | Mix     |    6 |        4 | NA       |          33 |
-| RBv2glmnet  | Mix     |    3 |        4 | NA       |          56 |
-| RBv2ranger  | Mix+Dep |    9 |        4 | NA       |         114 |
-| RBv2xgboost | Mix+Dep |   14 |        4 | NA       |         119 |
+| instance    | space   | n\_dims | n\_targets | fidelity | n\_problems |
+|:------------|:--------|--------:|-----------:|:---------|------------:|
+| NB301       | Cat+Dep |      34 |          2 | epochs   |           1 |
+| LCBench     | Mix     |       7 |          6 | epoch    |          35 |
+| RBv2SVM     | Mix+Dep |       7 |          4 | NA       |          98 |
+| RBv2rpart   | Mix     |       5 |          4 | NA       |          22 |
+| RBv2aknn    | Mix     |       6 |          4 | NA       |          33 |
+| RBv2glmnet  | Mix     |       3 |          4 | NA       |          56 |
+| RBv2ranger  | Mix+Dep |       9 |          4 | NA       |         114 |
+| RBv2xgboost | Mix+Dep |      14 |          4 | NA       |         119 |
 
 Toy test functions:
 
-| instance | space | dims | fidelity | n\_problems |
-|:---------|:------|-----:|:---------|------------:|
-| Branin   | Num   |    2 | fidelity |           1 |
-| Shekel   | Num   |    4 | fidelity |           1 |
+| instance | space | n\_dims | n\_targets | fidelity | n\_problems |
+|:---------|:------|--------:|-----------:|:---------|------------:|
+| Branin   | Num   |       2 |          1 | fidelity |           1 |
+| Shekel   | Num   |       4 |          1 | fidelity |           1 |
 
 # Overview
 
@@ -39,7 +39,8 @@ library(paradox)
 library(mfsurrogates)
 workdir = "/tmp/multifidelity_data/"
 cfg = cfgs("nb301", workdir = workdir)
-#cfg$setup()
+cfg$setup()  # automatic download of files; necessary if you didn't download manually
+cfg
 ```
 
 this config contains our `objective` which we can use to optimize.
@@ -61,7 +62,7 @@ We first load the config:
 ``` r
 workdir = "/tmp/multifidelity_data/"
 cfg = cfgs("lcbench", workdir = workdir)
-#cfg$setup()
+cfg$setup()
 ```
 
 this config contains our `objective` which we can use to optimize.
@@ -80,6 +81,7 @@ We first load the config:
 
 ``` r
 cfg = cfgs("branin")
+#cfg$plot()  # or method = "rgl"
 ```
 
 this config contains our `objective` which we can use to optimize.
@@ -117,6 +119,7 @@ We first load the config:
 ``` r
 workdir = "/tmp/multifidelity_data/"
 cfg = cfgs("rbv2_svm", workdir = workdir)
+cfg$setup()
 ```
 
 this config contains our `objective` which we can use to optimize.

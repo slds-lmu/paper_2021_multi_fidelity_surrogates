@@ -10,7 +10,7 @@
 \description{
 A simple [mlr3misc::Dictionary] storing objects of class [BenchmarkConfig].
 
-For a more convenient way to retrieve and construct tasks, see [tsk()]/[tsks()].
+For a more convenient way to retrieve and construct benchmarks, see [cfgs()]/[cfgs()].
 }
 \section{Methods}{
 
