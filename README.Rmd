@@ -16,8 +16,10 @@ knitr::opts_chunk$set(
 
 # Surrogates for Multi-Fidelity Problems
 
-This package contains several surrogates that approximate the hyperparameter response surface for
-several interesting machine learing algorithms across several tasks.
+This package contains several surrogates that approximate the hyperparameter response surface for several interesting machine learing algorithms across several tasks.
+
+
+## Overview
 
 ```{r, echo=FALSE}
 dt = data.frame(
@@ -28,7 +30,9 @@ dt = data.frame(
   n_dims = c(34L, 7L, 7L, 5L, 6L, 3L, 9L, 14L),
   n_targets = c(2L, 6L, 4L, 4L, 4L, 4L, 4L, 4L),
   fidelity = c("epochs", "epoch", "NA", "NA", "NA", "NA", "NA", "NA"),
-  n_problems = c(1L, 35L, 98L, 22L, 33L, 56L, 114L, 119L)
+  n_problems = c(1L, 35L, 98L, 22L, 33L, 56L, 114L, 119L),
+  "R^2" = c(0.9866, 0.9820, NA, NA, NA, NA, NA, NA),
+  status = c("ready", "ready", "-", "-", "-", "-", "-", "-")
 )
 knitr::kable(dt)
 ```
@@ -46,10 +50,6 @@ dt = data.frame(
 )
 knitr::kable(dt)
 ```
-
-# Overview
-
-This should perhaps have a table of implemented surrogates
 
 ## NASBench-301
 
@@ -72,10 +72,12 @@ library("bbotk")
 library("data.table")
 ins = OptimInstanceMultiCrit$new(
   objective = cfg$get_objective(),
-  terminator = trm("evals", n_evals = 10L)
+  terminator = trm("evals", n_evals = 2L)
 )
-#opt("random_search")$optimize(ins)
+opt("random_search")$optimize(ins)
 ```
+
+Since NASBench is only trained on `CIFAR10`, we do not need to set a specific `task_id` here.
 
 ## LCBench
 
@@ -94,7 +96,26 @@ ins = OptimInstanceMultiCrit$new(
   objective = cfg$get_objective(),
   terminator = trm("evals", n_evals = 10L)
 )
-#opt("random_search")$optimize(ins)
+opt("random_search")$optimize(ins)
+```
+
+### Subsetting to a specific task
+
+In practice, we need to subset to a `task_id` if we want to tune
+on a specific task.
+
+```{r,eval=FALSE}
+ins = OptimInstanceMultiCrit$new(
+  objective = cfg$get_objective(task = "126025"),
+  terminator = trm("evals", n_evals = 10L)
+)
+opt("random_search")$optimize(ins)
+```
+
+A list of available `task_id`s can be obtained from the `param_set`:
+
+```{r, eval=FALSE}
+cfg$param_set$params$OpenML_task_id$levels
 ```
 
 ## Branin

@@ -17,13 +17,14 @@ knitr::opts_chunk$set(
 ```{r, eval=FALSE}
 # One-time setup
 library(reticulate)
+envname = "r-reticulate"
 conda_create(
-  envname = "mlr3keras",
+  envname = envname,
   packages = c("pandas", "python=3.8")
 )
-keras::install_keras("conda", tensorflow="2.3.1", envname="mlr3keras")
+keras::install_keras("conda", tensorflow="2.3.1", envname=envname)
 conda_install(
-  envname = "mlr3keras",
+  envname = envname,
   packages = c("keras2onnx", "onnxruntime"),
   pip = TRUE
 )

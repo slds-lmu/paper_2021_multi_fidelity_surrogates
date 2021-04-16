@@ -7,27 +7,25 @@ This package contains several surrogates that approximate the
 hyperparameter response surface for several interesting machine learing
 algorithms across several tasks.
 
-| instance    | space   | n\_dims | n\_targets | fidelity | n\_problems |
-|:------------|:--------|--------:|-----------:|:---------|------------:|
-| NB301       | Cat+Dep |      34 |          2 | epochs   |           1 |
-| LCBench     | Mix     |       7 |          6 | epoch    |          35 |
-| RBv2SVM     | Mix+Dep |       7 |          4 | NA       |          98 |
-| RBv2rpart   | Mix     |       5 |          4 | NA       |          22 |
-| RBv2aknn    | Mix     |       6 |          4 | NA       |          33 |
-| RBv2glmnet  | Mix     |       3 |          4 | NA       |          56 |
-| RBv2ranger  | Mix+Dep |       9 |          4 | NA       |         114 |
-| RBv2xgboost | Mix+Dep |      14 |          4 | NA       |         119 |
+## Overview
+
+| instance    | space   | n\_dims | n\_targets | fidelity | n\_problems |    R.2 | status |
+| :---------- | :------ | ------: | ---------: | :------- | ----------: | -----: | :----- |
+| NB301       | Cat+Dep |      34 |          2 | epochs   |           1 | 0.9866 | ready  |
+| LCBench     | Mix     |       7 |          6 | epoch    |          35 | 0.9820 | ready  |
+| RBv2SVM     | Mix+Dep |       7 |          4 | NA       |          98 |     NA | \-     |
+| RBv2rpart   | Mix     |       5 |          4 | NA       |          22 |     NA | \-     |
+| RBv2aknn    | Mix     |       6 |          4 | NA       |          33 |     NA | \-     |
+| RBv2glmnet  | Mix     |       3 |          4 | NA       |          56 |     NA | \-     |
+| RBv2ranger  | Mix+Dep |       9 |          4 | NA       |         114 |     NA | \-     |
+| RBv2xgboost | Mix+Dep |      14 |          4 | NA       |         119 |     NA | \-     |
 
 Toy test functions:
 
 | instance | space | n\_dims | n\_targets | fidelity | n\_problems |
-|:---------|:------|--------:|-----------:|:---------|------------:|
+| :------- | :---- | ------: | ---------: | :------- | ----------: |
 | Branin   | Num   |       2 |          1 | fidelity |           1 |
 | Shekel   | Num   |       4 |          1 | fidelity |           1 |
-
-# Overview
-
-This should perhaps have a table of implemented surrogates
 
 ## NASBench-301
 
@@ -50,10 +48,13 @@ library("bbotk")
 library("data.table")
 ins = OptimInstanceMultiCrit$new(
   objective = cfg$get_objective(),
-  terminator = trm("evals", n_evals = 10L)
+  terminator = trm("evals", n_evals = 2L)
 )
-#opt("random_search")$optimize(ins)
+opt("random_search")$optimize(ins)
 ```
+
+Since NASBench is only trained on `CIFAR10`, we do not need to set a
+specific `task_id` here.
 
 ## LCBench
 
@@ -72,7 +73,26 @@ ins = OptimInstanceMultiCrit$new(
   objective = cfg$get_objective(),
   terminator = trm("evals", n_evals = 10L)
 )
-#opt("random_search")$optimize(ins)
+opt("random_search")$optimize(ins)
+```
+
+### Subsetting to a specific task
+
+In practice, we need to subset to a `task_id` if we want to tune on a
+specific task.
+
+``` r
+ins = OptimInstanceMultiCrit$new(
+  objective = cfg$get_objective(task = "126025"),
+  terminator = trm("evals", n_evals = 10L)
+)
+opt("random_search")$optimize(ins)
+```
+
+A list of available `task_id`s can be obtained from the `param_set`:
+
+``` r
+cfg$param_set$params$OpenML_task_id$levels
 ```
 
 ## Branin
