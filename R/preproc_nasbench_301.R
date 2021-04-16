@@ -1,4 +1,4 @@
-preproc_data_nb301 = function(config, seed = 123L, n_max = 10^5, frac = 0.1) {
+preproc_data_nb301 = function(config, seed = 123L, n_max = Inf, frac = 0.1) {
   set.seed(seed)
   path = config$data_path
   dt = readRDS(path)

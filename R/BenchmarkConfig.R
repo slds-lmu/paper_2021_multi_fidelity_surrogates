@@ -114,8 +114,8 @@ BenchmarkConfig = R6Class("BenchmarkConfig",
       }
       fit_surrogate(self, model_config, overwrite = overwrite, plot = plot)
     },
-    tune_surrogate = function(model_config = default_model_config(), overwrite = FALSE, plot = TRUE) {
-      tune_surrogate(self)
+    tune_surrogate = function(tune_munge=TRUE) {
+      tune_surrogate(self,tune_munge=tune_munge)
     }
   ),
   active = list(

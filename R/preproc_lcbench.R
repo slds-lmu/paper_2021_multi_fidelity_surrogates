@@ -1,5 +1,5 @@
 # FIXME: This was not started yet
-preproc_data_lcbench = function(config, seed = 123L, n_max = 10^5, frac=.1) {
+preproc_data_lcbench = function(config, seed = 123L, n_max = 2*10^6, frac=.1) {
   set.seed(seed)
   path = config$data_path
   dt = readRDS(path)

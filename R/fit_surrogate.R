@@ -13,7 +13,7 @@ fit_surrogate = function(problem_config, model_config = default_model_config(), 
     fit(
       x = rs$data,
       y = data$ytrain,
-      batch_size = 512L,
+      batch_size = model_config$batch_size,
       validation_split = 0.1,
       epochs = model_config$epochs,
       sample_weight = weights_from_target(data$ytrain),
@@ -30,10 +30,10 @@ fit_surrogate = function(problem_config, model_config = default_model_config(), 
   ptest = as.matrix(predict(model, rs2$data))
   colnames(ptest) = cfg$target_variables
   colnames(data$ytest) = cfg$target_variables
+  smp = sample(nrow(data$ytest), 1000L)
   metrics = map_dtr(colnames(ptest), function(nms) {
     x = data$ytest[, nms]
     y = ptest[, nms]
-    smp = sample(length(x), 1000L)
     data.table(
       variable = nms,
       rsq = mlr3measures::rsq(x,y),
@@ -49,7 +49,7 @@ fit_surrogate = function(problem_config, model_config = default_model_config(), 
     print(metrics)
     require("ggplot2")
     require("patchwork")
-    p1 = ggplot(data.frame(x = data$ytest[,1], y = ptest[,1]), aes(x=x, y=y)) +
+    p1 = ggplot(data.frame(x = data$ytest[smp,1], y = ptest[smp,1]), aes(x=x, y=y)) +
       geom_point() +
       geom_abline(slope = 1, color = "blue")
     p2 = plot(history)
@@ -72,16 +72,17 @@ default_model_config = function() {
     dropout = FALSE,
     dropout_p = FALSE,
     epochs = 150L,
-    munge_n = NULL
+    munge_n = NULL,
+    batch_size = 512L
   )
 }
 
 
-tune_surrogate = function(self, tune_munge=TRUE) {
+tune_surrogate = function(self, save=TRUE, tune_munge=TRUE) {
   p = ps(
     activation = p_fct(levels = c("elu", "relu")),
-    deep_u = p_int(lower = 6, upper = 9, trafo = function(x) rep(2^x, 2)),
-    deeper_u = p_int(lower = 6, upper = 9, trafo = function(x) 2^c(x,x,x-1, x-2)), 
+    deep_u = p_int(lower = 6, upper = 9, trafo = function(x) rep(2^x, 2), depends = deep == TRUE),
+    deeper_u = p_int(lower = 6, upper = 9, trafo = function(x) 2^c(x,x,x-1, x-2), depends = deeper == TRUE), 
     deep = p_lgl(),
     deeper = p_lgl(),
     munge_n =   p_int(lower = 1, upper = ifelse(tune_munge, 4, 1), trafo = function(x) {if (x == 1L) {NULL} else {10^x}}),
@@ -91,8 +92,8 @@ tune_surrogate = function(self, tune_munge=TRUE) {
   obj = bbotk::ObjectiveRFun$new(
     fun = function(xs) {
       xs = mlr3misc::insert_named(default_model_config(), xs)
-      xs$epochs = 1L
       ret = fit_surrogate(self, xs, plot = FALSE)
+      keras::k_clear_session()
       list(rsq = ret[1,]$rsq, metrics = ret)
     }, 
     domain = p, 
@@ -101,4 +102,6 @@ tune_surrogate = function(self, tune_munge=TRUE) {
   )
   ins = bbotk::OptimInstanceSingleCrit$new(obj, terminator = bbotk::trm("evals", n_evals = 10L))
   opt$optimize(ins)
+  if (save) saveRDS(ins, paste0(self$subdir, "OptimInstance.rds"))
+  return(ins)
 }
