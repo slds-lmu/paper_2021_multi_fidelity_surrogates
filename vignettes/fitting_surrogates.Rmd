@@ -58,7 +58,7 @@ All benchmarks have an associated **BenchmarkConfig** that contains paths to rel
 In order to fit surrogates or to get the objective we first instantiate the **Config** object.
 
 ```{r}
-workdir = paste0(path.expand("~"), "/..", "/LRZ Sync+Share/multifidelity_data/")
+workdir = paste0(path.expand("~"), "/LRZ Sync+Share/multifidelity_data/")
 cfg = BenchmarkConfigNB301$new(workdir = workdir)
 ```
 

@@ -30,20 +30,39 @@ fit_surrogate = function(problem_config, model_config = default_model_config(), 
   ptest = as.matrix(predict(model, rs2$data))
   colnames(ptest) = cfg$target_variables
   colnames(data$ytest) = cfg$target_variables
-  smp = sample(nrow(data$ytest), 1000L)
-  metrics = map_dtr(colnames(ptest), function(nms) {
-    x = data$ytest[, nms]
-    y = ptest[, nms]
-    data.table(
-      variable = nms,
-      rsq = mlr3measures::rsq(x,y),
-      roh = mlr3measures::srho(x,y),
-      ktau = mlr3measures::ktau(x[smp],y[smp]), # on sample since this is slow.
-      mae = mlr3measures::mae(x,y)
-    )
+
+  # Stratify by e.g. task_id
+  if (!is.null(problem_config$task_id_column)) {
+    groups = c("full", as.character(unique(data$xtest[[problem_config$task_id_column]])))
+  } else {
+    groups = "full"
+  }
+
+  metrics = map_dtr(
+    groups,
+    function(grp) {
+      map_dtr(colnames(ptest), function(nms) {
+      if (grp == "full") {
+        idx = rep(TRUE, nrow(ptest))
+      } else {
+        idx = (data$xtest[[problem_config$task_id_column]] == grp)
+      }
+      x = data$ytest[idx, nms]
+      y = ptest[idx, nms]
+      print(length(x))
+      smp = sample(seq_along(x), min(length(x), 500L))
+      data.table(
+        variable = nms,
+        grp = as.character(grp),
+        rsq = mlr3measures::rsq(x,y),
+        roh = mlr3measures::srho(x,y),
+        ktau = mlr3measures::ktau(x[smp],y[smp]), # on sample since this is slow.
+        mae = mlr3measures::mae(x,y)
+      )
+    })
   })
 
-  
+
   if (overwrite) data.table::fwrite(metrics, paste0(cfg$subdir, "surrogate_test_metrics.csv"))
   if (plot) {
     print(metrics)
@@ -77,12 +96,11 @@ default_model_config = function() {
   )
 }
 
-
 tune_surrogate = function(self, save=TRUE, tune_munge=TRUE) {
   p = ps(
     activation = p_fct(levels = c("elu", "relu")),
     deep_u = p_int(lower = 6, upper = 9, trafo = function(x) rep(2^x, 2), depends = deep == TRUE),
-    deeper_u = p_int(lower = 6, upper = 9, trafo = function(x) 2^c(x,x,x-1, x-2), depends = deeper == TRUE), 
+    deeper_u = p_int(lower = 6, upper = 9, trafo = function(x) 2^c(x,x,x-1, x-2), depends = deeper == TRUE),
     deep = p_lgl(),
     deeper = p_lgl(),
     munge_n =   p_int(lower = 1, upper = ifelse(tune_munge, 4, 1), trafo = function(x) {if (x == 1L) {NULL} else {10^x}}),
@@ -94,9 +112,9 @@ tune_surrogate = function(self, save=TRUE, tune_munge=TRUE) {
       xs = mlr3misc::insert_named(default_model_config(), xs)
       ret = fit_surrogate(self, xs, plot = FALSE)
       keras::k_clear_session()
-      list(rsq = ret[1,]$rsq, metrics = ret)
-    }, 
-    domain = p, 
+      list(rsq = ret[grp == "full",][1,]$rsq, metrics = ret)
+    },
+    domain = p,
     codomain = ps(rsq = p_dbl(lower = 0, upper = 1, tags = "maximize")),
     check_values = FALSE
   )
