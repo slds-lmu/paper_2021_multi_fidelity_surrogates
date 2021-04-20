@@ -53,6 +53,7 @@ BenchmarkConfigLCBench = R6Class("BenchmarkConfigLCBench",
        keras_model_file = "model.hdf5",
        onnx_model_file = "model.onnx",
        budget_param = "epoch",
+       task_id_column = "OpenML_task_id",
        target_variables = c("val_accuracy", "val_cross_entropy", "val_balanced_accuracy", "test_cross_entropy", "test_balanced_accuracy", "time"),
        codomain = ps(
          val_accuracy = p_dbl(lower = 0, upper = 1, tags = "maximize"),
@@ -257,6 +258,7 @@ BenchmarkConfigRBv2SVM = R6Class("BenchmarkConfigRBv2SVM",
         keras_model_file = "model.hdf5",
         onnx_model_file = "model.onnx",
         budget_param = "epoch",
+        task_id_column = "task_id",
         target_variables = c("perf.mmce", "perf.logloss", "traintime", "predicttime"),
         codomain = ps(
           perf.mmce = p_dbl(lower = 0, upper = 1, tags = "minimize"),
@@ -307,6 +309,7 @@ BenchmarkConfigRBv2ranger = R6Class("BenchmarkConfigRBv2ranger",
         keras_model_file = "model.hdf5",
         onnx_model_file = "model.onnx",
         budget_param = "epoch",
+        task_id_column = "task_id",
         target_variables = c("perf.mmce", "perf.logloss", "traintime", "predicttime"),
         codomain = ps(
           perf.mmce = p_dbl(lower = 0, upper = 1, tags = "minimize"),
@@ -345,45 +348,46 @@ benchmark_configs$add("rbv2_ranger", BenchmarkConfigRBv2ranger)
 
 
 BenchmarkConfigRBv2glmnet = R6Class("BenchmarkConfigRBv2glmnet",
-                                    inherit = BenchmarkConfig,
-                                    public = list(
-                                      initialize = function(id = "RBv2_glmnet", workdir) {
-                                        super$initialize(
-                                          id,
-                                          download_url = "https://syncandshare.lrz.de/dl/fiSd4UWxmx9FRrQtdYeYrxEV/rbv2_glmnet/",
-                                          workdir = workdir,
-                                          model_name = "rbv2_glmnet",
-                                          param_set_file = NULL,
-                                          data_file = "data.arff",
-                                          dicts_file = "dicts.rds",
-                                          keras_model_file = "model.hdf5",
-                                          onnx_model_file = "model.onnx",
-                                          budget_param = "epoch",
-                                          target_variables = c("perf.mmce", "perf.logloss", "traintime", "predicttime"),
-                                          codomain = ps(
-                                            perf.mmce = p_dbl(lower = 0, upper = 1, tags = "minimize"),
-                                            perf.logloss = p_dbl(lower = 0, upper = 1, tags = "minimize"),
-                                            traintime = p_dbl(lower = 0, upper = 1, tags = "minimize"),
-                                            predicttime = p_dbl(lower = 0, upper = 1, tags = "minimize")
-                                          ),
-                                          packages = NULL
-                                        )
-                                      }
-                                    ),
-                                    active = list(
-                                      param_set = function() {
-                                        ps(
-                                          alpha = p_dbl(lower = 0, upper = 1, default = 1, trafo = function(x) max(0, min(1, x))),
-                                          s = p_dbl(lower = -10, upper = 10, default = 0, trafo = function(x) 2^x),
-                                          num.impute.selected.cpo = p_fct(levels = c("impute.mean", "impute.median", "impute.hist")),
-                                          task_id = p_fct(levels = as.character(self$get_task_ids()))
-                                        )
-                                      },
-                                      data = function(x) {
-                                        if(is.null(private$.data)) private$.data = preproc_data_rbv2_glmnet(self)
-                                        private$.data
-                                      }
-                                    )
+  inherit = BenchmarkConfig,
+  public = list(
+    initialize = function(id = "RBv2_glmnet", workdir) {
+      super$initialize(
+        id,
+        download_url = "https://syncandshare.lrz.de/dl/fiSd4UWxmx9FRrQtdYeYrxEV/rbv2_glmnet/",
+        workdir = workdir,
+        model_name = "rbv2_glmnet",
+        param_set_file = NULL,
+        data_file = "data.arff",
+        dicts_file = "dicts.rds",
+        keras_model_file = "model.hdf5",
+        onnx_model_file = "model.onnx",
+        budget_param = "epoch",
+        task_id_column = "task_id",
+        target_variables = c("perf.mmce", "perf.logloss", "traintime", "predicttime"),
+        codomain = ps(
+          perf.mmce = p_dbl(lower = 0, upper = 1, tags = "minimize"),
+          perf.logloss = p_dbl(lower = 0, upper = 1, tags = "minimize"),
+          traintime = p_dbl(lower = 0, upper = 1, tags = "minimize"),
+          predicttime = p_dbl(lower = 0, upper = 1, tags = "minimize")
+        ),
+        packages = NULL
+      )
+    }
+  ),
+  active = list(
+    param_set = function() {
+      ps(
+        alpha = p_dbl(lower = 0, upper = 1, default = 1, trafo = function(x) max(0, min(1, x))),
+        s = p_dbl(lower = -10, upper = 10, default = 0, trafo = function(x) 2^x),
+        num.impute.selected.cpo = p_fct(levels = c("impute.mean", "impute.median", "impute.hist")),
+        task_id = p_fct(levels = as.character(self$get_task_ids()))
+      )
+    },
+    data = function(x) {
+      if(is.null(private$.data)) private$.data = preproc_data_rbv2_glmnet(self)
+      private$.data
+    }
+  )
 )
 #' @include BenchmarkConfig.R
 benchmark_configs$add("rbv2_glmnet", BenchmarkConfigRBv2glmnet)
@@ -391,102 +395,104 @@ benchmark_configs$add("rbv2_glmnet", BenchmarkConfigRBv2glmnet)
 
 
 BenchmarkConfigRBv2xgboost = R6Class("BenchmarkConfigRBv2xgboost",
-                                    inherit = BenchmarkConfig,
-                                    public = list(
-                                      initialize = function(id = "RBv2_xgboost", workdir) {
-                                        super$initialize(
-                                          id,
-                                          download_url = "https://syncandshare.lrz.de/dl/fiSd4UWxmx9FRrQtdYeYrxEV/rbv2_xgboost/",
-                                          workdir = workdir,
-                                          model_name = "rbv2_xgboost",
-                                          param_set_file = NULL,
-                                          data_file = "data.arff",
-                                          dicts_file = "dicts.rds",
-                                          keras_model_file = "model.hdf5",
-                                          onnx_model_file = "model.onnx",
-                                          budget_param = "epoch",
-                                          target_variables = c("perf.mmce", "perf.logloss", "traintime", "predicttime"),
-                                          codomain = ps(
-                                            perf.mmce = p_dbl(lower = 0, upper = 1, tags = "minimize"),
-                                            perf.logloss = p_dbl(lower = 0, upper = 1, tags = "minimize"),
-                                            traintime = p_dbl(lower = 0, upper = 1, tags = "minimize"),
-                                            predicttime = p_dbl(lower = 0, upper = 1, tags = "minimize")
-                                          ),
-                                          packages = NULL
-                                        )
-                                      }
-                                    ),
-                                    active = list(
-                                      param_set = function() {
-                                        ps(
-                                          booster = p_fct(levels = c("gblinear", "gbtree", "dart")),
-                                          nrounds = p_int(lower = 3, upper = 11, trafo = function(x) round(2^x)),
-                                          eta = p_dbl(lower = -10, upper = 0, trafo = function(x) 2^x, depends = booster %in% c("dart", "gbtree")),
-                                          gamma = p_dbl(lower = -15, upper = 3, trafo = function(x) 2^x, depends = booster %in% c("dart", "gbtree")),
-                                          lambda = p_dbl(lower = -10, upper = 10, trafo = function(x) 2^x),
-                                          alpha = p_dbl(lower = -10, upper = 10, trafo = function(x) 2^x),
-                                          subsample = p_dbl(lower = 0.1, upper = 1),
-                                          max_depth = p_int(lower = 1, upper = 15, depends = booster %in% c("dart", "gbtree")),
-                                          min_child_weight = p_dbl(lower = 0, upper = 7, trafo = function(x) 2^x, depends = booster %in% c("dart", "gbtree")),
-                                          colsample_bytree = p_dbl(lower = 0.01, upper = 1, depends = booster %in% c("dart", "gbtree")),
-                                          colsample_bylevel = p_dbl(lower = 0.01, upper = 1, depends = booster %in% c("dart", "gbtree")),
-                                          rate_drop = p_dbl(lower = 0, upper = 1, depends = booster == "dart"),
-                                          skip_drop = p_dbl(lower =  0, upper = 1, depends = booster == "dart"),
-                                          num.impute.selected.cpo = p_fct(levels = c("impute.mean", "impute.median", "impute.hist")),
-                                          task_id = p_fct(levels = as.character(self$get_task_ids()))
-                                        )
-                                      },
-                                      data = function(x) {
-                                        if(is.null(private$.data)) private$.data = preproc_data_rbv2_xgboost(self)
-                                        private$.data
-                                      }
-                                    )
+  inherit = BenchmarkConfig,
+  public = list(
+    initialize = function(id = "RBv2_xgboost", workdir) {
+      super$initialize(
+        id,
+        download_url = "https://syncandshare.lrz.de/dl/fiSd4UWxmx9FRrQtdYeYrxEV/rbv2_xgboost/",
+        workdir = workdir,
+        model_name = "rbv2_xgboost",
+        param_set_file = NULL,
+        data_file = "data.arff",
+        dicts_file = "dicts.rds",
+        keras_model_file = "model.hdf5",
+        onnx_model_file = "model.onnx",
+        budget_param = "epoch",
+        task_id_column = "task_id",
+        target_variables = c("perf.mmce", "perf.logloss", "traintime", "predicttime"),
+        codomain = ps(
+          perf.mmce = p_dbl(lower = 0, upper = 1, tags = "minimize"),
+          perf.logloss = p_dbl(lower = 0, upper = 1, tags = "minimize"),
+          traintime = p_dbl(lower = 0, upper = 1, tags = "minimize"),
+          predicttime = p_dbl(lower = 0, upper = 1, tags = "minimize")
+        ),
+        packages = NULL
+      )
+    }
+  ),
+  active = list(
+    param_set = function() {
+      ps(
+        booster = p_fct(levels = c("gblinear", "gbtree", "dart")),
+        nrounds = p_int(lower = 3, upper = 11, trafo = function(x) round(2^x)),
+        eta = p_dbl(lower = -10, upper = 0, trafo = function(x) 2^x, depends = booster %in% c("dart", "gbtree")),
+        gamma = p_dbl(lower = -15, upper = 3, trafo = function(x) 2^x, depends = booster %in% c("dart", "gbtree")),
+        lambda = p_dbl(lower = -10, upper = 10, trafo = function(x) 2^x),
+        alpha = p_dbl(lower = -10, upper = 10, trafo = function(x) 2^x),
+        subsample = p_dbl(lower = 0.1, upper = 1),
+        max_depth = p_int(lower = 1, upper = 15, depends = booster %in% c("dart", "gbtree")),
+        min_child_weight = p_dbl(lower = 0, upper = 7, trafo = function(x) 2^x, depends = booster %in% c("dart", "gbtree")),
+        colsample_bytree = p_dbl(lower = 0.01, upper = 1, depends = booster %in% c("dart", "gbtree")),
+        colsample_bylevel = p_dbl(lower = 0.01, upper = 1, depends = booster %in% c("dart", "gbtree")),
+        rate_drop = p_dbl(lower = 0, upper = 1, depends = booster == "dart"),
+        skip_drop = p_dbl(lower =  0, upper = 1, depends = booster == "dart"),
+        num.impute.selected.cpo = p_fct(levels = c("impute.mean", "impute.median", "impute.hist")),
+        task_id = p_fct(levels = as.character(self$get_task_ids()))
+      )
+    },
+    data = function(x) {
+      if(is.null(private$.data)) private$.data = preproc_data_rbv2_xgboost(self)
+      private$.data
+    }
+  )
 )
 #' @include BenchmarkConfig.R
 benchmark_configs$add("rbv2_xgboost", BenchmarkConfigRBv2xgboost)
 
 BenchmarkConfigRBv2rpart = R6Class("BenchmarkConfigRBv2rpart",
-                                    inherit = BenchmarkConfig,
-                                    public = list(
-                                      initialize = function(id = "RBv2_glmnet", workdir) {
-                                        super$initialize(
-                                          id,
-                                          download_url = "https://syncandshare.lrz.de/dl/fiSd4UWxmx9FRrQtdYeYrxEV/rbv2_rpart/",
-                                          workdir = workdir,
-                                          model_name = "rbv2_rpart",
-                                          param_set_file = NULL,
-                                          data_file = "data.arff",
-                                          dicts_file = "dicts.rds",
-                                          keras_model_file = "model.hdf5",
-                                          onnx_model_file = "model.onnx",
-                                          budget_param = "epoch",
-                                          target_variables = c("perf.mmce", "perf.logloss", "traintime", "predicttime"),
-                                          codomain = ps(
-                                            perf.mmce = p_dbl(lower = 0, upper = 1, tags = "minimize"),
-                                            perf.logloss = p_dbl(lower = 0, upper = 1, tags = "minimize"),
-                                            traintime = p_dbl(lower = 0, upper = 1, tags = "minimize"),
-                                            predicttime = p_dbl(lower = 0, upper = 1, tags = "minimize")
-                                          ),
-                                          packages = NULL
-                                        )
-                                      }
-                                    ),
-                                    active = list(
-                                      param_set = function() {
-                                        ps = ps(
-                                          cp = p_dbl(lower = -10, upper = 0, default = log2(0.01), trafo = function(x) 2^x),
-                                          maxdepth = p_int(lower = 1, upper = 30, default = 30),
-                                          minbucket = p_int(lower = 1, upper = 100, default = 1),
-                                          minsplit = p_int(lower = 1, upper = 100, default = 20),
-                                          num.impute.selected.cpo = p_fct(levels = c("impute.mean", "impute.median", "impute.hist")),
-                                          task_id = p_fct(levels = as.character(self$get_task_ids()))
-                                        )
-                                      },
-                                      data = function(x) {
-                                        if(is.null(private$.data)) private$.data = preproc_data_rbv2_rpart(self)
-                                        private$.data
-                                      }
-                                    )
+  inherit = BenchmarkConfig,
+  public = list(
+    initialize = function(id = "RBv2_glmnet", workdir) {
+      super$initialize(
+        id,
+        download_url = "https://syncandshare.lrz.de/dl/fiSd4UWxmx9FRrQtdYeYrxEV/rbv2_rpart/",
+        workdir = workdir,
+        model_name = "rbv2_rpart",
+        param_set_file = NULL,
+        data_file = "data.arff",
+        dicts_file = "dicts.rds",
+        keras_model_file = "model.hdf5",
+        onnx_model_file = "model.onnx",
+        budget_param = "epoch",
+        task_id_column = "task_id",
+        target_variables = c("perf.mmce", "perf.logloss", "traintime", "predicttime"),
+        codomain = ps(
+          perf.mmce = p_dbl(lower = 0, upper = 1, tags = "minimize"),
+          perf.logloss = p_dbl(lower = 0, upper = 1, tags = "minimize"),
+          traintime = p_dbl(lower = 0, upper = 1, tags = "minimize"),
+          predicttime = p_dbl(lower = 0, upper = 1, tags = "minimize")
+        ),
+        packages = NULL
+      )
+    }
+  ),
+  active = list(
+    param_set = function() {
+      ps = ps(
+        cp = p_dbl(lower = -10, upper = 0, default = log2(0.01), trafo = function(x) 2^x),
+        maxdepth = p_int(lower = 1, upper = 30, default = 30),
+        minbucket = p_int(lower = 1, upper = 100, default = 1),
+        minsplit = p_int(lower = 1, upper = 100, default = 20),
+        num.impute.selected.cpo = p_fct(levels = c("impute.mean", "impute.median", "impute.hist")),
+        task_id = p_fct(levels = as.character(self$get_task_ids()))
+      )
+    },
+    data = function(x) {
+      if(is.null(private$.data)) private$.data = preproc_data_rbv2_rpart(self)
+      private$.data
+    }
+  )
 )
 #' @include BenchmarkConfig.R
 benchmark_configs$add("rbv2_rpart", BenchmarkConfigRBv2rpart)
@@ -494,48 +500,49 @@ benchmark_configs$add("rbv2_rpart", BenchmarkConfigRBv2rpart)
 
 
 BenchmarkConfigRBv2aknn = R6Class("BenchmarkConfigRBv2aknn",
-                                    inherit = BenchmarkConfig,
-                                    public = list(
-                                      initialize = function(id = "RBv2_aknn", workdir) {
-                                        super$initialize(
-                                          id,
-                                          download_url = "https://syncandshare.lrz.de/dl/fiSd4UWxmx9FRrQtdYeYrxEV/rbv2_aknn/",
-                                          workdir = workdir,
-                                          model_name = "rbv2_aknn",
-                                          param_set_file = NULL,
-                                          data_file = "data.arff",
-                                          dicts_file = "dicts.rds",
-                                          keras_model_file = "model.hdf5",
-                                          onnx_model_file = "model.onnx",
-                                          budget_param = "epoch",
-                                          target_variables = c("perf.mmce", "perf.logloss", "traintime", "predicttime"),
-                                          codomain = ps(
-                                            perf.mmce = p_dbl(lower = 0, upper = 1, tags = "minimize"),
-                                            perf.logloss = p_dbl(lower = 0, upper = 1, tags = "minimize"),
-                                            traintime = p_dbl(lower = 0, upper = 1, tags = "minimize"),
-                                            predicttime = p_dbl(lower = 0, upper = 1, tags = "minimize")
-                                          ),
-                                          packages = NULL
-                                        )
-                                      }
-                                    ),
-                                    active = list(
-                                      param_set = function() {
-                                        ps(
-                                          k = p_int(lower = 1L, upper = 50),
-                                          distance = p_fct(levels = c("l2", "cosine", "ip"), default = "l2"),
-                                          M = p_int(lower = 18, upper = 50),
-                                          ef = p_dbl(lower = 3, upper = 8, trafo = function(x) round(2^x)),
-                                          ef_construction = p_dbl(lower = 4, upper = 9, trafo = function(x) round(2^x)),
-                                          num.impute.selected.cpo = p_fct(levels = c("impute.mean", "impute.median", "impute.hist")),
-                                          task_id = p_fct(levels = as.character(self$get_task_ids()))
-                                        )
-                                      },
-                                      data = function(x) {
-                                        if(is.null(private$.data)) private$.data = preproc_data_rbv2_aknn(self)
-                                        private$.data
-                                      }
-                                    )
+  inherit = BenchmarkConfig,
+  public = list(
+    initialize = function(id = "RBv2_aknn", workdir) {
+      super$initialize(
+        id,
+        download_url = "https://syncandshare.lrz.de/dl/fiSd4UWxmx9FRrQtdYeYrxEV/rbv2_aknn/",
+        workdir = workdir,
+        model_name = "rbv2_aknn",
+        param_set_file = NULL,
+        data_file = "data.arff",
+        dicts_file = "dicts.rds",
+        keras_model_file = "model.hdf5",
+        onnx_model_file = "model.onnx",
+        budget_param = "epoch",
+        task_id_column = "task_id",
+        target_variables = c("perf.mmce", "perf.logloss", "traintime", "predicttime"),
+        codomain = ps(
+          perf.mmce = p_dbl(lower = 0, upper = 1, tags = "minimize"),
+          perf.logloss = p_dbl(lower = 0, upper = 1, tags = "minimize"),
+          traintime = p_dbl(lower = 0, upper = 1, tags = "minimize"),
+          predicttime = p_dbl(lower = 0, upper = 1, tags = "minimize")
+        ),
+        packages = NULL
+      )
+    }
+  ),
+  active = list(
+    param_set = function() {
+      ps(
+        k = p_int(lower = 1L, upper = 50),
+        distance = p_fct(levels = c("l2", "cosine", "ip"), default = "l2"),
+        M = p_int(lower = 18, upper = 50),
+        ef = p_dbl(lower = 3, upper = 8, trafo = function(x) round(2^x)),
+        ef_construction = p_dbl(lower = 4, upper = 9, trafo = function(x) round(2^x)),
+        num.impute.selected.cpo = p_fct(levels = c("impute.mean", "impute.median", "impute.hist")),
+        task_id = p_fct(levels = as.character(self$get_task_ids()))
+      )
+    },
+    data = function(x) {
+      if(is.null(private$.data)) private$.data = preproc_data_rbv2_aknn(self)
+      private$.data
+    }
+  )
 )
 #' @include BenchmarkConfig.R
 benchmark_configs$add("rbv2_aknn", BenchmarkConfigRBv2aknn)
