@@ -32,13 +32,13 @@ ObjectiveONNX = R6Class("ObjectiveONNX",
         codomain = ParamSet$new(list(ParamDbl$new("y", tags = "minimize")))
       }
       if (!is.null(task)) {
-        task_id = domain$params$task_id
+        task_id = domain$params[[domain$ids(tags = "task_id")]]
         task_id$default = task
         task_id$tags = c(task_id$tags, "constant")
 
         # Drop the constant task_id from the domain
         # FIXME: would be way easier if we could drop params from the paramset
-        new_domain = ParamSet$new(domain$params[names(domain$params) != "task_id"])
+        new_domain = ParamSet$new(domain$params[names(domain$params) != domain$ids(tags = "task_id")])
         new_domain$trafo = domain$trafo
         new_domain$deps = domain$deps
         

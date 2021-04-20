@@ -53,7 +53,6 @@ BenchmarkConfigLCBench = R6Class("BenchmarkConfigLCBench",
        keras_model_file = "model.hdf5",
        onnx_model_file = "model.onnx",
        budget_param = "epoch",
-       task_id_column = "OpenML_task_id",
        target_variables = c("val_accuracy", "val_cross_entropy", "val_balanced_accuracy", "test_cross_entropy", "test_balanced_accuracy", "time"),
        codomain = ps(
          val_accuracy = p_dbl(lower = 0, upper = 1, tags = "maximize"),
@@ -258,7 +257,6 @@ BenchmarkConfigRBv2SVM = R6Class("BenchmarkConfigRBv2SVM",
         keras_model_file = "model.hdf5",
         onnx_model_file = "model.onnx",
         budget_param = "epoch",
-        task_id_column = "task_id",
         target_variables = c("perf.mmce", "perf.logloss", "traintime", "predicttime"),
         codomain = ps(
           perf.mmce = p_dbl(lower = 0, upper = 1, tags = "minimize"),
@@ -280,7 +278,7 @@ BenchmarkConfigRBv2SVM = R6Class("BenchmarkConfigRBv2SVM",
         degree = p_int(lower = 2, upper = 5, depends = kernel == "polynomial"),
         shrinking = p_lgl(),
         num.impute.selected.cpo = p_fct(levels = c("impute.mean", "impute.median", "impute.hist")),
-        task_id = p_fct(levels = as.character(self$get_task_ids()))
+        task_id = p_fct(levels = as.character(self$get_task_ids()), tags = "task_id")
       )
     },
     data = function(x) {
@@ -309,7 +307,6 @@ BenchmarkConfigRBv2ranger = R6Class("BenchmarkConfigRBv2ranger",
         keras_model_file = "model.hdf5",
         onnx_model_file = "model.onnx",
         budget_param = "epoch",
-        task_id_column = "task_id",
         target_variables = c("perf.mmce", "perf.logloss", "traintime", "predicttime"),
         codomain = ps(
           perf.mmce = p_dbl(lower = 0, upper = 1, tags = "minimize"),
@@ -333,7 +330,7 @@ BenchmarkConfigRBv2ranger = R6Class("BenchmarkConfigRBv2ranger",
         splitrule = p_fct(levels = c("gini", "extratrees")),
         num.random.splits = p_int(lower = 1, upper = 100, default = 1L, depends = splitrule == "extratrees"),
         num.impute.selected.cpo = p_fct(levels = c("impute.mean", "impute.median", "impute.hist")),
-        task_id = p_fct(levels = as.character(self$get_task_ids()))
+        task_id = p_fct(levels = as.character(self$get_task_ids()), tags = "task_id")
       )
     },
     data = function(x) {
@@ -362,7 +359,6 @@ BenchmarkConfigRBv2glmnet = R6Class("BenchmarkConfigRBv2glmnet",
         keras_model_file = "model.hdf5",
         onnx_model_file = "model.onnx",
         budget_param = "epoch",
-        task_id_column = "task_id",
         target_variables = c("perf.mmce", "perf.logloss", "traintime", "predicttime"),
         codomain = ps(
           perf.mmce = p_dbl(lower = 0, upper = 1, tags = "minimize"),
@@ -380,7 +376,7 @@ BenchmarkConfigRBv2glmnet = R6Class("BenchmarkConfigRBv2glmnet",
         alpha = p_dbl(lower = 0, upper = 1, default = 1, trafo = function(x) max(0, min(1, x))),
         s = p_dbl(lower = -10, upper = 10, default = 0, trafo = function(x) 2^x),
         num.impute.selected.cpo = p_fct(levels = c("impute.mean", "impute.median", "impute.hist")),
-        task_id = p_fct(levels = as.character(self$get_task_ids()))
+        task_id = p_fct(levels = as.character(self$get_task_ids()), tags = "task_id")
       )
     },
     data = function(x) {
@@ -409,7 +405,6 @@ BenchmarkConfigRBv2xgboost = R6Class("BenchmarkConfigRBv2xgboost",
         keras_model_file = "model.hdf5",
         onnx_model_file = "model.onnx",
         budget_param = "epoch",
-        task_id_column = "task_id",
         target_variables = c("perf.mmce", "perf.logloss", "traintime", "predicttime"),
         codomain = ps(
           perf.mmce = p_dbl(lower = 0, upper = 1, tags = "minimize"),
@@ -438,7 +433,7 @@ BenchmarkConfigRBv2xgboost = R6Class("BenchmarkConfigRBv2xgboost",
         rate_drop = p_dbl(lower = 0, upper = 1, depends = booster == "dart"),
         skip_drop = p_dbl(lower =  0, upper = 1, depends = booster == "dart"),
         num.impute.selected.cpo = p_fct(levels = c("impute.mean", "impute.median", "impute.hist")),
-        task_id = p_fct(levels = as.character(self$get_task_ids()))
+        task_id = p_fct(levels = as.character(self$get_task_ids()), tags = "task_id")
       )
     },
     data = function(x) {
@@ -465,7 +460,6 @@ BenchmarkConfigRBv2rpart = R6Class("BenchmarkConfigRBv2rpart",
         keras_model_file = "model.hdf5",
         onnx_model_file = "model.onnx",
         budget_param = "epoch",
-        task_id_column = "task_id",
         target_variables = c("perf.mmce", "perf.logloss", "traintime", "predicttime"),
         codomain = ps(
           perf.mmce = p_dbl(lower = 0, upper = 1, tags = "minimize"),
@@ -485,7 +479,7 @@ BenchmarkConfigRBv2rpart = R6Class("BenchmarkConfigRBv2rpart",
         minbucket = p_int(lower = 1, upper = 100, default = 1),
         minsplit = p_int(lower = 1, upper = 100, default = 20),
         num.impute.selected.cpo = p_fct(levels = c("impute.mean", "impute.median", "impute.hist")),
-        task_id = p_fct(levels = as.character(self$get_task_ids()))
+        task_id = p_fct(levels = as.character(self$get_task_ids()), tags = "task_id")
       )
     },
     data = function(x) {
@@ -514,7 +508,6 @@ BenchmarkConfigRBv2aknn = R6Class("BenchmarkConfigRBv2aknn",
         keras_model_file = "model.hdf5",
         onnx_model_file = "model.onnx",
         budget_param = "epoch",
-        task_id_column = "task_id",
         target_variables = c("perf.mmce", "perf.logloss", "traintime", "predicttime"),
         codomain = ps(
           perf.mmce = p_dbl(lower = 0, upper = 1, tags = "minimize"),
@@ -535,7 +528,7 @@ BenchmarkConfigRBv2aknn = R6Class("BenchmarkConfigRBv2aknn",
         ef = p_dbl(lower = 3, upper = 8, trafo = function(x) round(2^x)),
         ef_construction = p_dbl(lower = 4, upper = 9, trafo = function(x) round(2^x)),
         num.impute.selected.cpo = p_fct(levels = c("impute.mean", "impute.median", "impute.hist")),
-        task_id = p_fct(levels = as.character(self$get_task_ids()))
+        task_id = p_fct(levels = as.character(self$get_task_ids()), tags = "task_id")
       )
     },
     data = function(x) {

@@ -15,13 +15,12 @@ BenchmarkConfig = R6Class("BenchmarkConfig",
     target_variables = NULL,
     codomain = NULL,
     packages = NULL,
-    task_id_column = NULL,
     # FIXME: think about easier an way
     all_task_ids_file = "task_ids.txt",
     eval_task_ids_file = "task_ids.txt",
 
 
-    initialize = function(id, download_url, workdir, model_name, param_set_file = NULL, data_file, dicts_file, keras_model_file, onnx_model_file, budget_param, target_variables, task_id_column = NULL, codomain, packages) {
+    initialize = function(id, download_url, workdir, model_name, param_set_file = NULL, data_file, dicts_file, keras_model_file, onnx_model_file, budget_param, target_variables, codomain, packages) {
       self$id = assert_string(id)
       self$download_url = download_url
       self$workdir = if (!is.null(workdir)) if (!endsWith(workdir, "/")) paste0(workdir, "/") else workdir
@@ -34,7 +33,6 @@ BenchmarkConfig = R6Class("BenchmarkConfig",
       self$onnx_model_file = onnx_model_file
       self$budget_param = assert_string(budget_param)
       self$target_variables = assert_character(target_variables, min.len = 1L)
-      self$task_id_column = task_id_column
       self$codomain = assert_param_set(codomain)
       self$packages = assert_character(packages, null.ok = TRUE)
     },
