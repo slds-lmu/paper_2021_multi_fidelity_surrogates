@@ -158,7 +158,7 @@ BenchmarkConfigBranin = R6Class("BenchmarkConfigBranin",
       ps(
         x1 = p_dbl(lower = -5, upper = 10),
         x2 = p_dbl(lower = 0, upper = 15),
-        fidelity = p_dbl(lower = 0L, upper = 1L)
+        fidelity = p_dbl(lower = 0L, upper = 1L, tags = "budget")
       )
     }
   )
@@ -232,7 +232,7 @@ BenchmarkConfigShekel = R6Class("BenchmarkConfigShekel",
         x1 = p_dbl(lower = 0, upper = 10),
         x2 = p_dbl(lower = 0, upper = 10),
         x3 = p_dbl(lower = 0, upper = 10),
-        fidelity = p_dbl(lower = 0L, upper = 1L)
+        fidelity = p_dbl(lower = 0L, upper = 1L, tags = "budget")
       )
     }
   )
