@@ -9,16 +9,17 @@ algorithms across several tasks.
 
 ## Overview
 
-| instance    | space   | n\_dims | n\_targets | fidelity | n\_problems |    R.2 | status |
-| :---------- | :------ | ------: | ---------: | :------- | ----------: | -----: | :----- |
-| NB301       | Cat+Dep |      34 |          2 | epochs   |           1 | 0.9866 | ready  |
-| LCBench     | Mix     |       7 |          6 | epoch    |          35 | 0.9820 | ready  |
-| RBv2SVM     | Mix+Dep |       7 |          4 | NA       |          98 |     NA | \-     |
-| RBv2rpart   | Mix     |       5 |          4 | NA       |          22 |     NA | \-     |
-| RBv2aknn    | Mix     |       6 |          4 | NA       |          33 |     NA | \-     |
-| RBv2glmnet  | Mix     |       3 |          4 | NA       |          56 |     NA | \-     |
-| RBv2ranger  | Mix+Dep |       9 |          4 | NA       |         114 |     NA | \-     |
-| RBv2xgboost | Mix+Dep |      14 |          4 | NA       |         119 |     NA | \-     |
+| instance    | space   | n\_dims | n\_targets | fidelity       | n\_problems |    R.2 | status |
+| :---------- | :------ | ------: | ---------: | :------------- | ----------: | -----: | :----- |
+| NB301       | Cat+Dep |      34 |          2 | epochs         |           1 | 0.9866 | ready  |
+| LCBench     | Mix     |       7 |          6 | epoch          |          35 | 0.9820 | ready  |
+| RBv2SVM     | Mix+Dep |       7 |          4 | NA             |          98 |     NA | \-     |
+| RBv2rpart   | Mix     |       5 |          4 | NA             |          22 |     NA | \-     |
+| RBv2aknn    | Mix     |       6 |          4 | NA             |          33 |     NA | \-     |
+| RBv2glmnet  | Mix     |       3 |          4 | NA             |          56 |     NA | \-     |
+| RBv2ranger  | Mix+Dep |       9 |          4 | NA             |         114 |     NA | \-     |
+| RBv2xgboost | Mix+Dep |      14 |          4 | NA             |         119 |     NA | \-     |
+| FCNet       | Mix     |      11 |          4 | epochs + repls |           4 |     NA | \-     |
 
 Toy test functions:
 
@@ -253,4 +254,23 @@ ins = OptimInstanceMultiCrit$new(
   terminator = trm("evals", n_evals = 10L)
 )
 #opt("random_search")$optimize(ins)
+```
+
+## FCNet
+
+We first load the config:
+
+``` r
+workdir = "/tmp/multifidelity_data/"
+cfg = cfgs("fcnet", workdir = workdir)
+```
+
+this config contains our `objective` which we can use to optimize.
+
+``` r
+ins = OptimInstanceMultiCrit$new(
+  objective = cfg$get_objective(),
+  terminator = trm("evals", n_evals = 10L)
+)
+opt("random_search")$optimize(ins)
 ```

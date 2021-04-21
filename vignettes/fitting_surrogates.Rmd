@@ -220,6 +220,17 @@ cfg$fit_surrogate(model_config = model_config, overwrite = TRUE)
 save_task_ids(cfg)
 ```
 
+## FCNet
+
+```{r}
+cfg = cfgs('fcnet', workdir = workdir)
+model_config = default_model_config()
+model_config$epochs = 1L
+model_config$activation = "elu"
+cfg$fit_surrogate(model_config = model_config, overwrite = TRUE)
+```
+
+
 ## Determining task_ids for evaluation
 
 ```{r}
@@ -227,3 +238,4 @@ map(cfgs()$keys()[4:9], function(x) {
   cfgs(x)$get_task_id_param()$levels
 })
 ```
+

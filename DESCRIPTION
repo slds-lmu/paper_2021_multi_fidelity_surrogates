@@ -53,6 +53,7 @@ Collate:
     'fit_surrogate.R'
     'helpers.R'
     'keras_helpers.R'
+    'preproc_fcnet.R'
     'preproc_lcbench.R'
     'preproc_nasbench_301.R'
     'preproc_rbv2.R'

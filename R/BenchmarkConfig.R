@@ -39,7 +39,7 @@ BenchmarkConfig = R6Class("BenchmarkConfig",
       self$packages = assert_character(packages, null.ok = TRUE)
     },
 
-    setup = function(force_download = FALSE) {
+    setup = function(force_download = FALSE, data = FALSE) {
       assert_flag(force_download)
       if (!test_directory(self$workdir)) {
         dir.create(self$workdir, recursive = TRUE)
@@ -47,6 +47,11 @@ BenchmarkConfig = R6Class("BenchmarkConfig",
 
       if (!test_directory(self$subdir)) {
         dir.create(self$subdir)
+      }
+
+      # Do only download data if explicitly set.
+      if (data && !(is.null(self$data_file)) && (!test_file_exists(self$param_set_path) || force_download)) {
+        download.file(paste0(self$download_url, self$data_file), destfile = self$data_path)
       }
 
       if (!(is.null(self$param_set_file)) && (!test_file_exists(self$param_set_path) || force_download)) {

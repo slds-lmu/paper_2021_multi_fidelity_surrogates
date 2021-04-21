@@ -548,6 +548,60 @@ BenchmarkConfigRBv2aknn = R6Class("BenchmarkConfigRBv2aknn",
 benchmark_configs$add("rbv2_aknn", BenchmarkConfigRBv2aknn)
 
 
+BenchmarkConfigFCNet = R6Class("BenchmarkConfigFCNet",
+  inherit = BenchmarkConfig,
+  public = list(
+    initialize = function(id = "FCNet", workdir) {
+      super$initialize(
+        id,
+        download_url = "https://syncandshare.lrz.de/dl/fiSd4UWxmx9FRrQtdYeYrxEV/fcnet_tabular_benchmarks/",
+        workdir = workdir,
+        model_name = "fcnet_tabular_benchmarks",
+        param_set_file = NULL,
+        data_file = "data.rds",
+        dicts_file = "dicts.rds",
+        keras_model_file = "model.hdf5",
+        onnx_model_file = "model.onnx",
+        budget_param = "epoch",
+        task_id_column = "task",
+        target_variables = c("valid_loss", "valid_mse", "runtime", "n_params"),
+        codomain = ps(
+          valid_loss = p_dbl(lower = 0, upper = 1, tags = "minimize"),
+          valid_mse = p_dbl(lower = 0, upper = 1, tags = "minimize"),
+          runtime = p_dbl(lower = 0, upper = Inf, tags = "minimize"),
+          n_params = p_dbl(lower = 0, upper = Inf, tags = "minimize")
+        ),
+        packages = NULL
+      )
+    }
+  ),
+  active = list(
+    param_set = function() {
+      ps(
+        epoch = p_int(lower = 1L, upper = 100L, tags = "budget"),
+        replication = p_int(lower = 1L, upper = 4L, tags = "budget"),
+        activation_fn_1 = p_fct(levels = c("relu", "tanh")),
+        activation_fn_2 = p_fct(levels = c("relu", "tanh")),
+        batch_size = p_int(lower = 8L, upper = 64L),
+        dropout_1 = p_dbl(lower = 0, upper = 0.6),
+        dropout_2 = p_dbl(lower = 0, upper = 0.6),
+        init_lr = p_dbl(lower = -3.31, upper = -1, trafo = function(x) 10^x),
+        lr_schedule = p_fct(levels = c("const", "cosine")),
+        n_units_1 = p_int(lower = 4L, upper = 9L, trafo = function(x) 2^x),
+        n_units_2 = p_int(lower = 4L, upper = 9, trafo = function(x) 2^x),
+        task = p_fct(levels = c("fcnet_protein_structure", "fcnet_parkinsons_telemonitoring", "fcnet_naval_propulsion", "fcnet_slice_localization"))
+      )
+    },
+    data = function(x) {
+      if(is.null(private$.data)) private$.data = preproc_data_fcnet(self)
+      private$.data
+    }
+  )
+)
+#' @include BenchmarkConfig.R
+benchmark_configs$add("fcnet", BenchmarkConfigFCNet)
+
+
 # Not sure whether to include kerasff
 # classif.kerasff = ps(
 #   p_dbl(id = "epochs", lower = 3, upper = 7, trafo = function(x) round(2^x)),

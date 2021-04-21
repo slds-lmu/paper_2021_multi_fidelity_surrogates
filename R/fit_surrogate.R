@@ -38,6 +38,7 @@ fit_surrogate = function(problem_config, model_config = default_model_config(), 
     groups = "full"
   }
 
+
   metrics = map_dtr(
     groups,
     function(grp) {
@@ -49,7 +50,6 @@ fit_surrogate = function(problem_config, model_config = default_model_config(), 
       }
       x = data$ytest[idx, nms]
       y = ptest[idx, nms]
-      print(length(x))
       smp = sample(seq_along(x), min(length(x), 500L))
       data.table(
         variable = nms,
@@ -68,6 +68,7 @@ fit_surrogate = function(problem_config, model_config = default_model_config(), 
     print(metrics)
     require("ggplot2")
     require("patchwork")
+    smp = sample(seq_along(ptest[,1]), min(length(ptest[,1]), 500L))
     p1 = ggplot(data.frame(x = data$ytest[smp,1], y = ptest[smp,1]), aes(x=x, y=y)) +
       geom_point() +
       geom_abline(slope = 1, color = "blue")

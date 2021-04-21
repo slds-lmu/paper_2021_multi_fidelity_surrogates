@@ -21,3 +21,20 @@ scale_base = function(x, base = 10) {
     retrafo = function(x) {base ^ (x*div)}
   )
 }
+
+scale_base_0_1 = function(x, base = 10, p = 0.01) {
+  x = ifelse(x == 0, 1, x)
+  cat("Log-", base, "-[0,1]-scaling [", min(x), ";", max(x), "] to [",p,";",1-p,"]\n")
+  list(
+    trafo = function(x) {
+      x = ifelse(x == 0 | is.na(x), 1, x);
+      x = log(x, base = base)
+      rt_range = (max(x) - min(x)) / (1-2*p)
+      rt_min = min(x)
+      (x - rt_min) / rt_range + p
+    },
+    retrafo = function(x) {
+      ((base^x)-p) * rt_range + rt_min
+    }
+  )
+}
