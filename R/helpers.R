@@ -74,3 +74,17 @@ save_task_ids = function(cfg, min_evals = 50L, set = NULL, out_name = "task_ids.
   print(cnts)
   write(as.integer(as.character(unique(cnts[N >= min_evals,]$task_id))), paste0(cfg$subdir, "task_ids.txt"))
 }
+
+
+# Some fidelity parameters do not introduce bias but instead reduce variance.
+# Examples: Replications, CV-folds
+# We model this by introducing an arbitrary ordering on the replications
+# and computing the cummulative mean from the first to last replication.
+# By increasing the number of replications, we can thus go from minimal to maximal fidelity.
+apply_cummean_variance_param = function(dt, mean, sum, fidelity_param, ignore = NULL) {
+  hpars = setdiff(colnames(dt), c(mean, sum, fidelity_param, ignore))
+  setorderv(dt, fidelity_param)
+  dt[, (mean) := map(.SD, function(x) {cumsum(x) / length(x)}), by = hpars, .SDcols  = mean]
+  dt[, (sum) := map(.SD, cumsum), by = hpars, .SDcols  = sum]
+  return(dt)
+}

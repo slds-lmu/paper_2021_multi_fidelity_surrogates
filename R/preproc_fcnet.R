@@ -3,12 +3,13 @@ preproc_data_fcnet = function(config, seed = 123L, n_max = 2*10^6, frac=.1) {
   set.seed(seed)
   path = config$data_path
   dt = readRDS(path)
-  tt = split_by_col(dt, by = config$task_id_column, frac=frac)
+  tt = split_by_col(dt, by = "task", frac=frac)
 
   # Preproc train data
   train = tt$train
   train = preproc_iid(train)
   train = sample_max(train, n_max)
+  train = apply_cummean_variance_param(train, mean = c("valid_loss", "valid_mse"), sum = "runtime", "replication", ignore="n_params")
   trafos = c(
     map(train[, config$target_variables, with = FALSE], scale_base_0_1, base = 10),
     map(train[, c("batch_size", "n_units_1", "n_units_2"), with = FALSE], scale_sigmoid, p = 0),

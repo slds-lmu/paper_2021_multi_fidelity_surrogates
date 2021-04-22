@@ -3,7 +3,7 @@ preproc_data_lcbench = function(config, seed = 123L, n_max = 2*10^6, frac=.1) {
   set.seed(seed)
   path = config$data_path
   dt = readRDS(path)
-  tt = split_by_col(dt, by = config$task_id_column, frac=frac)
+  tt = split_by_col(dt, by = "OpenML_task_id", frac=frac)
 
   # Preproc train data
   train = tt$train

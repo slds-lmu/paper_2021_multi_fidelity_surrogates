@@ -556,7 +556,6 @@ BenchmarkConfigFCNet = R6Class("BenchmarkConfigFCNet",
         keras_model_file = "model.hdf5",
         onnx_model_file = "model.onnx",
         budget_param = "epoch",
-        task_id_column = "task",
         target_variables = c("valid_loss", "valid_mse", "runtime", "n_params"),
         codomain = ps(
           valid_loss = p_dbl(lower = 0, upper = 1, tags = "minimize"),
@@ -582,7 +581,7 @@ BenchmarkConfigFCNet = R6Class("BenchmarkConfigFCNet",
         lr_schedule = p_fct(levels = c("const", "cosine")),
         n_units_1 = p_int(lower = 4L, upper = 9L, trafo = function(x) 2^x),
         n_units_2 = p_int(lower = 4L, upper = 9, trafo = function(x) 2^x),
-        task = p_fct(levels = c("fcnet_protein_structure", "fcnet_parkinsons_telemonitoring", "fcnet_naval_propulsion", "fcnet_slice_localization"))
+        task = p_fct(levels = c("fcnet_protein_structure", "fcnet_parkinsons_telemonitoring", "fcnet_naval_propulsion", "fcnet_slice_localization"), tags = "task_id")
       )
     },
     data = function(x) {
