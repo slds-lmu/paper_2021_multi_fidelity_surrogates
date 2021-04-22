@@ -228,3 +228,42 @@ preproc_data_rbv2_aknn = function(config, seed = 123L, frac=.1) {
     trafos = trafos
   )
 }
+
+
+preproc_data_rbv2_super = function(config, seed = 123L, frac=.1) {
+  set.seed(seed)
+  dt = data.table(farff::readARFF(config$data_path))
+  dt[, c("dataset", "learner") := NULL]
+  dt[, task_id := as.factor(task_id)]
+  tt = split_by_col(dt, frac = frac)
+
+  train = tt$train
+  train = preproc_iid(train)
+  trafos = c(
+    map(train[, config$target_variables, with = FALSE], scale_sigmoid),
+    map(train[, c("s"), with = FALSE], scale_base, base = 2L)
+  )
+  train[, names(trafos) := pmap(list(.SD, trafos), function(x, t) {t$trafo(x)}), .SDcols = names(trafos)]
+  y = as.matrix(train[, config$target_variables, with = FALSE])
+  train = train[, (config$target_variables) := NULL]
+
+  # Preproc test data
+  if (frac) {
+    oob = tt$test
+    oob = preproc_iid(oob)
+    oob[, names(trafos) := pmap(list(.SD, trafos), function(x, t) {t$trafo(x)}), .SDcols = names(trafos)]
+    ytest = as.matrix(oob[, config$target_variables, with = FALSE])
+    oob = oob[, (config$target_variables) := NULL]
+  } else {
+    oob = NULL
+    ytest = NULL
+  }
+
+  list(
+    xtrain = train,
+    ytrain = y,
+    xtest = oob,
+    ytest = ytest,
+    trafos = trafos
+  )
+}

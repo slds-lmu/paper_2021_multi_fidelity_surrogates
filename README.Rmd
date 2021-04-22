@@ -31,11 +31,14 @@ dt = data.frame(
   n_targets = c(2L, 6L, 4L, 4L, 4L, 4L, 4L, 4L, 4L),
   fidelity = c("epochs", "epoch", "NA", "NA", "NA", "NA", "NA", "NA", "epochs + repls"),
   n_problems = c(1L, 35L, 98L, 22L, 33L, 56L, 114L, 119L, 4L),
-  "R^2" = c(0.9866, 0.9820, NA, NA, NA, NA, NA, NA, NA),
+  "$R^2$" = c(0.9866, 0.9820, NA, NA, NA, NA, NA, NA, NA),
+  "$R^2$" = c(0.9866, 0.9820, NA, NA, NA, NA, NA, NA, NA),
   status = c("ready", "ready", "-", "-", "-", "-", "-", "-", "-")
 )
 knitr::kable(dt)
 ```
+
+For more information either look directly into the [code](https://github.com/compstat-lmu/paper_2021_multi_fidelity_surrogates/blob/main/R/BenchmarkConfigs.R) or use the object's printers via `cfgs("...")`.
 
 Toy test functions:
 
