@@ -552,7 +552,7 @@ BenchmarkConfigSuperRBv2 = R6Class("BenchmarkConfigSuperRBv2",
         workdir = workdir,
         model_name = "rbv2_super",
         param_set_file = NULL,
-        data_file = "data.arff",
+        data_file = "data.rds",
         dicts_file = "dicts.rds",
         keras_model_file = "model.hdf5",
         onnx_model_file = "model.onnx",
@@ -574,9 +574,9 @@ BenchmarkConfigSuperRBv2 = R6Class("BenchmarkConfigSuperRBv2",
           # svm 
           svm.kernel = p_fct(levels = c("linear", "polynomial", "radial")),
           svm.cost =  p_dbl(lower = -12, upper = 12, trafo = function(x) 2^x),
-          svm.gamma = p_dbl(lower = -12, upper = 12, trafo = function(x) 2^x, depends = kernel == "radial"),
+          svm.gamma = p_dbl(lower = -12, upper = 12, trafo = function(x) 2^x, depends = svm.kernel == "radial"),
           svm.tolerance = p_dbl(lower = -12, upper = -3, trafo = function(x) 2^x),
-          svm.degree = p_int(lower = 2, upper = 5, depends = kernel == "polynomial"),
+          svm.degree = p_int(lower = 2, upper = 5, depends = svm.kernel == "polynomial"),
           svm.shrinking = p_lgl(),
           svm.num.impute.selected.cpo = p_fct(levels = c("impute.mean", "impute.median", "impute.hist")),
           # glmnet
@@ -597,7 +597,7 @@ BenchmarkConfigSuperRBv2 = R6Class("BenchmarkConfigSuperRBv2",
           ranger.respect.unordered.factors = p_fct(levels = c("ignore", "order", "partition")),
           ranger.min.node.size = p_int(lower = 1, upper = 100),
           ranger.splitrule = p_fct(levels = c("gini", "extratrees")),
-          ranger.num.random.splits = p_int(lower = 1, upper = 100, default = 1L, depends = splitrule == "extratrees"),
+          ranger.num.random.splits = p_int(lower = 1, upper = 100, default = 1L, depends = ranger.splitrule == "extratrees"),
           ranger.num.impute.selected.cpo = p_fct(levels = c("impute.mean", "impute.median", "impute.hist")),
           # aknn
           aknn.k = p_int(lower = 1L, upper = 50L),
@@ -609,21 +609,21 @@ BenchmarkConfigSuperRBv2 = R6Class("BenchmarkConfigSuperRBv2",
           # xgboost
           xgboost.booster = p_fct(levels = c("gblinear", "gbtree", "dart")),
           xgboost.nrounds = p_int(lower = 3, upper = 11, trafo = function(x) round(2^x)),
-          xgboost.eta = p_dbl(lower = -10, upper = 0, trafo = function(x) 2^x, depends = booster %in% c("dart", "gbtree")),
-          xgboost.gamma = p_dbl(lower = -15, upper = 3, trafo = function(x) 2^x, depends = booster %in% c("dart", "gbtree")),
+          xgboost.eta = p_dbl(lower = -10, upper = 0, trafo = function(x) 2^x, depends = xgboost.booster %in% c("dart", "gbtree")),
+          xgboost.gamma = p_dbl(lower = -15, upper = 3, trafo = function(x) 2^x, depends = xgboost.booster %in% c("dart", "gbtree")),
           xgboost.lambda = p_dbl(lower = -10, upper = 10, trafo = function(x) 2^x),
           xgboost.alpha = p_dbl(lower = -10, upper = 10, trafo = function(x) 2^x),
           xgboost.subsample = p_dbl(lower = 0.1, upper = 1),
-          xgboost.max_depth = p_int(lower = 1, upper = 15, depends = booster %in% c("dart", "gbtree")),
-          xgboost.min_child_weight = p_dbl(lower = 0, upper = 7, trafo = function(x) 2^x, depends = booster %in% c("dart", "gbtree")),
-          xgboost.colsample_bytree = p_dbl(lower = 0.01, upper = 1, depends = booster %in% c("dart", "gbtree")),
-          xgboost.colsample_bylevel = p_dbl(lower = 0.01, upper = 1, depends = booster %in% c("dart", "gbtree")),
-          xgboost.rate_drop = p_dbl(lower = 0, upper = 1, depends = booster == "dart"),
-          xgboost.skip_drop = p_dbl(lower =  0, upper = 1, depends = booster == "dart"),
+          xgboost.max_depth = p_int(lower = 1, upper = 15, depends = xgboost.booster %in% c("dart", "gbtree")),
+          xgboost.min_child_weight = p_dbl(lower = 0, upper = 7, trafo = function(x) 2^x, depends = xgboost.booster %in% c("dart", "gbtree")),
+          xgboost.colsample_bytree = p_dbl(lower = 0.01, upper = 1, depends = xgboost.booster %in% c("dart", "gbtree")),
+          xgboost.colsample_bylevel = p_dbl(lower = 0.01, upper = 1, depends = xgboost.booster %in% c("dart", "gbtree")),
+          xgboost.rate_drop = p_dbl(lower = 0, upper = 1, depends = xgboost.booster == "dart"),
+          xgboost.skip_drop = p_dbl(lower =  0, upper = 1, depends = xgboost.booster == "dart"),
           xgboost.num.impute.selected.cpo = p_fct(levels = c("impute.mean", "impute.median", "impute.hist")),
           # learner
           learner = p_fct(levels = c("aknn", "glmnet", "ranger", "rpart", "svm", "xgboost")),
-          task_id = p_fct(levels = c(1, 2, 3), tags = "task_id")
+          task_id = p_fct(levels = as.character(self$get_task_ids()), tags = "task_id")
       )
       # Add dependencies
       map(pc$params$learner$levels, function(x) {
@@ -631,6 +631,7 @@ BenchmarkConfigSuperRBv2 = R6Class("BenchmarkConfigSuperRBv2",
           print(nms)
           map(nms, function(nm) pc$add_dep(nm, "learner", CondEqual$new(x)))
       })
+      pc
     },
     data = function(x) {
       if(is.null(private$.data)) private$.data = preproc_data_rbv2_super(self)

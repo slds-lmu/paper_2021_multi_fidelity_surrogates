@@ -281,6 +281,28 @@ ins = OptimInstanceMultiCrit$new(
 #opt("random_search")$optimize(ins)
 ```
 
+## RandomBotv2 - super
+
+The **super** learner is a learner that is parametrized as a choice over all available randombot base learners.
+It has a highly hierarchical, $41$ dimensional parameter space that includes the configurations of all baselearners.
+
+
+We first load the config:
+
+```{r,eval=FALSE}
+workdir = "/tmp/multifidelity_data/"
+cfg = cfgs("rbv2_super", workdir = workdir)
+```
+
+this config contains our `objective` which we can use to optimize.
+
+```{r,eval=FALSE}
+ins = OptimInstanceMultiCrit$new(
+  objective = cfg$get_objective(),
+  terminator = trm("evals", n_evals = 10L)
+)
+#opt("random_search")$optimize(ins)
+```
 
 ## FCNet
 
