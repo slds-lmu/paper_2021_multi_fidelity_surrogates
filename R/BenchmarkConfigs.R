@@ -690,6 +690,69 @@ BenchmarkConfigFCNet = R6Class("BenchmarkConfigFCNet",
 #' @include BenchmarkConfig.R
 benchmark_configs$add("fcnet", BenchmarkConfigFCNet)
 
+BenchmarkConfigTaskSet = R6Class("BenchmarkConfigTaskSet",
+  inherit = BenchmarkConfig,
+  public = list(
+    initialize = function(id = "TaskSet", workdir) {
+      super$initialize(
+        id,
+        download_url = "https://syncandshare.lrz.de/dl/fiSd4UWxmx9FRrQtdYeYrxEV/task_set/",
+        workdir = workdir,
+        model_name = "task_set",
+        param_set_file = NULL,
+        data_file = "data.rds",
+        dicts_file = "dicts.rds",
+        keras_model_file = "model.hdf5",
+        onnx_model_file = "model.onnx",
+        budget_param = "epoch",
+        target_variables = c("train", "valid1", "valid2", "test"),
+        codomain = ps(
+          train = p_dbl(lower = 0, upper = Inf, tags = "minimize"),
+          valid1 = p_dbl(lower = 0, upper = Inf, tags = "minimize"),
+          valid2 = p_dbl(lower = 0, upper = Inf, tags = "minimize"),
+          test = p_dbl(lower = 0, upper = Inf, tags = "minimize")
+        ),
+        packages = NULL
+      )
+    }
+  ),
+  active = list(
+    param_set = function() {
+      ps(
+        epoch = p_int(lower = 1L, upper = 10000L, tags = "budget"),
+        replication = p_int(lower = 0L, upper = 4L, tags = "budget"),
+        learning_rate = p_dbl(lower = -8, upper = 1, trafo = function(x) 10^x),
+        beta1 = p_dbl(lower = -4, upper = 0, trafo = function(x) 10^x),
+        beta2 = p_dbl(lower = -3, upper = 0, trafo = function(x) 10^x),
+        epsilon = p_dbl(lower = -10, upper = 3, trafo = function(x) 10^x),
+        l1 = p_dbl(lower = -8, upper = 1, trafo = function(x) 10^x),
+        l2 = p_dbl(lower = -8, upper = 1, trafo = function(x) 10^x),
+        linear_decay = p_dbl(lower = -7, upper = -4, trafo = function(x) 10^x),
+        exponential_decay = p_dbl(lower = -6, upper = -3, trafo = function(x) 10^x),
+        task_name = p_fct(levels = 
+          c("Associative_GRU128_BS128_Pairs10_Tokens50", "Associative_GRU256_BS128_Pairs20_Tokens50", 
+            "Associative_LSTM128_BS128_Pairs10_Tokens50", "Associative_LSTM128_BS128_Pairs20_Tokens50",
+            "Associative_LSTM128_BS128_Pairs5_Tokens20", "Associative_LSTM256_BS128_Pairs20_Tokens50",
+            "Associative_LSTM256_BS128_Pairs40_Tokens100", "Associative_VRNN128_BS128_Pairs10_Tokens50",
+            "Associative_VRNN256_BS128_Pairs20_Tokens50", "Copy_GRU128_BS128_Length20_Tokens10",
+            "Copy_GRU256_BS128_Length40_Tokens50", "Copy_LSTM128_BS128_Length20_Tokens10",
+            "Copy_LSTM128_BS128_Length20_Tokens20", "Copy_LSTM128_BS128_Length5_Tokens10",
+            "Copy_LSTM128_BS128_Length50_Tokens5", "Copy_LSTM256_BS128_Length40_Tokens50",
+            "Copy_VRNN128_BS128_Length20_Tokens10", "Copy_VRNN256_BS128_Length40_Tokens50",
+            "FixedImageConvAE_cifar10_32x32x32x32x32_bs128", "FixedImageConvAE_cifar10_32x64x8x64x32_bs128"
+          ), tags = "task_id"
+        )
+      )
+    },
+    data = function(x) {
+      if(is.null(private$.data)) private$.data = preproc_data_task_set(self)
+      private$.data
+    }
+  )
+)
+#' @include BenchmarkConfig.R
+benchmark_configs$add("task_set", BenchmarkConfigTaskSet)
+
 
 # Not sure whether to include kerasff
 # classif.kerasff = ps(

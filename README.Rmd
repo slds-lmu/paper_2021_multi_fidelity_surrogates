@@ -24,15 +24,15 @@ This package contains several surrogates that approximate the hyperparameter res
 ```{r, echo=FALSE}
 dt = data.frame(
   instance = c("NB301", "LCBench", "RBv2SVM", "RBv2rpart", "RBv2aknn",
-               "RBv2glmnet", "RBv2ranger", "RBv2xgboost", "RBv2super" "FCNet"),
+               "RBv2glmnet", "RBv2ranger", "RBv2xgboost", "RBv2super" "FCNet", "TaskSet"),
   space = c("Cat+Dep", "Mix", "Mix+Dep", "Mix", "Mix", "Mix", "Mix+Dep",
-            "Mix+Dep","Mix+Dep", "Mix"),
-  n_dims = c(34L, 7L, 7L, 5L, 6L, 3L, 9L, 14L, 36L, 11L),
-  n_targets = c(2L, 6L, 4L, 4L, 4L, 4L, 4L, 4L, 4L, 4L),
-  fidelity = c("epochs", "epoch", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "epochs + repls"),
-  n_problems = c(1L, 35L, 98L, 22L, 33L, 56L, 114L, 119L, 122L, 4L),
-  "$R^2$" = c(0.9866, 0.9820, NA, NA, NA, NA, NA, NA, NA, 0.769),
-  status = c("ready", "ready", "-", "-", "-", "-", "-", "-", "-", "-", "ready")
+            "Mix+Dep","Mix+Dep", "Mix", "Num"),
+  n_dims = c(34L, 7L, 7L, 5L, 6L, 3L, 9L, 14L, 36L, 11L, 9L),
+  n_targets = c(2L, 6L, 4L, 4L, 4L, 4L, 4L, 4L, 4L, 4L, 4L),
+  fidelity = c("epochs", "epoch", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "epochs + repls", "epochs + repls"),
+  n_problems = c(1L, 35L, 98L, 22L, 33L, 56L, 114L, 119L, 122L, 4L, 20L),
+  "$R^2$" = c(0.9866, 0.9820, NA, NA, NA, NA, NA, NA, NA, 0.769, NA),
+  status = c("ready", "ready", "-", "-", "-", "-", "-", "-", "-", "-", "ready", "-")
 )
 knitr::kable(dt)
 ```
