@@ -597,7 +597,7 @@ BenchmarkConfigSuperRBv2 = R6Class("BenchmarkConfigSuperRBv2",
   active = list(
     param_set = function() {
       pc = ps(
-          # svm 
+          # svm
           svm.kernel = p_fct(levels = c("linear", "polynomial", "radial")),
           svm.cost =  p_dbl(lower = -12, upper = 12, trafo = function(x) 2^x),
           svm.gamma = p_dbl(lower = -12, upper = 12, trafo = function(x) 2^x, depends = svm.kernel == "radial"),
@@ -651,7 +651,6 @@ BenchmarkConfigSuperRBv2 = R6Class("BenchmarkConfigSuperRBv2",
       # Add dependencies
       map(pc$params$learner$levels, function(x) {
           nms = names(pc$params)[startsWith(names(pc$params), x)]
-          print(nms)
           map(nms, function(nm) pc$add_dep(nm, "learner", CondEqual$new(x)))
       })
       pc
@@ -757,8 +756,8 @@ BenchmarkConfigTaskSet = R6Class("BenchmarkConfigTaskSet",
         l2 = p_dbl(lower = -8, upper = 1, trafo = function(x) 10^x),
         linear_decay = p_dbl(lower = -7, upper = -4, trafo = function(x) 10^x),
         exponential_decay = p_dbl(lower = -6, upper = -3, trafo = function(x) 10^x),
-        task_name = p_fct(levels = 
-          c("Associative_GRU128_BS128_Pairs10_Tokens50", "Associative_GRU256_BS128_Pairs20_Tokens50", 
+        task_name = p_fct(levels =
+          c("Associative_GRU128_BS128_Pairs10_Tokens50", "Associative_GRU256_BS128_Pairs20_Tokens50",
             "Associative_LSTM128_BS128_Pairs10_Tokens50", "Associative_LSTM128_BS128_Pairs20_Tokens50",
             "Associative_LSTM128_BS128_Pairs5_Tokens20", "Associative_LSTM256_BS128_Pairs20_Tokens50",
             "Associative_LSTM256_BS128_Pairs40_Tokens100", "Associative_VRNN128_BS128_Pairs10_Tokens50",

@@ -157,7 +157,13 @@ BenchmarkConfig = R6Class("BenchmarkConfig",
       paste0(self$subdir, self$onnx_model_file)
     },
     task_col = function() {
-      unlist(imap(self$param_set$params, function(x, nm) ifelse(x$tags == "task_id", nm, NULL)))
+      x = unlist(imap(self$param_set$params, function(x, nm) ifelse("task_id" %in% x$tags, nm, NA_character_)))
+      x = x[!is.na(x)]
+      if (length(x)) {
+        x
+      } else {
+        NULL
+      }
     }
   ),
   private = list(
