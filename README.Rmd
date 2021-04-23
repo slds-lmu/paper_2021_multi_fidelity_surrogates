@@ -28,8 +28,8 @@ dt = data.frame(
   space = c("Cat+Dep", "Mix", "Mix+Dep", "Mix", "Mix", "Mix", "Mix+Dep",
             "Mix+Dep","Mix+Dep", "Mix", "Num"),
   ndims = c(34L, 7L, 7L, 5L, 6L, 3L, 9L, 14L, 36L, 11L, 9L),
-  ntargets = c("2:perf+rt", "6:perf(5)+rt","6:perf(4)+rt+pt","6:perf(4)+rt+pt","6:perf(4)+rt+pt", "6:perf(4)+rt+pt","6:perf(4)+rt+pt","6:perf(4)+rt+pt","6:perf(4)+rt+pt", "perf(2)+rt+ ms", "4:perf(4)"),
-  fidelity = c("epochs", "epoch", "frac+repls", "frac+repls", "frac+repls", "frac+repls", "fract+repls", "frac+repls", "frac+repls", "epochs+repls", "epochs+repls"),
+  ntargets = c("2:perf+rt", "6:perf(5)+rt","6:perf(4)+rt+pt","6:perf(4)+rt+pt","6:perf(4)+rt+pt", "6:perf(4)+rt+pt","6:perf(4)+rt+pt","6:perf(4)+rt+pt","6:perf(4)+rt+pt", "4:perf(2)+rt+ ms", "4:perf(4)"),
+  fidelity = c("epochs", "epochs", "frac+repls", "frac+repls", "frac+repls", "frac+repls", "fract+repls", "frac+repls", "frac+repls", "epochs+repls", "epochs+repls"),
   n_problems = c(1L, 35L, 96L, 101L, 99L, 98L, 114L, 109L, 89L, 4L, 20L),
   "$R^2$" = c(0.9866, 0.9820, NA, NA, NA, NA, NA, NA, NA, 0.769, NA),
   status = c("ready", "ready", "-", "-", "-", "-", "-", "-", "-", "ready", "-")
@@ -38,6 +38,7 @@ knitr::kable(dt)
 ```
 
 where for **ntargets** (#number):
+
 - perf = performance measure
 - ms = model_size
 - rt = runtime
@@ -124,7 +125,11 @@ A list of available `task_id`s can be obtained from the `param_set`:
 
 ```{r, eval=FALSE}
 cfg$param_set$params$OpenML_task_id$levels
+# or using the active binding across all configs:
+cfg$task_levels
 ```
+
+If the configuration only has $1$ task, `NULL` is returned.
 
 ## Branin
 

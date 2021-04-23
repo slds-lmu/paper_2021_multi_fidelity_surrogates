@@ -171,6 +171,10 @@ BenchmarkConfig = R6Class("BenchmarkConfig",
       } else {
         NULL
       }
+    },
+    task_levels = function() {
+      if (!is.null(self$task_col)) return(self$param_set$params[[self$task_col]]$levels)
+      return(NULL)
     }
   ),
   private = list(
