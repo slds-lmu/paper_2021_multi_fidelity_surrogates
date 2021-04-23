@@ -242,6 +242,71 @@ benchmark_configs$add("shekel", BenchmarkConfigShekel)
 
 
 
+#' @export
+# https://esa.github.io/pagmo2/docs/cpp/problems/zdt.html
+# 10d zdt6 (n = 10)
+# Zitzler, Deb & Thiele, 2000
+# Fidelity is incorporated in F1, see below
+# Pareto-optimal solutions are nonuniformly distributed along the global Pareto front
+# Pareto front is biased for solutions where F1 is near 1
+# Density of solutions os low near Pareto front and highest away from it
+# Plot 1 - exp(-4 * xdt[["x1"]]) * (sin(6 * pi * xdt[["x1"]] * xdt[["fidelity"]]) ^ 6)
+# to see which solutions are in bias (e.g. F1 is near 1), this is all x for fidelity 0 but thins out for fidelity 1
+BenchmarkConfigZDT6 = R6Class("BenchmarkConfigZDT6",
+  inherit = BenchmarkConfig,
+  public = list(
+    initialize = function(id = "ZDT6") {
+      super$initialize(
+        id,
+        download_url = NULL,
+        workdir = NULL,
+        model_name = "zdt1",
+        param_set_file = NULL,
+        data_file = NULL,
+        dicts_file = NULL,
+        keras_model_file = NULL,
+        onnx_model_file = NULL,
+        budget_param = "fidelity",
+        target_variables = c("F1", "F2"),
+        codomain = ps(
+          F1 = p_dbl(lower = -Inf, upper = Inf, tags = "minimize"),
+          F2 = p_dbl(lower = -Inf, upper = Inf, tags = "minimize")
+        ),
+        packages = NULL
+      )
+    },
+
+    setup = function() {
+      message("no setup necessary.")
+    },
+
+    get_objective = function() {
+      ObjectiveRFunDt$new(
+        fun = function(xdt) {
+          #ids = which(names(xdt) %nin% c("x1", "fidelity"))
+          g = 1 + 9 * ((rowSums(xdt[, 2:10]) / 9) ^ (1 / 4))
+          F1 = 1 - exp(-4 * xdt[["x1"]]) * (sin(6 * pi * xdt[["x1"]] * xdt[["fidelity"]]) ^ 6)
+          F2 = g * (1 - ((F1 / g) ^ 2))
+          data.table(F1 = F1, F2 = F2, g = g)
+        },
+        domain = self$param_set,
+        codomain = self$codomain
+      )
+    }
+  ),
+  active = list(
+    param_set = function() {
+      ps = map(1:10, function(i) ParamDbl$new(paste0("x", i), lower = 0, upper = 1))
+      ps = append(ps, ParamDbl$new("fidelity", lower = 1e-8, upper = 1L, tags = "budget"))
+      ParamSet$new(ps)
+    }
+  )
+)
+#' @include BenchmarkConfig.R
+benchmark_configs$add("zdt6", BenchmarkConfigZDT6)
+
+
+
 BenchmarkConfigRBv2SVM = R6Class("BenchmarkConfigRBv2SVM",
   inherit = BenchmarkConfig,
   public = list(
@@ -522,9 +587,9 @@ BenchmarkConfigRBv2aknn = R6Class("BenchmarkConfigRBv2aknn",
   active = list(
     param_set = function() {
       ps(
-        k = p_int(lower = 1L, upper = 50L),
+        k = p_int(lower = 1L, upper = 50),
         distance = p_fct(levels = c("l2", "cosine", "ip"), default = "l2"),
-        M = p_int(lower = 18L, upper = 50L),
+        M = p_int(lower = 18, upper = 50),
         ef = p_dbl(lower = 3, upper = 8, trafo = function(x) round(2^x)),
         ef_construction = p_dbl(lower = 4, upper = 9, trafo = function(x) round(2^x)),
         num.impute.selected.cpo = p_fct(levels = c("impute.mean", "impute.median", "impute.hist")),
@@ -539,103 +604,6 @@ BenchmarkConfigRBv2aknn = R6Class("BenchmarkConfigRBv2aknn",
 )
 #' @include BenchmarkConfig.R
 benchmark_configs$add("rbv2_aknn", BenchmarkConfigRBv2aknn)
-
-
-
-BenchmarkConfigSuperRBv2 = R6Class("BenchmarkConfigSuperRBv2",
-  inherit = BenchmarkConfig,
-  public = list(
-    initialize = function(id = "RBv2_super", workdir) {
-      super$initialize(
-        id,
-        download_url = "https://syncandshare.lrz.de/dl/fiSd4UWxmx9FRrQtdYeYrxEV/rbv2_aknn/",
-        workdir = workdir,
-        model_name = "rbv2_super",
-        param_set_file = NULL,
-        data_file = "data.rds",
-        dicts_file = "dicts.rds",
-        keras_model_file = "model.hdf5",
-        onnx_model_file = "model.onnx",
-        budget_param = "epoch",
-        target_variables = c("perf.mmce", "perf.logloss", "traintime", "predicttime"),
-        codomain = ps(
-          perf.mmce = p_dbl(lower = 0, upper = 1, tags = "minimize"),
-          perf.logloss = p_dbl(lower = 0, upper = 1, tags = "minimize"),
-          traintime = p_dbl(lower = 0, upper = 1, tags = "minimize"),
-          predicttime = p_dbl(lower = 0, upper = 1, tags = "minimize")
-        ),
-        packages = NULL
-      )
-    }
-  ),
-  active = list(
-    param_set = function() {
-      pc = ps(
-          # svm 
-          svm.kernel = p_fct(levels = c("linear", "polynomial", "radial")),
-          svm.cost =  p_dbl(lower = -12, upper = 12, trafo = function(x) 2^x),
-          svm.gamma = p_dbl(lower = -12, upper = 12, trafo = function(x) 2^x, depends = svm.kernel == "radial"),
-          svm.tolerance = p_dbl(lower = -12, upper = -3, trafo = function(x) 2^x),
-          svm.degree = p_int(lower = 2, upper = 5, depends = svm.kernel == "polynomial"),
-          svm.shrinking = p_lgl(),
-          # glmnet
-          glmnet.alpha = p_dbl(lower = 0, upper = 1, default = 1, trafo = function(x) max(0, min(1, x))),
-          glmnet.s = p_dbl(lower = -10, upper = 10, default = 0, trafo = function(x) 2^x),
-          # rpart
-          rpart.cp = p_dbl(lower = -10, upper = 0, default = log2(0.01), trafo = function(x) 2^x),
-          rpart.maxdepth = p_int(lower = 1, upper = 30, default = 30),
-          rpart.minbucket = p_int(lower = 1, upper = 100, default = 1),
-          rpart.minsplit = p_int(lower = 1, upper = 100, default = 20),
-          # ranger
-          ranger.num.trees = p_int(lower = 1, upper = 2000),
-          ranger.replace = p_lgl(),
-          ranger.sample.fraction = p_dbl(lower = 0.1, upper = 1),
-          ranger.mtry.power = p_int(lower = 0, upper = 1),
-          ranger.respect.unordered.factors = p_fct(levels = c("ignore", "order", "partition")),
-          ranger.min.node.size = p_int(lower = 1, upper = 100),
-          ranger.splitrule = p_fct(levels = c("gini", "extratrees")),
-          ranger.num.random.splits = p_int(lower = 1, upper = 100, default = 1L, depends = ranger.splitrule == "extratrees"),
-          # aknn
-          aknn.k = p_int(lower = 1L, upper = 50L),
-          aknn.distance = p_fct(levels = c("l2", "cosine", "ip"), default = "l2"),
-          aknn.M = p_int(lower = 18L, upper = 50L),
-          aknn.ef = p_dbl(lower = 3, upper = 8, trafo = function(x) round(2^x)),
-          aknn.ef_construction = p_dbl(lower = 4, upper = 9, trafo = function(x) round(2^x)),
-          # xgboost
-          xgboost.booster = p_fct(levels = c("gblinear", "gbtree", "dart")),
-          xgboost.nrounds = p_int(lower = 3, upper = 11, trafo = function(x) round(2^x)),
-          xgboost.eta = p_dbl(lower = -10, upper = 0, trafo = function(x) 2^x, depends = xgboost.booster %in% c("dart", "gbtree")),
-          xgboost.gamma = p_dbl(lower = -15, upper = 3, trafo = function(x) 2^x, depends = xgboost.booster %in% c("dart", "gbtree")),
-          xgboost.lambda = p_dbl(lower = -10, upper = 10, trafo = function(x) 2^x),
-          xgboost.alpha = p_dbl(lower = -10, upper = 10, trafo = function(x) 2^x),
-          xgboost.subsample = p_dbl(lower = 0.1, upper = 1),
-          xgboost.max_depth = p_int(lower = 1, upper = 15, depends = xgboost.booster %in% c("dart", "gbtree")),
-          xgboost.min_child_weight = p_dbl(lower = 0, upper = 7, trafo = function(x) 2^x, depends = xgboost.booster %in% c("dart", "gbtree")),
-          xgboost.colsample_bytree = p_dbl(lower = 0.01, upper = 1, depends = xgboost.booster %in% c("dart", "gbtree")),
-          xgboost.colsample_bylevel = p_dbl(lower = 0.01, upper = 1, depends = xgboost.booster %in% c("dart", "gbtree")),
-          xgboost.rate_drop = p_dbl(lower = 0, upper = 1, depends = xgboost.booster == "dart"),
-          xgboost.skip_drop = p_dbl(lower =  0, upper = 1, depends = xgboost.booster == "dart"),
-          # learner
-          num.impute.selected.cpo = p_fct(levels = c("impute.mean", "impute.median", "impute.hist")),
-          learner = p_fct(levels = c("aknn", "glmnet", "ranger", "rpart", "svm", "xgboost")),
-          task_id = p_fct(levels = as.character(self$get_task_ids()), tags = "task_id")
-      )
-      # Add dependencies
-      map(pc$params$learner$levels, function(x) {
-          nms = names(pc$params)[startsWith(names(pc$params), x)]
-          print(nms)
-          map(nms, function(nm) pc$add_dep(nm, "learner", CondEqual$new(x)))
-      })
-      pc
-    },
-    data = function(x) {
-      if(is.null(private$.data)) private$.data = preproc_data_rbv2_super(self)
-      private$.data
-    }
-  )
-)
-#' @include BenchmarkConfig.R
-benchmark_configs$add("rbv2_super", BenchmarkConfigSuperRBv2)
 
 
 BenchmarkConfigFCNet = R6Class("BenchmarkConfigFCNet",
