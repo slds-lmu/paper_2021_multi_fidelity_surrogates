@@ -11,7 +11,6 @@ BenchmarkConfig = R6Class("BenchmarkConfig",
     dicts_file = NULL,
     keras_model_file = NULL,
     onnx_model_file = NULL,
-    budget_param = NULL,
     target_variables = NULL,
     codomain = NULL,
     packages = NULL,
@@ -20,7 +19,7 @@ BenchmarkConfig = R6Class("BenchmarkConfig",
     eval_task_ids_file = "task_ids.txt",
 
 
-    initialize = function(id, download_url, workdir, model_name, param_set_file = NULL, data_file, dicts_file, keras_model_file, onnx_model_file, budget_param, target_variables, codomain, packages) {
+    initialize = function(id, download_url, workdir, model_name, param_set_file = NULL, data_file, dicts_file, keras_model_file, onnx_model_file, target_variables, codomain, packages) {
       self$id = assert_string(id)
       self$download_url = download_url
       self$workdir = if (!is.null(workdir)) if (!endsWith(workdir, "/")) paste0(workdir, "/") else workdir
@@ -31,7 +30,6 @@ BenchmarkConfig = R6Class("BenchmarkConfig",
       self$dicts_file = dicts_file
       self$keras_model_file = keras_model_file
       self$onnx_model_file = onnx_model_file
-      self$budget_param = assert_string(budget_param)
       self$target_variables = assert_character(target_variables, min.len = 1L)
       self$codomain = assert_param_set(codomain)
       self$packages = assert_character(packages, null.ok = TRUE)
@@ -160,7 +158,16 @@ BenchmarkConfig = R6Class("BenchmarkConfig",
       x = unlist(imap(self$param_set$params, function(x, nm) ifelse("task_id" %in% x$tags, nm, NA_character_)))
       x = x[!is.na(x)]
       if (length(x)) {
-        x
+        unname(x)
+      } else {
+        NULL
+      }
+    },
+    budget_param = function() {
+      x = unlist(imap(self$param_set$params, function(x, nm) ifelse("budget" %in% x$tags, nm, NA_character_)))
+      x = x[!is.na(x)]
+      if (length(x)) {
+        unname(x)
       } else {
         NULL
       }
