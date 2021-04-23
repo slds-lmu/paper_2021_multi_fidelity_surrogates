@@ -27,15 +27,21 @@ dt = data.frame(
                "RBv2glmnet", "RBv2ranger", "RBv2xgboost", "RBv2super" "FCNet", "TaskSet"),
   space = c("Cat+Dep", "Mix", "Mix+Dep", "Mix", "Mix", "Mix", "Mix+Dep",
             "Mix+Dep","Mix+Dep", "Mix", "Num"),
-  n_dims = c(34L, 7L, 7L, 5L, 6L, 3L, 9L, 14L, 36L, 11L, 9L),
-  n_targets = c(2L, 6L, 4L, 4L, 4L, 4L, 4L, 4L, 4L, 4L, 4L),
-  fidelity = c("epochs", "epoch", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "epochs + repls", "epochs + repls"),
-  n_problems = c(1L, 35L, 98L, 22L, 33L, 56L, 114L, 119L, 122L, 4L, 20L),
+  ndims = c(34L, 7L, 7L, 5L, 6L, 3L, 9L, 14L, 36L, 11L, 9L),
+  ntargets = c("2:perf+rt", "6:perf(5)+rt","6:perf(4)+rt+pt","6:perf(4)+rt+pt","6:perf(4)+rt+pt", "6:perf(4)+rt+pt","6:perf(4)+rt+pt","6:perf(4)+rt+pt","6:perf(4)+rt+pt", "perf(2)+rt+ ms", "4:perf(4)"),
+  fidelity = c("epochs", "epoch", "frac+repls", "frac+repls", "frac+repls", "frac+repls", "fract+repls", "frac+repls", "frac+repls", "epochs+repls", "epochs+repls"),
+  n_problems = c(1L, 35L, 96L, 101L, 99L, 98L, 114L, 109L, 89L, 4L, 20L),
   "$R^2$" = c(0.9866, 0.9820, NA, NA, NA, NA, NA, NA, NA, 0.769, NA),
   status = c("ready", "ready", "-", "-", "-", "-", "-", "-", "-", "-", "ready", "-")
 )
 knitr::kable(dt)
 ```
+
+where for **ntargets** (#number):
+- perf = performance measure
+- ms = model_size
+- rt = runtime
+- pt = predicttime
 
 For more information either look directly into the [code](https://github.com/compstat-lmu/paper_2021_multi_fidelity_surrogates/blob/main/R/BenchmarkConfigs.R) or use the object's printers via `cfgs("...")`.
 

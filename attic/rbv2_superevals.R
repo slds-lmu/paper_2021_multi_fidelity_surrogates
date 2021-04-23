@@ -62,7 +62,7 @@ for (j in c(1, 4:10)) {
 files = list.files(basepath, full.names = TRUE)
 files = files[endsWith(files, "_prep.rds")]
 devtools::load_all()
-workdir = paste0(path.expand("~"), "/LRZ Sync+Share/multifidelity_data/")
+workdir = paste0(path.expand("~"), "/..", "/LRZ Sync+Share/multifidelity_data/")
 
 # glmnet
 this_file = files[[1]]
@@ -115,8 +115,14 @@ for (f in files) {
   dt = rbindlist(list(dt, readRDS(f)), fill=TRUE, use.names=TRUE)
   gc()
 }
+saveRDS(dt, gsub(".arff", "_full.rds", cfg$data_path))
+
+# we also need a smaller version the other one might just be too big
+dt = readRDS(gsub(".arff", "_full.rds", cfg$data_path))
+dt = dt[!(task_id == "23517"), ]
+dt = dt[repl %in% 1:10, ]
+dt = dt[, sample_max(.SD, 10^5), by=task_id]
 saveRDS(dt, gsub(".arff", ".rds", cfg$data_path))
-map(files, unlink)
 
 # aknn
 this_file = files[grepl("HNSW.*_\\d*_prep", files)]
@@ -134,5 +140,3 @@ dt[,c("task_id", "dataset") := split_task_col(task)]
 dt[,task := NULL]
 cfg = cfgs("rbv2_rpart", workdir = workdir)
 saveRDS(dt, gsub(".arff", ".rds", cfg$data_path))
-
-#

@@ -1,13 +1,19 @@
-preproc_data_rbv2_svm = function(config, seed = 123L, frac=.1) {
+preproc_data_rbv2_svm = function(config, seed = 123L, frac=.1, n_max=1e5, n_min_task=800L) {
   set.seed(seed)
-  dt = data.table(farff::readARFF(config$data_path))
+  dt = data.table(readRDS(config$data_path))
   dt[, c("dataset", "learner") := NULL]
-  dt[, task_id := as.factor(task_id)]
+  dt = dt[repl %in% 1:10,]
+  # Limit to tasks with >= n_min_task obs.
+  cnts = dt[, .N, by = task_id][N > n_min_task,]
+  dt = dt[task_id %in% cnts$task_id,]
+  dt[, task_id := droplevels(task_id)]
   dt[, shrinking := as.logical(shrinking)]
+  
   tt = split_by_col(dt, frac = frac)
-
   train = tt$train
+  train = sample_max(train, n_max)
   train = preproc_iid(train)
+  train = apply_cummean_variance_param(train, mean = c("mmce", "f1", "auc", "logloss", "timepredict"), sum = "timetrain", "repl", ignore=NULL)
   trafos = c(
     map(train[, config$target_variables, with = FALSE], scale_sigmoid),
     map(train[, c("cost", "gamma"), with = FALSE], scale_base)
@@ -36,16 +42,22 @@ preproc_data_rbv2_svm = function(config, seed = 123L, frac=.1) {
   )
 }
 
-preproc_data_rbv2_ranger = function(config, seed = 123L, frac=.1) {
+preproc_data_rbv2_ranger = function(config, seed = 123L, frac=.1, n_max=1e5, n_min_task=800L) {
   set.seed(seed)
-  dt = data.table(farff::readARFF(config$data_path))
+  dt = data.table(readRDS(config$data_path))
   dt[, c("dataset", "learner") := NULL]
-  dt[, task_id := as.factor(task_id)]
   dt[, replace := as.logical(replace)]
+  dt = dt[repl %in% 1:10,]
+  # Limit to tasks with >= n_min_task obs.
+  cnts = dt[, .N, by = task_id][N > n_min_task,]
+  dt = dt[task_id %in% cnts$task_id,]
+  dt[, task_id := droplevels(task_id)]
   tt = split_by_col(dt, frac = frac)
 
   train = tt$train
+  train = sample_max(train, n_max)
   train = preproc_iid(train)
+  train = apply_cummean_variance_param(train, mean = c("mmce", "f1", "auc", "logloss", "timepredict"), sum = "timetrain", "repl", ignore=NULL)
   trafos = c(
     map(train[, config$target_variables, with = FALSE], scale_sigmoid),
     map(train[, c("num.trees", "min.node.size", 'num.random.splits'), with = FALSE], scale_base, base = 2L)
@@ -75,15 +87,21 @@ preproc_data_rbv2_ranger = function(config, seed = 123L, frac=.1) {
   )
 }
 
-preproc_data_rbv2_glmnet = function(config, seed = 123L, frac=.1) {
+preproc_data_rbv2_glmnet = function(config, seed = 123L, frac=.1, n_max=1e5, n_min_task=800L) {
   set.seed(seed)
-  dt = data.table(farff::readARFF(config$data_path))
+  dt = data.table(readRDS(config$data_path))
   dt[, c("dataset", "learner") := NULL]
-  dt[, task_id := as.factor(task_id)]
+  dt = dt[repl %in% 1:10,]
+  # Limit to tasks with >= n_min_task obs.
+  cnts = dt[, .N, by = task_id][N > n_min_task,]
+  dt = dt[task_id %in% cnts$task_id,]
+  dt[, task_id := droplevels(task_id)]
   tt = split_by_col(dt, frac = frac)
 
   train = tt$train
+  train = sample_max(train, n_max)
   train = preproc_iid(train)
+  train = apply_cummean_variance_param(train, mean = c("mmce", "f1", "auc", "logloss", "timepredict"), sum = "timetrain", "repl", ignore=NULL)
   trafos = c(
     map(train[, config$target_variables, with = FALSE], scale_sigmoid),
     map(train[, c("s"), with = FALSE], scale_base, base = 2L)
@@ -113,15 +131,21 @@ preproc_data_rbv2_glmnet = function(config, seed = 123L, frac=.1) {
   )
 }
 
-preproc_data_rbv2_xgboost = function(config, seed = 123L, frac=.1) {
+preproc_data_rbv2_xgboost = function(config, seed = 123L, frac=.1, n_max=1e5, n_min_task=800L) {
   set.seed(seed)
-  dt = data.table(farff::readARFF(config$data_path))
+  dt = data.table(readRDS(config$data_path))
   dt[, c("dataset", "learner") := NULL]
-  dt[, task_id := as.factor(task_id)]
+  dt = dt[repl %in% 1:10,]
+  # Limit to tasks with >= n_min_task obs.
+  cnts = dt[, .N, by = task_id][N > n_min_task,]
+  dt = dt[task_id %in% cnts$task_id,]
+  dt[, task_id := droplevels(task_id)]
   tt = split_by_col(dt, frac = frac)
 
   train = tt$train
+  train = sample_max(train, n_max)
   train = preproc_iid(train)
+  train = apply_cummean_variance_param(train, mean = c("mmce", "f1", "auc", "logloss", "timepredict"), sum = "timetrain", "repl", ignore=NULL)
   trafos = c(
     map(train[, config$target_variables, with = FALSE], scale_sigmoid),
     map(train[, c("nrounds", "eta", "gamma", "lambda", "alpha", "min_child_weight"), with = FALSE], scale_base, base = 2L),
@@ -152,15 +176,21 @@ preproc_data_rbv2_xgboost = function(config, seed = 123L, frac=.1) {
   )
 }
 
-preproc_data_rbv2_rpart = function(config, seed = 123L, frac=.1) {
+preproc_data_rbv2_rpart = function(config, seed = 123L, frac=.1, n_max=1e5, n_min_task=800L) {
   set.seed(seed)
-  dt = data.table(farff::readARFF(config$data_path))
+  dt = data.table(readRDS(config$data_path))
   dt[, c("dataset", "learner") := NULL]
-  dt[, task_id := as.factor(task_id)]
+  dt = dt[repl %in% 1:10,]
+  # Limit to tasks with >= n_min_task obs.
+  cnts = dt[, .N, by = task_id][N > n_min_task,]
+  dt = dt[task_id %in% cnts$task_id,]
+  dt[, task_id := droplevels(task_id)]
   tt = split_by_col(dt, frac = frac)
 
   train = tt$train
+  train = sample_max(train, n_max)
   train = preproc_iid(train)
+  train = apply_cummean_variance_param(train, mean = c("mmce", "f1", "auc", "logloss", "timepredict"), sum = "timetrain", "repl", ignore=NULL)
   trafos = c(
     map(train[, config$target_variables, with = FALSE], scale_sigmoid),
     map(train[, "cp", with = FALSE], scale_base, base = 2L),
@@ -190,15 +220,21 @@ preproc_data_rbv2_rpart = function(config, seed = 123L, frac=.1) {
   )
 }
 
-preproc_data_rbv2_aknn = function(config, seed = 123L, frac=.1) {
+preproc_data_rbv2_aknn = function(config, seed = 123L, frac=.1, n_max=1e5, n_min_task=800L) {
   set.seed(seed)
-  dt = data.table(farff::readARFF(config$data_path))
+  dt = data.table(readRDS(config$data_path))
   dt[, c("dataset", "learner") := NULL]
-  dt[, task_id := as.factor(task_id)]
+  dt = dt[repl %in% 1:10,]
+  # Limit to tasks with >= n_min_task obs.
+  cnts = dt[, .N, by = task_id][N > n_min_task,]
+  dt = dt[task_id %in% cnts$task_id,]
+  dt[, task_id := droplevels(task_id)]
   tt = split_by_col(dt, frac = frac)
 
   train = tt$train
+  train = sample_max(train, n_max)
   train = preproc_iid(train)
+  train = apply_cummean_variance_param(train, mean = c("mmce", "f1", "auc", "logloss", "timepredict"), sum = "timetrain", "repl", ignore=NULL)
   trafos = c(
     map(train[, config$target_variables, with = FALSE], scale_sigmoid),
     map(train[, c("k", "M"), with = FALSE], scale_sigmoid, p = 0),
@@ -230,11 +266,10 @@ preproc_data_rbv2_aknn = function(config, seed = 123L, frac=.1) {
 }
 
 
-preproc_data_rbv2_super = function(config, seed = 123L, frac=.1) {
+preproc_data_rbv2_super = function(config, seed = 123L, frac=., n_max=1e5) {
   set.seed(seed)
   dt = data.table(readRDS(config$data_path))
-  # Limit to tasks with > 500 obs.
-  cnts = dt[, .N, by = task_id][N > 500,]
+  dt = dt[repl %in% 1:10,]
   dt = dt[task_id %in% cnts$task_id,]
   dt[, task_id := droplevels(task_id)]
   dt[, learner := droplevels(learner)]
@@ -242,8 +277,9 @@ preproc_data_rbv2_super = function(config, seed = 123L, frac=.1) {
   tt = split_by_col(dt, frac = frac)
 
   train = tt$train
+  train = sample_max(train, n_max)
   train = preproc_iid(train)
-  train = sample_max(train, 1e6)
+  train = apply_cummean_variance_param(train, mean = c("mmce", "f1", "auc", "logloss", "timepredict"), sum = "timetrain", "repl", ignore=NULL)
   trafos = c(
     map(train[, config$target_variables, with = FALSE], scale_sigmoid),
     map(train[, c("glmnet.s"), with = FALSE], scale_base, base = 2L),
