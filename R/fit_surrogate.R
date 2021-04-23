@@ -94,7 +94,7 @@ default_model_config = function() {
     epochs = 150L,
     munge_n = NULL,
     batch_size = 512L,
-    emb_multiplier = 3.2
+    emb_multiplier = 1.6
   )
 }
 
