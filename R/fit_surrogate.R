@@ -82,7 +82,7 @@ fit_surrogate = function(problem_config, model_config = default_model_config(), 
 
 default_model_config = function() {
   list(
-    activation = "relu",
+    activation = "elu",
     deep_u = c(512, 512),
     deeper_u = c(512, 512, 256, 128),
     optimizer = optimizer_adam(3*10^-4),

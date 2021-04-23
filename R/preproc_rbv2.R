@@ -1,4 +1,4 @@
-preproc_data_rbv2_svm = function(config, seed = 123L, frac=.1, n_max=1e5, n_min_task=800L) {
+preproc_data_rbv2_svm = function(config, seed = 123L, frac=.1, n_max=5*1e6, n_min_task=800L) {
   set.seed(seed)
   dt = data.table(readRDS(config$data_path))
   dt[, c("dataset", "learner") := NULL]
@@ -42,7 +42,7 @@ preproc_data_rbv2_svm = function(config, seed = 123L, frac=.1, n_max=1e5, n_min_
   )
 }
 
-preproc_data_rbv2_ranger = function(config, seed = 123L, frac=.1, n_max=1e5, n_min_task=800L) {
+preproc_data_rbv2_ranger = function(config, seed = 123L, frac=.1, n_max=5*1e6, n_min_task=800L) {
   set.seed(seed)
   dt = data.table(readRDS(config$data_path))
   dt[, c("dataset", "learner") := NULL]
@@ -87,7 +87,7 @@ preproc_data_rbv2_ranger = function(config, seed = 123L, frac=.1, n_max=1e5, n_m
   )
 }
 
-preproc_data_rbv2_glmnet = function(config, seed = 123L, frac=.1, n_max=1e5, n_min_task=800L) {
+preproc_data_rbv2_glmnet = function(config, seed = 123L, frac=.1, n_max=5*1e6, n_min_task=800L) {
   set.seed(seed)
   dt = data.table(readRDS(config$data_path))
   dt[, c("dataset", "learner") := NULL]
@@ -131,7 +131,7 @@ preproc_data_rbv2_glmnet = function(config, seed = 123L, frac=.1, n_max=1e5, n_m
   )
 }
 
-preproc_data_rbv2_xgboost = function(config, seed = 123L, frac=.1, n_max=1e5, n_min_task=800L) {
+preproc_data_rbv2_xgboost = function(config, seed = 123L, frac=.1, n_max=5*1e6, n_min_task=800L) {
   set.seed(seed)
   dt = data.table(readRDS(config$data_path))
   dt[, c("dataset", "learner") := NULL]
@@ -176,7 +176,7 @@ preproc_data_rbv2_xgboost = function(config, seed = 123L, frac=.1, n_max=1e5, n_
   )
 }
 
-preproc_data_rbv2_rpart = function(config, seed = 123L, frac=.1, n_max=1e5, n_min_task=800L) {
+preproc_data_rbv2_rpart = function(config, seed = 123L, frac=.1, n_max=5*1e6, n_min_task=800L) {
   set.seed(seed)
   dt = data.table(readRDS(config$data_path))
   dt[, c("dataset", "learner") := NULL]
@@ -220,7 +220,7 @@ preproc_data_rbv2_rpart = function(config, seed = 123L, frac=.1, n_max=1e5, n_mi
   )
 }
 
-preproc_data_rbv2_aknn = function(config, seed = 123L, frac=.1, n_max=1e5, n_min_task=800L) {
+preproc_data_rbv2_aknn = function(config, seed = 123L, frac=.1, n_max=5*1e6, n_min_task=800L) {
   set.seed(seed)
   dt = data.table(readRDS(config$data_path))
   dt[, c("dataset", "learner") := NULL]
@@ -266,7 +266,7 @@ preproc_data_rbv2_aknn = function(config, seed = 123L, frac=.1, n_max=1e5, n_min
 }
 
 
-preproc_data_rbv2_super = function(config, seed = 123L, frac=., n_max=1e5) {
+preproc_data_rbv2_super = function(config, seed = 123L, frac=.1, n_max=5*1e6) {
   set.seed(seed)
   dt = data.table(readRDS(config$data_path))
   dt = dt[repl %in% 1:10,]
