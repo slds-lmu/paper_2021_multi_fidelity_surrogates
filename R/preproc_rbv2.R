@@ -270,7 +270,6 @@ preproc_data_rbv2_super = function(config, seed = 123L, frac=.1, n_max=5*1e6) {
   set.seed(seed)
   dt = data.table(readRDS(config$data_path))
   dt = dt[repl %in% 1:10,]
-  dt = dt[task_id %in% cnts$task_id,]
   dt[, task_id := droplevels(task_id)]
   dt[, learner := droplevels(learner)]
   # Split into train and test
