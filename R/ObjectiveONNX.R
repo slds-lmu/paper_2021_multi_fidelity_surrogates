@@ -41,7 +41,6 @@ ObjectiveONNX = R6Class("ObjectiveONNX",
         new_domain = ParamSet$new(domain$params[names(domain$params) != domain$ids(tags = "task_id")])
         new_domain$trafo = domain$trafo
         new_domain$deps = domain$deps
-        
         constants = ParamSet$new(list(task_id))
       } else {
         new_domain = domain
@@ -72,11 +71,12 @@ ObjectiveONNX = R6Class("ObjectiveONNX",
             "numeric" = NA_real_,
             "integer" = NA_integer_,
             "character" = NA_character_,
-            "list" = NA
+            "logical" = NA_integer_,
+            "list" = NA,
           )
           xdt[, to_add[i] := NA_storage_type]
         }
-
+        
         li = c(
           mlr3misc::imap(mlr3misc::keep(xdt, is.character), char_to_int, self$trafo_dict),
           # Below is a little odd but required as-is since otherwise autoconvert to float64 happens

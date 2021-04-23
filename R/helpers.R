@@ -2,10 +2,6 @@
 char_to_int = function(x, param_name, dict) {
   x[is.na(x)] = "None"
   matrix(dict[[param_name]][x,]$int)
-  # matrix(map_int(x, function(xs) {
-  #   dd = dict[[param_name]]
-  #   dd[dd$level == xs,]$int
-  # }))
 }
 
 # Trafo numerics using a trafo dict and impute NA's

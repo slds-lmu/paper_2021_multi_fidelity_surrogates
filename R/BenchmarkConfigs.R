@@ -578,17 +578,14 @@ BenchmarkConfigSuperRBv2 = R6Class("BenchmarkConfigSuperRBv2",
           svm.tolerance = p_dbl(lower = -12, upper = -3, trafo = function(x) 2^x),
           svm.degree = p_int(lower = 2, upper = 5, depends = svm.kernel == "polynomial"),
           svm.shrinking = p_lgl(),
-          svm.num.impute.selected.cpo = p_fct(levels = c("impute.mean", "impute.median", "impute.hist")),
           # glmnet
           glmnet.alpha = p_dbl(lower = 0, upper = 1, default = 1, trafo = function(x) max(0, min(1, x))),
           glmnet.s = p_dbl(lower = -10, upper = 10, default = 0, trafo = function(x) 2^x),
-          glmnet.num.impute.selected.cpo = p_fct(levels = c("impute.mean", "impute.median", "impute.hist")),
           # rpart
           rpart.cp = p_dbl(lower = -10, upper = 0, default = log2(0.01), trafo = function(x) 2^x),
           rpart.maxdepth = p_int(lower = 1, upper = 30, default = 30),
           rpart.minbucket = p_int(lower = 1, upper = 100, default = 1),
           rpart.minsplit = p_int(lower = 1, upper = 100, default = 20),
-          rpart.num.impute.selected.cpo = p_fct(levels = c("impute.mean", "impute.median", "impute.hist")),
           # ranger
           ranger.num.trees = p_int(lower = 1, upper = 2000),
           ranger.replace = p_lgl(),
@@ -598,14 +595,12 @@ BenchmarkConfigSuperRBv2 = R6Class("BenchmarkConfigSuperRBv2",
           ranger.min.node.size = p_int(lower = 1, upper = 100),
           ranger.splitrule = p_fct(levels = c("gini", "extratrees")),
           ranger.num.random.splits = p_int(lower = 1, upper = 100, default = 1L, depends = ranger.splitrule == "extratrees"),
-          ranger.num.impute.selected.cpo = p_fct(levels = c("impute.mean", "impute.median", "impute.hist")),
           # aknn
           aknn.k = p_int(lower = 1L, upper = 50L),
           aknn.distance = p_fct(levels = c("l2", "cosine", "ip"), default = "l2"),
           aknn.M = p_int(lower = 18L, upper = 50L),
           aknn.ef = p_dbl(lower = 3, upper = 8, trafo = function(x) round(2^x)),
           aknn.ef_construction = p_dbl(lower = 4, upper = 9, trafo = function(x) round(2^x)),
-          aknn.num.impute.selected.cpo = p_fct(levels = c("impute.mean", "impute.median", "impute.hist")),
           # xgboost
           xgboost.booster = p_fct(levels = c("gblinear", "gbtree", "dart")),
           xgboost.nrounds = p_int(lower = 3, upper = 11, trafo = function(x) round(2^x)),
@@ -620,8 +615,8 @@ BenchmarkConfigSuperRBv2 = R6Class("BenchmarkConfigSuperRBv2",
           xgboost.colsample_bylevel = p_dbl(lower = 0.01, upper = 1, depends = xgboost.booster %in% c("dart", "gbtree")),
           xgboost.rate_drop = p_dbl(lower = 0, upper = 1, depends = xgboost.booster == "dart"),
           xgboost.skip_drop = p_dbl(lower =  0, upper = 1, depends = xgboost.booster == "dart"),
-          xgboost.num.impute.selected.cpo = p_fct(levels = c("impute.mean", "impute.median", "impute.hist")),
           # learner
+          num.impute.selected.cpo = p_fct(levels = c("impute.mean", "impute.median", "impute.hist")),
           learner = p_fct(levels = c("aknn", "glmnet", "ranger", "rpart", "svm", "xgboost")),
           task_id = p_fct(levels = as.character(self$get_task_ids()), tags = "task_id")
       )

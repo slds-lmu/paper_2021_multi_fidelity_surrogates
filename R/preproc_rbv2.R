@@ -237,6 +237,7 @@ preproc_data_rbv2_super = function(config, seed = 123L, frac=.1) {
   cnts = dt[, .N, by = task_id][N > 500,]
   dt = dt[task_id %in% cnts$task_id,]
   dt[, task_id := droplevels(task_id)]
+  dt[, learner := droplevels(learner)]
   # Split into train and test
   tt = split_by_col(dt, frac = frac)
 
