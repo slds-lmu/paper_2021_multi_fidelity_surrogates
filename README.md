@@ -19,7 +19,8 @@ algorithms across several tasks.
 | RBv2glmnet  | Mix     |       3 |          4 | NA             |          56 |     NA | \-     |
 | RBv2ranger  | Mix+Dep |       9 |          4 | NA             |         114 |     NA | \-     |
 | RBv2xgboost | Mix+Dep |      14 |          4 | NA             |         119 |     NA | \-     |
-| FCNet       | Mix     |      11 |          4 | epochs + repls |           4 |     NA | \-     |
+| RBv2super   | Mix+Dep |      41 |          4 | NA             |         119 |     NA | \-     |
+| FCNet       | Mix     |      40 |          4 | epochs + repls |           4 |  0.769 | ready  |
 
 Toy test functions:
 

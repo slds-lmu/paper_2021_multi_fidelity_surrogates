@@ -24,18 +24,20 @@ This package contains several surrogates that approximate the hyperparameter res
 ```{r, echo=FALSE}
 dt = data.frame(
   instance = c("NB301", "LCBench", "RBv2SVM", "RBv2rpart", "RBv2aknn",
-               "RBv2glmnet", "RBv2ranger", "RBv2xgboost", "FCNet"),
+               "RBv2glmnet", "RBv2ranger", "RBv2xgboost", "RBv2super" "FCNet", "TaskSet"),
   space = c("Cat+Dep", "Mix", "Mix+Dep", "Mix", "Mix", "Mix", "Mix+Dep",
-            "Mix+Dep", "Mix"),
-  n_dims = c(34L, 7L, 7L, 5L, 6L, 3L, 9L, 14L, 11L),
-  n_targets = c(2L, 6L, 4L, 4L, 4L, 4L, 4L, 4L, 4L),
-  fidelity = c("epochs", "epoch", "NA", "NA", "NA", "NA", "NA", "NA", "epochs + repls"),
-  n_problems = c(1L, 35L, 98L, 22L, 33L, 56L, 114L, 119L, 4L),
-  "R^2" = c(0.9866, 0.9820, NA, NA, NA, NA, NA, NA, NA),
-  status = c("ready", "ready", "-", "-", "-", "-", "-", "-", "-")
+            "Mix+Dep","Mix+Dep", "Mix", "Num"),
+  n_dims = c(34L, 7L, 7L, 5L, 6L, 3L, 9L, 14L, 36L, 11L, 9L),
+  n_targets = c(2L, 6L, 4L, 4L, 4L, 4L, 4L, 4L, 4L, 4L, 4L),
+  fidelity = c("epochs", "epoch", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "epochs + repls", "epochs + repls"),
+  n_problems = c(1L, 35L, 98L, 22L, 33L, 56L, 114L, 119L, 122L, 4L, 20L),
+  "$R^2$" = c(0.9866, 0.9820, NA, NA, NA, NA, NA, NA, NA, 0.769, NA),
+  status = c("ready", "ready", "-", "-", "-", "-", "-", "-", "-", "-", "ready", "-")
 )
 knitr::kable(dt)
 ```
+
+For more information either look directly into the [code](https://github.com/compstat-lmu/paper_2021_multi_fidelity_surrogates/blob/main/R/BenchmarkConfigs.R) or use the object's printers via `cfgs("...")`.
 
 Toy test functions:
 
@@ -278,6 +280,28 @@ ins = OptimInstanceMultiCrit$new(
 #opt("random_search")$optimize(ins)
 ```
 
+## RandomBotv2 - super
+
+The **super** learner is a learner that is parametrized as a choice over all available randombot base learners.
+It has a highly hierarchical, $41$ dimensional parameter space that includes the configurations of all baselearners.
+
+
+We first load the config:
+
+```{r,eval=FALSE}
+workdir = "/tmp/multifidelity_data/"
+cfg = cfgs("rbv2_super", workdir = workdir)
+```
+
+this config contains our `objective` which we can use to optimize.
+
+```{r,eval=FALSE}
+ins = OptimInstanceMultiCrit$new(
+  objective = cfg$get_objective(),
+  terminator = trm("evals", n_evals = 10L)
+)
+#opt("random_search")$optimize(ins)
+```
 
 ## FCNet
 

@@ -2,7 +2,7 @@ fit_surrogate = function(problem_config, model_config = default_model_config(), 
   data = problem_config$data
   data = munge_data(data, target_vars = problem_config$target_variables, munge_n = model_config$munge_n)
   rs = reshape_data_embedding(data$xtrain)
-  embd = make_embedding_dt(data$xtrain)
+  embd = make_embedding_dt(data$xtrain, emb_multiplier = model_config$emb_multiplier)
 
   input_shape =  list(ncol(data$xtrain) - ncol(data$ytrain))
   output_shape = ncol(data$ytrain)
@@ -93,7 +93,8 @@ default_model_config = function() {
     dropout_p = FALSE,
     epochs = 150L,
     munge_n = NULL,
-    batch_size = 512L
+    batch_size = 512L,
+    emb_multiplier = 3.2
   )
 }
 

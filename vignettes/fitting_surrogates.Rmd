@@ -226,7 +226,7 @@ save_task_ids(cfg)
 cfg = cfgs('fcnet', workdir = workdir)
 model_config = default_model_config()
 model_config$epochs = 1L
-model_config$activation = "elu"
+model_config$activation = "relu"
 cfg$fit_surrogate(model_config = model_config, overwrite = TRUE)
 ```
 

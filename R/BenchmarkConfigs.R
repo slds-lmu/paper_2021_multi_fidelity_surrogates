@@ -522,9 +522,9 @@ BenchmarkConfigRBv2aknn = R6Class("BenchmarkConfigRBv2aknn",
   active = list(
     param_set = function() {
       ps(
-        k = p_int(lower = 1L, upper = 50),
+        k = p_int(lower = 1L, upper = 50L),
         distance = p_fct(levels = c("l2", "cosine", "ip"), default = "l2"),
-        M = p_int(lower = 18, upper = 50),
+        M = p_int(lower = 18L, upper = 50L),
         ef = p_dbl(lower = 3, upper = 8, trafo = function(x) round(2^x)),
         ef_construction = p_dbl(lower = 4, upper = 9, trafo = function(x) round(2^x)),
         num.impute.selected.cpo = p_fct(levels = c("impute.mean", "impute.median", "impute.hist")),
@@ -539,6 +539,103 @@ BenchmarkConfigRBv2aknn = R6Class("BenchmarkConfigRBv2aknn",
 )
 #' @include BenchmarkConfig.R
 benchmark_configs$add("rbv2_aknn", BenchmarkConfigRBv2aknn)
+
+
+
+BenchmarkConfigSuperRBv2 = R6Class("BenchmarkConfigSuperRBv2",
+  inherit = BenchmarkConfig,
+  public = list(
+    initialize = function(id = "RBv2_super", workdir) {
+      super$initialize(
+        id,
+        download_url = "https://syncandshare.lrz.de/dl/fiSd4UWxmx9FRrQtdYeYrxEV/rbv2_aknn/",
+        workdir = workdir,
+        model_name = "rbv2_super",
+        param_set_file = NULL,
+        data_file = "data.rds",
+        dicts_file = "dicts.rds",
+        keras_model_file = "model.hdf5",
+        onnx_model_file = "model.onnx",
+        budget_param = "epoch",
+        target_variables = c("perf.mmce", "perf.logloss", "traintime", "predicttime"),
+        codomain = ps(
+          perf.mmce = p_dbl(lower = 0, upper = 1, tags = "minimize"),
+          perf.logloss = p_dbl(lower = 0, upper = 1, tags = "minimize"),
+          traintime = p_dbl(lower = 0, upper = 1, tags = "minimize"),
+          predicttime = p_dbl(lower = 0, upper = 1, tags = "minimize")
+        ),
+        packages = NULL
+      )
+    }
+  ),
+  active = list(
+    param_set = function() {
+      pc = ps(
+          # svm 
+          svm.kernel = p_fct(levels = c("linear", "polynomial", "radial")),
+          svm.cost =  p_dbl(lower = -12, upper = 12, trafo = function(x) 2^x),
+          svm.gamma = p_dbl(lower = -12, upper = 12, trafo = function(x) 2^x, depends = svm.kernel == "radial"),
+          svm.tolerance = p_dbl(lower = -12, upper = -3, trafo = function(x) 2^x),
+          svm.degree = p_int(lower = 2, upper = 5, depends = svm.kernel == "polynomial"),
+          svm.shrinking = p_lgl(),
+          # glmnet
+          glmnet.alpha = p_dbl(lower = 0, upper = 1, default = 1, trafo = function(x) max(0, min(1, x))),
+          glmnet.s = p_dbl(lower = -10, upper = 10, default = 0, trafo = function(x) 2^x),
+          # rpart
+          rpart.cp = p_dbl(lower = -10, upper = 0, default = log2(0.01), trafo = function(x) 2^x),
+          rpart.maxdepth = p_int(lower = 1, upper = 30, default = 30),
+          rpart.minbucket = p_int(lower = 1, upper = 100, default = 1),
+          rpart.minsplit = p_int(lower = 1, upper = 100, default = 20),
+          # ranger
+          ranger.num.trees = p_int(lower = 1, upper = 2000),
+          ranger.replace = p_lgl(),
+          ranger.sample.fraction = p_dbl(lower = 0.1, upper = 1),
+          ranger.mtry.power = p_int(lower = 0, upper = 1),
+          ranger.respect.unordered.factors = p_fct(levels = c("ignore", "order", "partition")),
+          ranger.min.node.size = p_int(lower = 1, upper = 100),
+          ranger.splitrule = p_fct(levels = c("gini", "extratrees")),
+          ranger.num.random.splits = p_int(lower = 1, upper = 100, default = 1L, depends = ranger.splitrule == "extratrees"),
+          # aknn
+          aknn.k = p_int(lower = 1L, upper = 50L),
+          aknn.distance = p_fct(levels = c("l2", "cosine", "ip"), default = "l2"),
+          aknn.M = p_int(lower = 18L, upper = 50L),
+          aknn.ef = p_dbl(lower = 3, upper = 8, trafo = function(x) round(2^x)),
+          aknn.ef_construction = p_dbl(lower = 4, upper = 9, trafo = function(x) round(2^x)),
+          # xgboost
+          xgboost.booster = p_fct(levels = c("gblinear", "gbtree", "dart")),
+          xgboost.nrounds = p_int(lower = 3, upper = 11, trafo = function(x) round(2^x)),
+          xgboost.eta = p_dbl(lower = -10, upper = 0, trafo = function(x) 2^x, depends = xgboost.booster %in% c("dart", "gbtree")),
+          xgboost.gamma = p_dbl(lower = -15, upper = 3, trafo = function(x) 2^x, depends = xgboost.booster %in% c("dart", "gbtree")),
+          xgboost.lambda = p_dbl(lower = -10, upper = 10, trafo = function(x) 2^x),
+          xgboost.alpha = p_dbl(lower = -10, upper = 10, trafo = function(x) 2^x),
+          xgboost.subsample = p_dbl(lower = 0.1, upper = 1),
+          xgboost.max_depth = p_int(lower = 1, upper = 15, depends = xgboost.booster %in% c("dart", "gbtree")),
+          xgboost.min_child_weight = p_dbl(lower = 0, upper = 7, trafo = function(x) 2^x, depends = xgboost.booster %in% c("dart", "gbtree")),
+          xgboost.colsample_bytree = p_dbl(lower = 0.01, upper = 1, depends = xgboost.booster %in% c("dart", "gbtree")),
+          xgboost.colsample_bylevel = p_dbl(lower = 0.01, upper = 1, depends = xgboost.booster %in% c("dart", "gbtree")),
+          xgboost.rate_drop = p_dbl(lower = 0, upper = 1, depends = xgboost.booster == "dart"),
+          xgboost.skip_drop = p_dbl(lower =  0, upper = 1, depends = xgboost.booster == "dart"),
+          # learner
+          num.impute.selected.cpo = p_fct(levels = c("impute.mean", "impute.median", "impute.hist")),
+          learner = p_fct(levels = c("aknn", "glmnet", "ranger", "rpart", "svm", "xgboost")),
+          task_id = p_fct(levels = as.character(self$get_task_ids()), tags = "task_id")
+      )
+      # Add dependencies
+      map(pc$params$learner$levels, function(x) {
+          nms = names(pc$params)[startsWith(names(pc$params), x)]
+          print(nms)
+          map(nms, function(nm) pc$add_dep(nm, "learner", CondEqual$new(x)))
+      })
+      pc
+    },
+    data = function(x) {
+      if(is.null(private$.data)) private$.data = preproc_data_rbv2_super(self)
+      private$.data
+    }
+  )
+)
+#' @include BenchmarkConfig.R
+benchmark_configs$add("rbv2_super", BenchmarkConfigSuperRBv2)
 
 
 BenchmarkConfigFCNet = R6Class("BenchmarkConfigFCNet",
@@ -556,7 +653,6 @@ BenchmarkConfigFCNet = R6Class("BenchmarkConfigFCNet",
         keras_model_file = "model.hdf5",
         onnx_model_file = "model.onnx",
         budget_param = "epoch",
-        task_id_column = "task",
         target_variables = c("valid_loss", "valid_mse", "runtime", "n_params"),
         codomain = ps(
           valid_loss = p_dbl(lower = 0, upper = 1, tags = "minimize"),
@@ -582,7 +678,7 @@ BenchmarkConfigFCNet = R6Class("BenchmarkConfigFCNet",
         lr_schedule = p_fct(levels = c("const", "cosine")),
         n_units_1 = p_int(lower = 4L, upper = 9L, trafo = function(x) 2^x),
         n_units_2 = p_int(lower = 4L, upper = 9, trafo = function(x) 2^x),
-        task = p_fct(levels = c("fcnet_protein_structure", "fcnet_parkinsons_telemonitoring", "fcnet_naval_propulsion", "fcnet_slice_localization"))
+        task = p_fct(levels = c("fcnet_protein_structure", "fcnet_parkinsons_telemonitoring", "fcnet_naval_propulsion", "fcnet_slice_localization"), tags = "task_id")
       )
     },
     data = function(x) {
@@ -593,6 +689,69 @@ BenchmarkConfigFCNet = R6Class("BenchmarkConfigFCNet",
 )
 #' @include BenchmarkConfig.R
 benchmark_configs$add("fcnet", BenchmarkConfigFCNet)
+
+BenchmarkConfigTaskSet = R6Class("BenchmarkConfigTaskSet",
+  inherit = BenchmarkConfig,
+  public = list(
+    initialize = function(id = "TaskSet", workdir) {
+      super$initialize(
+        id,
+        download_url = "https://syncandshare.lrz.de/dl/fiSd4UWxmx9FRrQtdYeYrxEV/task_set/",
+        workdir = workdir,
+        model_name = "task_set",
+        param_set_file = NULL,
+        data_file = "data.rds",
+        dicts_file = "dicts.rds",
+        keras_model_file = "model.hdf5",
+        onnx_model_file = "model.onnx",
+        budget_param = "epoch",
+        target_variables = c("train", "valid1", "valid2", "test"),
+        codomain = ps(
+          train = p_dbl(lower = 0, upper = Inf, tags = "minimize"),
+          valid1 = p_dbl(lower = 0, upper = Inf, tags = "minimize"),
+          valid2 = p_dbl(lower = 0, upper = Inf, tags = "minimize"),
+          test = p_dbl(lower = 0, upper = Inf, tags = "minimize")
+        ),
+        packages = NULL
+      )
+    }
+  ),
+  active = list(
+    param_set = function() {
+      ps(
+        epoch = p_int(lower = 1L, upper = 10000L, tags = "budget"),
+        replication = p_int(lower = 0L, upper = 4L, tags = "budget"),
+        learning_rate = p_dbl(lower = -8, upper = 1, trafo = function(x) 10^x),
+        beta1 = p_dbl(lower = -4, upper = 0, trafo = function(x) 10^x),
+        beta2 = p_dbl(lower = -3, upper = 0, trafo = function(x) 10^x),
+        epsilon = p_dbl(lower = -10, upper = 3, trafo = function(x) 10^x),
+        l1 = p_dbl(lower = -8, upper = 1, trafo = function(x) 10^x),
+        l2 = p_dbl(lower = -8, upper = 1, trafo = function(x) 10^x),
+        linear_decay = p_dbl(lower = -7, upper = -4, trafo = function(x) 10^x),
+        exponential_decay = p_dbl(lower = -6, upper = -3, trafo = function(x) 10^x),
+        task_name = p_fct(levels = 
+          c("Associative_GRU128_BS128_Pairs10_Tokens50", "Associative_GRU256_BS128_Pairs20_Tokens50", 
+            "Associative_LSTM128_BS128_Pairs10_Tokens50", "Associative_LSTM128_BS128_Pairs20_Tokens50",
+            "Associative_LSTM128_BS128_Pairs5_Tokens20", "Associative_LSTM256_BS128_Pairs20_Tokens50",
+            "Associative_LSTM256_BS128_Pairs40_Tokens100", "Associative_VRNN128_BS128_Pairs10_Tokens50",
+            "Associative_VRNN256_BS128_Pairs20_Tokens50", "Copy_GRU128_BS128_Length20_Tokens10",
+            "Copy_GRU256_BS128_Length40_Tokens50", "Copy_LSTM128_BS128_Length20_Tokens10",
+            "Copy_LSTM128_BS128_Length20_Tokens20", "Copy_LSTM128_BS128_Length5_Tokens10",
+            "Copy_LSTM128_BS128_Length50_Tokens5", "Copy_LSTM256_BS128_Length40_Tokens50",
+            "Copy_VRNN128_BS128_Length20_Tokens10", "Copy_VRNN256_BS128_Length40_Tokens50",
+            "FixedImageConvAE_cifar10_32x32x32x32x32_bs128", "FixedImageConvAE_cifar10_32x64x8x64x32_bs128"
+          ), tags = "task_id"
+        )
+      )
+    },
+    data = function(x) {
+      if(is.null(private$.data)) private$.data = preproc_data_task_set(self)
+      private$.data
+    }
+  )
+)
+#' @include BenchmarkConfig.R
+benchmark_configs$add("task_set", BenchmarkConfigTaskSet)
 
 
 # Not sure whether to include kerasff
