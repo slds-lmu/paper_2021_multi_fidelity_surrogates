@@ -57,6 +57,7 @@ Collate:
     'preproc_lcbench.R'
     'preproc_nasbench_301.R'
     'preproc_rbv2.R'
+    'preproc_task_set.R'
     'scalers.R'
     'zzz.R'
 Config/testthat/edition: 3
