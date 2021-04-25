@@ -2,13 +2,15 @@ preproc_data_rbv2_svm = function(config, seed = 123L, frac=.1, n_max=1e5, n_min_
   set.seed(seed)
   dt = data.table(readRDS(config$data_path))
   dt[, c("dataset", "learner") := NULL]
-  dt = dt[repl %in% 1:10,]
+  stopifnot(all(dt$repl == as.numeric(dt$repl)))
+  dt[, repl := as.numeric(repl)]
+  dt = dt[repl <= 10L,]
   # Limit to tasks with >= n_min_task obs.
   cnts = dt[, .N, by = task_id][N > n_min_task,]
   dt = dt[task_id %in% cnts$task_id,]
   dt[, task_id := droplevels(task_id)]
   dt[, shrinking := as.logical(shrinking)]
-  
+
   tt = split_by_col(dt, frac = frac)
   train = tt$train
   train = sample_max(train, n_max)
@@ -47,7 +49,8 @@ preproc_data_rbv2_ranger = function(config, seed = 123L, frac=.1, n_max=1e5, n_m
   dt = data.table(readRDS(config$data_path))
   dt[, c("dataset", "learner") := NULL]
   dt[, replace := as.logical(replace)]
-  dt = dt[repl %in% 1:10,]
+  dt[, repl := as.numeric(repl)]
+  dt = dt[repl <= 10L,]
   # Limit to tasks with >= n_min_task obs.
   cnts = dt[, .N, by = task_id][N > n_min_task,]
   dt = dt[task_id %in% cnts$task_id,]
@@ -77,7 +80,7 @@ preproc_data_rbv2_ranger = function(config, seed = 123L, frac=.1, n_max=1e5, n_m
     oob = NULL
     ytest = NULL
   }
-  
+
   list(
     xtrain = train,
     ytrain = y,
@@ -91,7 +94,8 @@ preproc_data_rbv2_glmnet = function(config, seed = 123L, frac=.1, n_max=1e5, n_m
   set.seed(seed)
   dt = data.table(readRDS(config$data_path))
   dt[, c("dataset", "learner") := NULL]
-  dt = dt[repl %in% 1:10,]
+  dt[, repl := as.numeric(repl)]
+  dt = dt[repl <= 10L,]
   # Limit to tasks with >= n_min_task obs.
   cnts = dt[, .N, by = task_id][N > n_min_task,]
   dt = dt[task_id %in% cnts$task_id,]
@@ -135,7 +139,8 @@ preproc_data_rbv2_xgboost = function(config, seed = 123L, frac=.1, n_max=1e5, n_
   set.seed(seed)
   dt = data.table(readRDS(config$data_path))
   dt[, c("dataset", "learner") := NULL]
-  dt = dt[repl %in% 1:10,]
+  dt[, repl := as.numeric(repl)]
+  dt = dt[repl <= 10L,]
   # Limit to tasks with >= n_min_task obs.
   cnts = dt[, .N, by = task_id][N > n_min_task,]
   dt = dt[task_id %in% cnts$task_id,]
@@ -180,7 +185,8 @@ preproc_data_rbv2_rpart = function(config, seed = 123L, frac=.1, n_max=1e5, n_mi
   set.seed(seed)
   dt = data.table(readRDS(config$data_path))
   dt[, c("dataset", "learner") := NULL]
-  dt = dt[repl %in% 1:10,]
+  dt[, repl := as.numeric(repl)]
+  dt = dt[repl <= 10L,]
   # Limit to tasks with >= n_min_task obs.
   cnts = dt[, .N, by = task_id][N > n_min_task,]
   dt = dt[task_id %in% cnts$task_id,]
@@ -224,7 +230,8 @@ preproc_data_rbv2_aknn = function(config, seed = 123L, frac=.1, n_max=1e5, n_min
   set.seed(seed)
   dt = data.table(readRDS(config$data_path))
   dt[, c("dataset", "learner") := NULL]
-  dt = dt[repl %in% 1:10,]
+  dt[, repl := as.numeric(repl)]
+  dt = dt[repl <= 10L,]
   # Limit to tasks with >= n_min_task obs.
   cnts = dt[, .N, by = task_id][N > n_min_task,]
   dt = dt[task_id %in% cnts$task_id,]
@@ -243,7 +250,7 @@ preproc_data_rbv2_aknn = function(config, seed = 123L, frac=.1, n_max=1e5, n_min
   train[, names(trafos) := pmap(list(.SD, trafos), function(x, t) {t$trafo(x)}), .SDcols = names(trafos)]
   y = as.matrix(train[, config$target_variables, with = FALSE])
   train = train[, (config$target_variables) := NULL]
-  
+
   # Preproc test data
   if (frac) {
     oob = tt$test
@@ -269,7 +276,8 @@ preproc_data_rbv2_aknn = function(config, seed = 123L, frac=.1, n_max=1e5, n_min
 preproc_data_rbv2_super = function(config, seed = 123L, frac=., n_max=1e5) {
   set.seed(seed)
   dt = data.table(readRDS(config$data_path))
-  dt = dt[repl %in% 1:10,]
+  dt[, repl := as.numeric(repl)]
+  dt = dt[repl <= 10L,]
   dt = dt[task_id %in% cnts$task_id,]
   dt[, task_id := droplevels(task_id)]
   dt[, learner := droplevels(learner)]

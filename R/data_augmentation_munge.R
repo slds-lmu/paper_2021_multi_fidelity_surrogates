@@ -43,7 +43,6 @@ augment_with_munge = function(data, target_vars, n_augment = 10000, n_max_train 
       t = TaskRegr$new("ban", backend = dt, target = target_vars[i])
       l = rng$clone()
       l$train(t)
-      # print(l$predict(t)$score(list(msr("regr.rsq"), msr("regr.rmse"))))
       p = l$predict(tm)
       p$data$response
     })
