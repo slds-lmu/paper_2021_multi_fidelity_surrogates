@@ -11,13 +11,13 @@ algorithms across several tasks.
 
 | instance    | space   | ndims | ntargets         | fidelity     | n\_problems |    X.R.2. | status |
 | :---------- | :------ | ----: | :--------------- | :----------- | ----------: | --------: | :----- |
-| NB301       | Cat+Dep |    34 | 2:perf+rt        | epochs       |           1 |    0.9866 | ready  |
+| NB301       | Cat+Dep |    34 | 2:perf(1)+rt     | epochs       |           1 |    0.9866 | ready  |
 | LCBench     | Mix     |     7 | 6:perf(5)+rt     | epochs       |          35 |    0.9820 | ready  |
 | RBv2SVM     | Mix+Dep |     7 | 6:perf(4)+rt+pt  | frac+repls   |          96 |    0.6900 | \-     |
 | RBv2rpart   | Mix     |     5 | 6:perf(4)+rt+pt  | frac+repls   |         101 |    0.3400 | \-     |
 | RBv2aknn    | Mix     |     6 | 6:perf(4)+rt+pt  | frac+repls   |          99 |    0.3680 | \-     |
 | RBv2glmnet  | Mix     |     3 | 6:perf(4)+rt+pt  | frac+repls   |          98 |    0.2590 | \-     |
-| RBv2ranger  | Mix+Dep |     9 | 6:perf(4)+rt+pt  | fract+repls  |         114 |    0.2830 | \-     |
+| RBv2ranger  | Mix+Dep |     9 | 6:perf(4)+rt+pt  | frac+repls   |         114 |    0.2830 | \-     |
 | RBv2xgboost | Mix+Dep |    14 | 6:perf(4)+rt+pt  | frac+repls   |         109 |    0.5770 | \-     |
 | RBv2super   | Mix+Dep |    36 | 6:perf(4)+rt+pt  | frac+repls   |          89 |        NA | \-     |
 | FCNet       | Mix     |    11 | 4:perf(2)+rt+ ms | epochs+repls |           4 |    0.7690 | ready  |
@@ -300,7 +300,7 @@ ins = OptimInstanceMultiCrit$new(
 
 The **super** learner is a learner that is parametrized as a choice over
 all available randombot base learners. It has a highly hierarchical,
-\(41\) dimensional parameter space that includes the configurations of
+\(37\) dimensional parameter space that includes the configurations of
 all baselearners.
 
 We first load the config:

@@ -316,7 +316,6 @@ preproc_data_rbv2_super = function(config, seed = 123L, frac=.1, n_max=1e5) {
     oob = NULL
     ytest = NULL
   }
-
   list(
     xtrain = train,
     ytrain = y,
