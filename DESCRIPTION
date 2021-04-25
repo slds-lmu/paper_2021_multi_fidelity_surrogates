@@ -17,19 +17,20 @@ Config/reticulate:
 Depends:
     R (>= 3.2)
 Imports:
+    bbotk,
     data.table,
-    keras,
-    tensorflow,
-    mlr3,
     mlr3misc,
+    keras,
     paradox (>= 0.7.1),
     R6,
-    mlr3keras,
     reticulate,
     forcats,
     checkmate
 Suggests:
+    mlr3,
     mlr3measures,
+    mlr3keras,
+    tensorflow,
     ggplot2,
     rgl,
     patchwork,
@@ -45,7 +46,7 @@ RoxygenNote: 7.1.1
 Encoding: UTF-8
 VignetteBuilder: knitr
 SystemRequirements: Keras >= 2.3 (https://keras.io)
-Collate: 
+Collate:
     'BenchmarkConfig.R'
     'BenchmarkConfigs.R'
     'ObjectiveONNX.R'

@@ -18,7 +18,7 @@ dts = map(base_configs, function(cfg) {
     dt = dt[task_id %in% cnts$task_id,]
     catf("Algo %s: %s datasets with > 800 evals", cfg, nrow(cnts))
     # Rename colnames
-    param_names = setdiff(intersect(colnames(dt), names(cff$param_set$params)), c("task_id", "num.impute.selected.cpo"))
+    param_names = setdiff(intersect(colnames(dt), names(cff$param_set$params)), c("task_id", "num.impute.selected.cpo", "repl", "trainsize"))
     colnames(dt)[colnames(dt) %in% param_names] = paste0(learner, ".", param_names)
     dt[, learner := as.factor(learner)]
     return(dt)
@@ -30,6 +30,8 @@ dts = dts[task_id %in% cnts$task_id,]
 catf("Algo %s: %s datasets with > 800 evals", "rbv2_super", nrow(cnts))
 dts[, svm.shrinking := as.logical(svm.shrinking)]
 dts[, ranger.replace := as.logical(ranger.replace)]
-dts[, fitted := NULL]
+dts[, task := NULL]
 dts[, (colnames(keep(dts, is.character))) := map(.SD, as.factor), .SDcols = is.character]
 saveRDS(dts, "C:/Users/flo/LRZ Sync+Share/multifidelity_data/rbv2_super/data.rds")
+
+

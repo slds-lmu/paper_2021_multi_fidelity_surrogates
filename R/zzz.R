@@ -1,12 +1,10 @@
 #' @import data.table
-#' @import keras
-#' @import tensorflow
-#' @import mlr3
 #' @import mlr3misc
 #' @import paradox
-#' @import mlr3keras
 #' @import reticulate
+#' @import keras
 #' @importFrom forcats fct_explicit_na fct_drop
+#' @importFrom bbotk ObjectiveRFunDt
 #' @import checkmate
 #' @importFrom R6 R6Class
 "_PACKAGE"

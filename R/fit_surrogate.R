@@ -1,14 +1,15 @@
 fit_surrogate = function(problem_config, model_config = default_model_config(), overwrite = FALSE, plot = TRUE) {
+  require_namespaces(c("keras", "mlr3keras"))
   data = problem_config$data
   data = munge_data(data, target_vars = problem_config$target_variables, munge_n = model_config$munge_n)
-  rs = reshape_data_embedding(data$xtrain)
+  rs = mlr3keras::reshape_data_embedding(data$xtrain)
   embd = make_embedding_dt(data$xtrain, emb_multiplier = model_config$emb_multiplier)
 
   input_shape =  list(ncol(data$xtrain) - ncol(data$ytrain))
   output_shape = ncol(data$ytrain)
   model = make_architecture(embd, input_shape, output_shape, model_config)
 
-  cbs = list(cb_es(patience = 20L))
+  cbs = list(mlr3keras::cb_es(patience = 20L))
   history = model %>%
     fit(
       x = rs$data,
@@ -26,7 +27,7 @@ fit_surrogate = function(problem_config, model_config = default_model_config(), 
   }
 
   # Test Data Metrics & Plots
-  rs2 = reshape_data_embedding(data$xtest)
+  rs2 = mlr3keras::reshape_data_embedding(data$xtest)
   ptest = as.matrix(predict(model, rs2$data))
   colnames(ptest) = cfg$target_variables
   colnames(data$ytest) = cfg$target_variables
@@ -82,10 +83,10 @@ fit_surrogate = function(problem_config, model_config = default_model_config(), 
 
 default_model_config = function() {
   list(
-    activation = "relu",
+    activation = "elu",
     deep_u = c(512, 512),
     deeper_u = c(512, 512, 256, 128),
-    optimizer = optimizer_adam(3*10^-4),
+    optimizer = keras::optimizer_adam(3*10^-4),
     deep = TRUE,
     deeper = TRUE,
     batchnorm = FALSE,
@@ -94,7 +95,7 @@ default_model_config = function() {
     epochs = 150L,
     munge_n = NULL,
     batch_size = 512L,
-    emb_multiplier = 3.2
+    emb_multiplier = 1.6
   )
 }
 

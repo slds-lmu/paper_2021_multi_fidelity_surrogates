@@ -13,7 +13,6 @@ BenchmarkConfigNB301 = R6Class("BenchmarkConfigNB301",
         dicts_file = "dicts.rds",
         keras_model_file = "model.hdf5",
         onnx_model_file = "model.onnx",
-        budget_param = "epoch",
         target_variables = c("val_accuracy", "runtime"),
         codomain = ps(
           val_accuracy = p_dbl(lower = 0, upper = 1, tags = "maximize"),
@@ -52,7 +51,6 @@ BenchmarkConfigLCBench = R6Class("BenchmarkConfigLCBench",
        dicts_file = "dicts.rds",
        keras_model_file = "model.hdf5",
        onnx_model_file = "model.onnx",
-       budget_param = "epoch",
        target_variables = c("val_accuracy", "val_cross_entropy", "val_balanced_accuracy", "test_cross_entropy", "test_balanced_accuracy", "time"),
        codomain = ps(
          val_accuracy = p_dbl(lower = 0, upper = 1, tags = "maximize"),
@@ -102,7 +100,6 @@ BenchmarkConfigBranin = R6Class("BenchmarkConfigBranin",
         dicts_file = NULL,
         keras_model_file = NULL,
         onnx_model_file = NULL,
-        budget_param = "fidelity",
         target_variables = "y",
         codomain = ps(
           y = p_dbl(lower = -Inf, upper = Inf, tags = "minimize")
@@ -116,7 +113,7 @@ BenchmarkConfigBranin = R6Class("BenchmarkConfigBranin",
     },
 
     get_objective = function() {
-      ObjectiveRFunDt$new(
+      bbotk::ObjectiveRFunDt$new(
         fun = function(xdt) {
           a = 1
           b = 5.1 / (4 * (pi ^ 2))
@@ -187,7 +184,6 @@ BenchmarkConfigShekel = R6Class("BenchmarkConfigShekel",
         dicts_file = NULL,
         keras_model_file = NULL,
         onnx_model_file = NULL,
-        budget_param = "fidelity",
         target_variables = "y",
         codomain = ps(
           y = p_dbl(lower = -Inf, upper = Inf, tags = "minimize")
@@ -202,7 +198,7 @@ BenchmarkConfigShekel = R6Class("BenchmarkConfigShekel",
 
     get_objective = function(m = 10L) {
       assert_int(m, lower = 1L, upper = 20L)
-      ObjectiveRFunDt$new(
+      bbotk::ObjectiveRFunDt$new(
         fun = function(xdt) {
           xdt[["fidelity"]] =  4 * xdt[["fidelity"]]  # scale to from [0, 1] to [0, 4]
           xdt_mat = as.matrix(xdt)
@@ -256,12 +252,11 @@ BenchmarkConfigRBv2SVM = R6Class("BenchmarkConfigRBv2SVM",
         dicts_file = "dicts.rds",
         keras_model_file = "model.hdf5",
         onnx_model_file = "model.onnx",
-        budget_param = "epoch",
         target_variables = c("mmce", "f1", "auc", "logloss", "timetrain", "timepredict"),
         codomain = ps(
           mmce = p_dbl(lower = 0, upper = 1, tags = "minimize"),
-          f1 = p_dbl(lower = 0, upper = 1, tags = "minimize"),
-          auc = p_dbl(lower = 0, upper = 1, tags = "minimize"),
+          f1 = p_dbl(lower = 0, upper = 1, tags = "maximize"),
+          auc = p_dbl(lower = 0, upper = 1, tags = "maximize"),
           logloss = p_dbl(lower = 0, upper = Inf, tags = "minimize"),
           timetrain = p_dbl(lower = 0, upper = 1, tags = "minimize"),
           timepredict = p_dbl(lower = 0, upper = 1, tags = "minimize")
@@ -282,8 +277,20 @@ BenchmarkConfigRBv2SVM = R6Class("BenchmarkConfigRBv2SVM",
         trainsize = p_dbl(lower = 0, upper = 1, tag = "budget"),
         repl = p_int(lower = 1, upper = 10, tag = "budget"),
         num.impute.selected.cpo = p_fct(levels = c("impute.mean", "impute.median", "impute.hist")),
-        task_id = p_fct(levels = as.character(self$get_task_ids()), tags = "task_id")
-      )
+        task_id = p_fct(levels = c("1040", "1049", "1050", "1053", "1056", "1063", "1067", "1068",
+          "11", "1111", "12", "1220", "14", "1457", "1461", "1462", "1464",
+          "1468", "1475", "1476", "1478", "1479", "1480", "1485", "1486",
+          "1487", "1489", "1494", "1497", "15", "1501", "1510", "1515",
+          "16", "18", "181", "182", "188", "22", "23", "23381", "24", "28",
+          "29", "3", "300", "307", "31", "312", "32", "334", "37", "375",
+          "377", "38", "40496", "40498", "40499", "40536", "40670", "40701",
+          "40900", "40966", "40975", "40978", "40979", "40981", "40982",
+          "40983", "40984", "40994", "41138", "41142", "41143", "41146",
+          "41156", "41157", "41163", "41164", "41212", "41216", "4134",
+          "4135", "4154", "42", "44", "4534", "4538", "458", "46", "469",
+          "470", "50", "54", "60", "6332"),
+          tags = "task_id")
+        )
     },
     data = function(x) {
       if(is.null(private$.data)) private$.data = preproc_data_rbv2_svm(self)
@@ -310,12 +317,11 @@ BenchmarkConfigRBv2ranger = R6Class("BenchmarkConfigRBv2ranger",
         dicts_file = "dicts.rds",
         keras_model_file = "model.hdf5",
         onnx_model_file = "model.onnx",
-        budget_param = "epoch",
         target_variables = c("mmce", "f1", "auc", "logloss", "timetrain", "timepredict"),
         codomain = ps(
           mmce = p_dbl(lower = 0, upper = 1, tags = "minimize"),
-          f1 = p_dbl(lower = 0, upper = 1, tags = "minimize"),
-          auc = p_dbl(lower = 0, upper = 1, tags = "minimize"),
+          f1 = p_dbl(lower = 0, upper = 1, tags = "maximize"),
+          auc = p_dbl(lower = 0, upper = 1, tags = "maximize"),
           logloss = p_dbl(lower = 0, upper = Inf, tags = "minimize"),
           timetrain = p_dbl(lower = 0, upper = 1, tags = "minimize"),
           timepredict = p_dbl(lower = 0, upper = 1, tags = "minimize")
@@ -338,7 +344,23 @@ BenchmarkConfigRBv2ranger = R6Class("BenchmarkConfigRBv2ranger",
         trainsize = p_dbl(lower = 0, upper = 1, tag = "budget"),
         repl = p_int(lower = 1, upper = 10, tag = "budget"),
         num.impute.selected.cpo = p_fct(levels = c("impute.mean", "impute.median", "impute.hist")),
-        task_id = p_fct(levels = as.character(self$get_task_ids()), tags = "task_id")
+        task_id = p_fct(levels = c("1040", "1049", "1050", "1053", "1056", "1063", "1067", "1068",
+          "11", "1111", "12", "1220", "14", "1457", "1461", "1462", "1464",
+          "1468", "1475", "1476", "1478", "1479", "1480", "1485", "1486",
+          "1487", "1489", "1494", "1497", "15", "1501", "151", "1510",
+          "1515", "1590", "16", "18", "181", "182", "188", "22", "23",
+          "23381", "23512", "23517", "24", "28", "29", "3", "300", "307",
+          "31", "312", "32", "334", "37", "375", "377", "38", "40496",
+          "40498", "40499", "40536", "40668", "40670", "40685", "40701",
+          "40900", "40927", "40966", "40975", "40978", "40979", "40981",
+          "40982", "40983", "40984", "40994", "41027", "41138", "41142",
+          "41143", "41146", "41150", "41156", "41157", "41159", "41161",
+          "41162", "41163", "41164", "41165", "41166", "41168", "41212",
+          "41216", "41278", "4134", "4135", "4154", "42", "44", "4534",
+          "4538", "4541", "458", "46", "469", "470", "50", "54", "6", "60",
+          "6332")
+          , tags = "task_id"
+        )
       )
     },
     data = function(x) {
@@ -366,12 +388,11 @@ BenchmarkConfigRBv2glmnet = R6Class("BenchmarkConfigRBv2glmnet",
         dicts_file = "dicts.rds",
         keras_model_file = "model.hdf5",
         onnx_model_file = "model.onnx",
-        budget_param = "epoch",
         target_variables = c("mmce", "f1", "auc", "logloss", "timetrain", "timepredict"),
         codomain = ps(
           mmce = p_dbl(lower = 0, upper = 1, tags = "minimize"),
-          f1 = p_dbl(lower = 0, upper = 1, tags = "minimize"),
-          auc = p_dbl(lower = 0, upper = 1, tags = "minimize"),
+          f1 = p_dbl(lower = 0, upper = 1, tags = "maximize"),
+          auc = p_dbl(lower = 0, upper = 1, tags = "maximize"),
           logloss = p_dbl(lower = 0, upper = Inf, tags = "minimize"),
           timetrain = p_dbl(lower = 0, upper = 1, tags = "minimize"),
           timepredict = p_dbl(lower = 0, upper = 1, tags = "minimize")
@@ -388,7 +409,20 @@ BenchmarkConfigRBv2glmnet = R6Class("BenchmarkConfigRBv2glmnet",
         trainsize = p_dbl(lower = 0, upper = 1, tag = "budget"),
         repl = p_int(lower = 1, upper = 10, tag = "budget"),
         num.impute.selected.cpo = p_fct(levels = c("impute.mean", "impute.median", "impute.hist")),
-        task_id = p_fct(levels = as.character(self$get_task_ids()), tags = "task_id")
+        task_id = p_fct(levels = c("1040", "1049", "1050", "1053", "1056", "1063", "1067", "1068",
+          "11", "1111", "12", "14", "1461", "1462", "1464", "1468", "1475",
+          "1476", "1478", "1479", "1480", "1485", "1486", "1487", "1489",
+          "1494", "1497", "15", "1501", "1510", "1515", "1590", "16", "18",
+          "181", "182", "188", "22", "23", "23381", "23512", "24", "28",
+          "29", "3", "307", "31", "312", "32", "334", "37", "375", "377",
+          "38", "40496", "40498", "40499", "40536", "40668", "40670", "40701",
+          "40900", "40966", "40975", "40978", "40979", "40981", "40982",
+          "40983", "40984", "40994", "41138", "41142", "41143", "41146",
+          "41156", "41157", "41159", "41161", "41162", "41212", "41278",
+          "4134", "4135", "4154", "42", "44", "4534", "4538", "4541", "458",
+          "46", "469", "470", "50", "54", "60", "6332")
+          , tags = "task_id"
+        )
       )
     },
     data = function(x) {
@@ -416,12 +450,11 @@ BenchmarkConfigRBv2xgboost = R6Class("BenchmarkConfigRBv2xgboost",
         dicts_file = "dicts.rds",
         keras_model_file = "model.hdf5",
         onnx_model_file = "model.onnx",
-        budget_param = "epoch",
         target_variables = c("mmce", "f1", "auc", "logloss", "timetrain", "timepredict"),
         codomain = ps(
           mmce = p_dbl(lower = 0, upper = 1, tags = "minimize"),
-          f1 = p_dbl(lower = 0, upper = 1, tags = "minimize"),
-          auc = p_dbl(lower = 0, upper = 1, tags = "minimize"),
+          f1 = p_dbl(lower = 0, upper = 1, tags = "maximize"),
+          auc = p_dbl(lower = 0, upper = 1, tags = "maximize"),
           logloss = p_dbl(lower = 0, upper = Inf, tags = "minimize"),
           timetrain = p_dbl(lower = 0, upper = 1, tags = "minimize"),
           timepredict = p_dbl(lower = 0, upper = 1, tags = "minimize")
@@ -449,7 +482,22 @@ BenchmarkConfigRBv2xgboost = R6Class("BenchmarkConfigRBv2xgboost",
         trainsize = p_dbl(lower = 0, upper = 1, tag = "budget"),
         repl = p_int(lower = 1, upper = 10, tag = "budget"),
         num.impute.selected.cpo = p_fct(levels = c("impute.mean", "impute.median", "impute.hist")),
-        task_id = p_fct(levels = as.character(self$get_task_ids()), tags = "task_id")
+        task_id = p_fct(levels = c("1040", "1049", "1050", "1053", "1056", "1063", "1067", "1068",
+          "11", "1111", "12", "1220", "14", "1457", "1461", "1462", "1464",
+          "1468", "1475", "1476", "1478", "1479", "1480", "1485", "1486",
+          "1487", "1489", "1494", "1497", "15", "1501", "151", "1510",
+          "1515", "1590", "16", "18", "181", "182", "188", "22", "23",
+          "23381", "23512", "24", "28", "29", "3", "300", "307", "31",
+          "312", "32", "334", "37", "375", "377", "38", "40496", "40498",
+          "40499", "40536", "40668", "40670", "40701", "40900", "40927",
+          "40966", "40975", "40978", "40979", "40981", "40982", "40983",
+          "40984", "40994", "41138", "41142", "41143", "41146", "41150",
+          "41156", "41157", "41159", "41161", "41162", "41163", "41164",
+          "41165", "41166", "41212", "41216", "41278", "4134", "4135",
+          "4154", "42", "44", "4534", "4538", "4541", "458", "46", "469",
+          "470", "50", "54", "60", "6332"),
+          tags = "task_id"
+        )
       )
     },
     data = function(x) {
@@ -475,12 +523,11 @@ BenchmarkConfigRBv2rpart = R6Class("BenchmarkConfigRBv2rpart",
         dicts_file = "dicts.rds",
         keras_model_file = "model.hdf5",
         onnx_model_file = "model.onnx",
-        budget_param = "epoch",
         target_variables = c("mmce", "f1", "auc", "logloss", "timetrain", "timepredict"),
         codomain = ps(
           mmce = p_dbl(lower = 0, upper = 1, tags = "minimize"),
-          f1 = p_dbl(lower = 0, upper = 1, tags = "minimize"),
-          auc = p_dbl(lower = 0, upper = 1, tags = "minimize"),
+          f1 = p_dbl(lower = 0, upper = 1, tags = "maximize"),
+          auc = p_dbl(lower = 0, upper = 1, tags = "maximize"),
           logloss = p_dbl(lower = 0, upper = Inf, tags = "minimize"),
           timetrain = p_dbl(lower = 0, upper = 1, tags = "minimize"),
           timepredict = p_dbl(lower = 0, upper = 1, tags = "minimize")
@@ -499,7 +546,21 @@ BenchmarkConfigRBv2rpart = R6Class("BenchmarkConfigRBv2rpart",
         trainsize = p_dbl(lower = 0, upper = 1, tag = "budget"),
         repl = p_int(lower = 1, upper = 10, tag = "budget"),
         num.impute.selected.cpo = p_fct(levels = c("impute.mean", "impute.median", "impute.hist")),
-        task_id = p_fct(levels = as.character(self$get_task_ids()), tags = "task_id")
+        task_id = p_fct(levels = c("1040", "1049", "1050", "1053", "1056", "1063", "1067", "1068",
+          "11", "1111", "12", "14", "1457", "1461", "1462", "1464", "1468",
+          "1475", "1476", "1478", "1479", "1480", "1485", "1486", "1487",
+          "1489", "1494", "1497", "15", "1501", "1510", "1515", "1590",
+          "16", "18", "181", "182", "188", "22", "23", "23381", "23512",
+          "24", "28", "29", "3", "300", "307", "31", "312", "32", "334",
+          "37", "375", "377", "38", "40496", "40498", "40499", "40536",
+          "40670", "40701", "40900", "40927", "40966", "40975", "40978",
+          "40979", "40981", "40982", "40983", "40984", "40994", "41138",
+          "41142", "41143", "41146", "41156", "41157", "41159", "41161",
+          "41162", "41163", "41164", "41165", "41212", "4134", "4135",
+          "4154", "42", "44", "4534", "4538", "458", "46", "469", "470",
+          "50", "54", "60", "6332")
+          , tags = "task_id"
+        )
       )
     },
     data = function(x) {
@@ -527,12 +588,11 @@ BenchmarkConfigRBv2aknn = R6Class("BenchmarkConfigRBv2aknn",
         dicts_file = "dicts.rds",
         keras_model_file = "model.hdf5",
         onnx_model_file = "model.onnx",
-        budget_param = "epoch",
         target_variables = c("mmce", "f1", "auc", "logloss", "timetrain", "timepredict"),
         codomain = ps(
           mmce = p_dbl(lower = 0, upper = 1, tags = "minimize"),
-          f1 = p_dbl(lower = 0, upper = 1, tags = "minimize"),
-          auc = p_dbl(lower = 0, upper = 1, tags = "minimize"),
+          f1 = p_dbl(lower = 0, upper = 1, tags = "maximize"),
+          auc = p_dbl(lower = 0, upper = 1, tags = "maximize"),
           logloss = p_dbl(lower = 0, upper = Inf, tags = "minimize"),
           timetrain = p_dbl(lower = 0, upper = 1, tags = "minimize"),
           timepredict = p_dbl(lower = 0, upper = 1, tags = "minimize")
@@ -552,7 +612,20 @@ BenchmarkConfigRBv2aknn = R6Class("BenchmarkConfigRBv2aknn",
         trainsize = p_dbl(lower = 0, upper = 1, tag = "budget"),
         repl = p_int(lower = 1, upper = 10, tag = "budget"),
         num.impute.selected.cpo = p_fct(levels = c("impute.mean", "impute.median", "impute.hist")),
-        task_id = p_fct(levels = as.character(self$get_task_ids()), tags = "task_id")
+        task_id = p_fct(levels = c("1040", "1049", "1050", "1053", "1056", "1063", "1067", "1068",
+          "11", "1111", "12", "1220", "14", "1457", "1461", "1462", "1464",
+          "1468", "1475", "1476", "1478", "1479", "1480", "1485", "1486",
+          "1487", "1489", "1494", "1497", "15", "1501", "1510", "1515",
+          "16", "18", "181", "182", "188", "22", "23", "23381", "24", "28",
+          "29", "3", "300", "307", "31", "312", "32", "334", "37", "375",
+          "377", "38", "40496", "40498", "40499", "40536", "40670", "40701",
+          "40900", "40966", "40975", "40978", "40979", "40981", "40982",
+          "40983", "40984", "40994", "41138", "41142", "41143", "41146",
+          "41156", "41157", "41159", "41161", "41162", "41163", "41164",
+          "41165", "41212", "41278", "4134", "4154", "42", "44", "4534",
+          "4538", "458", "46", "469", "470", "50", "54", "60", "6332"),
+          tags = "task_id"
+        )
       )
     },
     data = function(x) {
@@ -580,12 +653,11 @@ BenchmarkConfigSuperRBv2 = R6Class("BenchmarkConfigSuperRBv2",
         dicts_file = "dicts.rds",
         keras_model_file = "model.hdf5",
         onnx_model_file = "model.onnx",
-        budget_param = "epoch",
         target_variables = c("mmce", "f1", "auc", "logloss", "timetrain", "timepredict"),
         codomain = ps(
           mmce = p_dbl(lower = 0, upper = 1, tags = "minimize"),
-          f1 = p_dbl(lower = 0, upper = 1, tags = "minimize"),
-          auc = p_dbl(lower = 0, upper = 1, tags = "minimize"),
+          f1 = p_dbl(lower = 0, upper = 1, tags = "maximize"),
+          auc = p_dbl(lower = 0, upper = 1, tags = "maximize"),
           logloss = p_dbl(lower = 0, upper = Inf, tags = "minimize"),
           timetrain = p_dbl(lower = 0, upper = 1, tags = "minimize"),
           timepredict = p_dbl(lower = 0, upper = 1, tags = "minimize")
@@ -646,7 +718,19 @@ BenchmarkConfigSuperRBv2 = R6Class("BenchmarkConfigSuperRBv2",
           repl = p_int(lower = 1, upper = 10, tag = "budget"),
           num.impute.selected.cpo = p_fct(levels = c("impute.mean", "impute.median", "impute.hist")),
           learner = p_fct(levels = c("aknn", "glmnet", "ranger", "rpart", "svm", "xgboost")),
-          task_id = p_fct(levels = as.character(self$get_task_ids()), tags = "task_id")
+          task_id = p_fct(levels = c("1040", "1049", "1050", "1053", "1056", "1063", "1067", "1068",
+            "11", "1111", "12", "14", "1461", "1462", "1464", "1468", "1475",
+            "1476", "1478", "1479", "1480", "1485", "1486", "1487", "1489",
+            "1494", "1497", "15", "1501", "1510", "1515", "16", "18", "181",
+            "182", "188", "22", "23", "23381", "24", "28", "29", "3", "307",
+            "31", "312", "32", "334", "37", "375", "377", "38", "40496",
+            "40498", "40499", "40536", "40670", "40701", "40900", "40966",
+            "40975", "40978", "40979", "40981", "40982", "40983", "40984",
+            "40994", "41138", "41142", "41143", "41146", "41156", "41157",
+            "41212", "4134", "4154", "42", "44", "4534", "4538", "458", "46",
+            "469", "470", "50", "54", "60", "6332"),
+            tags = "task_id"
+          )
       )
       # Add dependencies
       map(pc$params$learner$levels, function(x) {
@@ -679,7 +763,6 @@ BenchmarkConfigFCNet = R6Class("BenchmarkConfigFCNet",
         dicts_file = "dicts.rds",
         keras_model_file = "model.hdf5",
         onnx_model_file = "model.onnx",
-        budget_param = "epoch",
         target_variables = c("valid_loss", "valid_mse", "runtime", "n_params"),
         codomain = ps(
           valid_loss = p_dbl(lower = 0, upper = 1, tags = "minimize"),
@@ -731,7 +814,6 @@ BenchmarkConfigTaskSet = R6Class("BenchmarkConfigTaskSet",
         dicts_file = "dicts.rds",
         keras_model_file = "model.hdf5",
         onnx_model_file = "model.onnx",
-        budget_param = "epoch",
         target_variables = c("train", "valid1", "valid2", "test"),
         codomain = ps(
           train = p_dbl(lower = 0, upper = Inf, tags = "minimize"),

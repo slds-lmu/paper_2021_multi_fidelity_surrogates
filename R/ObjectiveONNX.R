@@ -76,6 +76,7 @@ ObjectiveONNX = R6Class("ObjectiveONNX",
           )
           xdt[, to_add[i] := NA_storage_type]
         }
+
         li = c(
           mlr3misc::imap(mlr3misc::keep(xdt, is.character), char_to_int, self$trafo_dict),
           # Below is a little odd but required as-is since otherwise autoconvert to float64 happens

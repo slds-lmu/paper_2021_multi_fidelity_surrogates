@@ -9,22 +9,26 @@ algorithms across several tasks.
 
 ## Overview
 
-| instance    | space   | ndims | ntargets        | fidelity     | n\_problems | X.R.2. | status |
-| :---------- | :------ | ----: | :-------------- | :----------- | ----------: | -----: | :----- |
-| NB301       | Cat+Dep |    34 | 2:perf+rt       | epochs       |           1 | 0.9866 | ready  |
-| LCBench     | Mix     |     7 | 6:perf(5)+rt    | epoch        |          35 | 0.9820 | ready  |
-| RBv2SVM     | Mix+Dep |     7 | 6:perf(4)+rt+pt | frac+repls   |          96 |     NA | \-     |
-| RBv2rpart   | Mix     |     5 | 6:perf(4)+rt+pt | frac+repls   |         101 |     NA | \-     |
-| RBv2aknn    | Mix     |     6 | 6:perf(4)+rt+pt | frac+repls   |          99 |     NA | \-     |
-| RBv2glmnet  | Mix     |     3 | 6:perf(4)+rt+pt | frac+repls   |          98 |     NA | \-     |
-| RBv2ranger  | Mix+Dep |     9 | 6:perf(4)+rt+pt | fract+repls  |         114 |     NA | \-     |
-| RBv2xgboost | Mix+Dep |    14 | 6:perf(4)+rt+pt | frac+repls   |         109 |     NA | \-     |
-| RBv2super   | Mix+Dep |    36 | 6:perf(4)+rt+pt | frac+repls   |          89 |     NA | \-     |
-| FCNet       | Mix     |    11 | perf(2)+rt+ ms  | epochs+repls |           4 | 0.7690 | ready  |
-| TaskSet     | Num     |     9 | 4:perf(4)       | epochs+repls |          20 |     NA | \-     |
+| instance    | space   | ndims | ntargets         | fidelity     | n\_problems |    X.R.2. | status |
+| :---------- | :------ | ----: | :--------------- | :----------- | ----------: | --------: | :----- |
+| NB301       | Cat+Dep |    34 | 2:perf+rt        | epochs       |           1 |    0.9866 | ready  |
+| LCBench     | Mix     |     7 | 6:perf(5)+rt     | epochs       |          35 |    0.9820 | ready  |
+| RBv2SVM     | Mix+Dep |     7 | 6:perf(4)+rt+pt  | frac+repls   |          96 |    0.6900 | \-     |
+| RBv2rpart   | Mix     |     5 | 6:perf(4)+rt+pt  | frac+repls   |         101 |    0.3400 | \-     |
+| RBv2aknn    | Mix     |     6 | 6:perf(4)+rt+pt  | frac+repls   |          99 |    0.3680 | \-     |
+| RBv2glmnet  | Mix     |     3 | 6:perf(4)+rt+pt  | frac+repls   |          98 |    0.2590 | \-     |
+| RBv2ranger  | Mix+Dep |     9 | 6:perf(4)+rt+pt  | fract+repls  |         114 |    0.2830 | \-     |
+| RBv2xgboost | Mix+Dep |    14 | 6:perf(4)+rt+pt  | frac+repls   |         109 |    0.5770 | \-     |
+| RBv2super   | Mix+Dep |    36 | 6:perf(4)+rt+pt  | frac+repls   |          89 |        NA | \-     |
+| FCNet       | Mix     |    11 | 4:perf(2)+rt+ ms | epochs+repls |           4 |    0.7690 | ready  |
+| TaskSet     | Num     |     9 | 4:perf(4)        | epochs+repls |          20 | \-44.0000 | \-     |
 
-where for **ntargets** (\#number): - perf = performance measure - ms =
-model\_size - rt = runtime - pt = predicttime
+where for **ntargets** (\#number):
+
+  - perf = performance measure
+  - ms = model\_size
+  - rt = runtime
+  - pt = predicttime
 
 For more information either look directly into the
 [code](https://github.com/compstat-lmu/paper_2021_multi_fidelity_surrogates/blob/main/R/BenchmarkConfigs.R)
@@ -103,7 +107,11 @@ A list of available `task_id`s can be obtained from the `param_set`:
 
 ``` r
 cfg$param_set$params$OpenML_task_id$levels
+# or using the active binding across all configs:
+cfg$task_levels
 ```
+
+If the configuration only has \(1\) task, `NULL` is returned.
 
 ## Branin
 
@@ -140,6 +148,29 @@ ins = OptimInstanceSingleCrit$new(
   terminator = trm("evals", n_evals = 10L)
 )
 #opt("random_search")$optimize(ins)
+```
+
+## RandomBotv2
+
+All rbv2 have been at least partially evaluated on the same `OpenML`
+tasks. In order to provide a consistent set to evaluate on, the set
+where all algorithms had a sufficient amount of evaluations is available
+as `rbv2_test_tasks`. All other task’s in the respective config’s
+`param_set` also have sufficient evaluations, but not consistently
+across all datasets and are therefore not included in the set.
+
+``` r
+rbv2_test_tasks
+#>  [1] "1040"  "1049"  "1050"  "1053"  "1056"  "1063"  "1067"  "1068"  "11"   
+#> [10] "1111"  "12"    "14"    "1461"  "1462"  "1464"  "1468"  "1475"  "1476" 
+#> [19] "1478"  "1479"  "1480"  "1485"  "1486"  "1487"  "1489"  "1494"  "1497" 
+#> [28] "15"    "1501"  "1510"  "1515"  "16"    "18"    "181"   "182"   "188"  
+#> [37] "22"    "23"    "23381" "24"    "28"    "29"    "3"     "307"   "31"   
+#> [46] "312"   "32"    "334"   "37"    "375"   "377"   "38"    "40496" "40498"
+#> [55] "40499" "40536" "40670" "40701" "40900" "40966" "40975" "40978" "40979"
+#> [64] "40981" "40982" "40983" "40984" "40994" "41138" "41142" "41143" "41146"
+#> [73] "41156" "41157" "41212" "4134"  "4154"  "42"    "44"    "4534"  "4538" 
+#> [82] "458"   "46"    "469"   "470"   "50"    "54"    "60"    "6332"
 ```
 
 ## RandomBotv2 - svm
@@ -327,6 +358,7 @@ opt("random_search")$optimize(ins)
     #> BenchmarkConfig: <FCNet>
     #> Target variables: valid_loss,valid_mse,runtime,n_params
     #> Budget parameter: "epoch"
+    #> Budget parameter: "replication"
     #> Task parameter (n): "task" (4)
     #> <ParamSet>
     #>                  id    class lower upper nlevels        default value
@@ -500,8 +532,9 @@ opt("random_search")$optimize(ins)
     #> 
     #> BenchmarkConfig: <RBv2_aknn>
     #> Target variables: mmce,f1,auc,logloss,timetrain,timepredict
-    #> Budget parameter: "epoch"
-    #> Task parameter (n): "task_id" (33)
+    #> Budget parameter: "trainsize"
+    #> Budget parameter: "repl"
+    #> Task parameter (n): "task_id" (99)
     #> <ParamSet>
     #>                         id    class lower upper nlevels        default value
     #> 1:                       k ParamInt     1    50      50 <NoDefault[3]>      
@@ -512,7 +545,7 @@ opt("random_search")$optimize(ins)
     #> 6:               trainsize ParamDbl     0     1     Inf <NoDefault[3]>      
     #> 7:                    repl ParamInt     1    10      10 <NoDefault[3]>      
     #> 8: num.impute.selected.cpo ParamFct    NA    NA       3 <NoDefault[3]>      
-    #> 9:                 task_id ParamFct    NA    NA      33 <NoDefault[3]>      
+    #> 9:                 task_id ParamFct    NA    NA      99 <NoDefault[3]>      
     #> Trafo is set.
     #> <ParamSet>
     #>             id    class lower upper nlevels        default value
@@ -526,8 +559,9 @@ opt("random_search")$optimize(ins)
     #> 
     #> BenchmarkConfig: <RBv2_glmnet>
     #> Target variables: mmce,f1,auc,logloss,timetrain,timepredict
-    #> Budget parameter: "epoch"
-    #> Task parameter (n): "task_id" (56)
+    #> Budget parameter: "trainsize"
+    #> Budget parameter: "repl"
+    #> Task parameter (n): "task_id" (98)
     #> <ParamSet>
     #>                         id    class lower upper nlevels        default value
     #> 1:                   alpha ParamDbl     0     1     Inf              1      
@@ -535,7 +569,7 @@ opt("random_search")$optimize(ins)
     #> 3:               trainsize ParamDbl     0     1     Inf <NoDefault[3]>      
     #> 4:                    repl ParamInt     1    10      10 <NoDefault[3]>      
     #> 5: num.impute.selected.cpo ParamFct    NA    NA       3 <NoDefault[3]>      
-    #> 6:                 task_id ParamFct    NA    NA      56 <NoDefault[3]>      
+    #> 6:                 task_id ParamFct    NA    NA      98 <NoDefault[3]>      
     #> Trafo is set.
     #> <ParamSet>
     #>             id    class lower upper nlevels        default value
@@ -549,7 +583,8 @@ opt("random_search")$optimize(ins)
     #> 
     #> BenchmarkConfig: <RBv2_ranger>
     #> Target variables: mmce,f1,auc,logloss,timetrain,timepredict
-    #> Budget parameter: "epoch"
+    #> Budget parameter: "trainsize"
+    #> Budget parameter: "repl"
     #> Task parameter (n): "task_id" (114)
     #> <ParamSet>
     #>                            id    class lower upper nlevels        default
@@ -590,8 +625,9 @@ opt("random_search")$optimize(ins)
     #> 
     #> BenchmarkConfig: <RBv2_glmnet>
     #> Target variables: mmce,f1,auc,logloss,timetrain,timepredict
-    #> Budget parameter: "epoch"
-    #> Task parameter (n): "task_id" (22)
+    #> Budget parameter: "trainsize"
+    #> Budget parameter: "repl"
+    #> Task parameter (n): "task_id" (101)
     #> <ParamSet>
     #>                         id    class lower upper nlevels        default value
     #> 1:                      cp ParamDbl   -10     0     Inf      -6.643856      
@@ -601,7 +637,7 @@ opt("random_search")$optimize(ins)
     #> 5:               trainsize ParamDbl     0     1     Inf <NoDefault[3]>      
     #> 6:                    repl ParamInt     1    10      10 <NoDefault[3]>      
     #> 7: num.impute.selected.cpo ParamFct    NA    NA       3 <NoDefault[3]>      
-    #> 8:                 task_id ParamFct    NA    NA      22 <NoDefault[3]>      
+    #> 8:                 task_id ParamFct    NA    NA     101 <NoDefault[3]>      
     #> Trafo is set.
     #> <ParamSet>
     #>             id    class lower upper nlevels        default value
@@ -615,8 +651,9 @@ opt("random_search")$optimize(ins)
     #> 
     #> BenchmarkConfig: <RBv2_super>
     #> Target variables: mmce,f1,auc,logloss,timetrain,timepredict
-    #> Budget parameter: "epoch"
-    #> Task parameter (n): "task_id" (122)
+    #> Budget parameter: "trainsize"
+    #> Budget parameter: "repl"
+    #> Task parameter (n): "task_id" (89)
     #> <ParamSet>
     #>                                   id    class  lower upper nlevels
     #>  1:                           aknn.M ParamInt  18.00    50      33
@@ -647,7 +684,7 @@ opt("random_search")$optimize(ins)
     #> 26:                       svm.kernel ParamFct     NA    NA       3
     #> 27:                    svm.shrinking ParamLgl     NA    NA       2
     #> 28:                    svm.tolerance ParamDbl -12.00    -3     Inf
-    #> 29:                          task_id ParamFct     NA    NA     122
+    #> 29:                          task_id ParamFct     NA    NA      89
     #> 30:                        trainsize ParamDbl   0.00     1     Inf
     #> 31:                    xgboost.alpha ParamDbl -10.00    10     Inf
     #> 32:                  xgboost.booster ParamFct     NA    NA       3
@@ -721,8 +758,9 @@ opt("random_search")$optimize(ins)
     #> 
     #> BenchmarkConfig: <RBv2_SVM>
     #> Target variables: mmce,f1,auc,logloss,timetrain,timepredict
-    #> Budget parameter: "epoch"
-    #> Task parameter (n): "task_id" (98)
+    #> Budget parameter: "trainsize"
+    #> Budget parameter: "repl"
+    #> Task parameter (n): "task_id" (96)
     #> <ParamSet>
     #>                          id    class lower upper nlevels        default parents
     #>  1:                    cost ParamDbl   -12    12     Inf <NoDefault[3]>        
@@ -732,7 +770,7 @@ opt("random_search")$optimize(ins)
     #>  5: num.impute.selected.cpo ParamFct    NA    NA       3 <NoDefault[3]>        
     #>  6:                    repl ParamInt     1    10      10 <NoDefault[3]>        
     #>  7:               shrinking ParamLgl    NA    NA       2 <NoDefault[3]>        
-    #>  8:                 task_id ParamFct    NA    NA      98 <NoDefault[3]>        
+    #>  8:                 task_id ParamFct    NA    NA      96 <NoDefault[3]>        
     #>  9:               tolerance ParamDbl   -12    -3     Inf <NoDefault[3]>        
     #> 10:               trainsize ParamDbl     0     1     Inf <NoDefault[3]>        
     #>     value
@@ -759,8 +797,9 @@ opt("random_search")$optimize(ins)
     #> 
     #> BenchmarkConfig: <RBv2_xgboost>
     #> Target variables: mmce,f1,auc,logloss,timetrain,timepredict
-    #> Budget parameter: "epoch"
-    #> Task parameter (n): "task_id" (119)
+    #> Budget parameter: "trainsize"
+    #> Budget parameter: "repl"
+    #> Task parameter (n): "task_id" (109)
     #> <ParamSet>
     #>                          id    class  lower upper nlevels        default
     #>  1:                   alpha ParamDbl -10.00    10     Inf <NoDefault[3]>
@@ -778,7 +817,7 @@ opt("random_search")$optimize(ins)
     #> 13:                    repl ParamInt   1.00    10      10 <NoDefault[3]>
     #> 14:               skip_drop ParamDbl   0.00     1     Inf <NoDefault[3]>
     #> 15:               subsample ParamDbl   0.10     1     Inf <NoDefault[3]>
-    #> 16:                 task_id ParamFct     NA    NA     119 <NoDefault[3]>
+    #> 16:                 task_id ParamFct     NA    NA     109 <NoDefault[3]>
     #> 17:               trainsize ParamDbl   0.00     1     Inf <NoDefault[3]>
     #>     parents value
     #>  1:              
@@ -826,6 +865,7 @@ opt("random_search")$optimize(ins)
     #> BenchmarkConfig: <TaskSet>
     #> Target variables: train,valid1,valid2,test
     #> Budget parameter: "epoch"
+    #> Budget parameter: "replication"
     #> Task parameter (n): "task_name" (20)
     #> <ParamSet>
     #>                    id    class lower upper nlevels        default value

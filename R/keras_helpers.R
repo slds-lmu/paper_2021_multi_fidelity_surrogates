@@ -30,14 +30,14 @@ make_architecture = function(embedding, input_shape, output_shape, mcfg) {
 }
 
 make_embedding_dt = function(dt, embed_size = NULL, embed_dropout = 0, embed_batchnorm = FALSE, emb_multiplier = 1.6) {
+  require_namespaces(c("mlr3", "mlr3keras"))
   emb_dt = copy(dt)[, tmp_target := runif(nrow(dt))]
-  t = TaskRegr$new("train", backend = emb_dt, target = "tmp_target")
+  t = mlr3::TaskRegr$new("train", backend = emb_dt, target = "tmp_target")
   emb = make_embedding(t, embed_size, embed_dropout, embed_batchnorm, emb_multiplier)
   return(emb)
 }
 
 make_embedding = function(task, embed_size = NULL, embed_dropout = 0, embed_batchnorm = FALSE, emb_multiplier = 1.6) {
-  requireNamespace("keras")
   typedt = task$feature_types
   data = as.matrix(task$data(cols = task$feature_names))
   target = task$data(cols = task$target_names)
