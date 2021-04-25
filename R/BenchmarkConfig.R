@@ -98,16 +98,7 @@ BenchmarkConfig = R6Class("BenchmarkConfig",
         saveRDS(trafos, self$dicts_path)
     },
     get_task_ids = function(eval=FALSE) {
-      if (eval) {
-        file = self$all_task_ids_file
-      } else {
-        file = self$eval_task_ids_file
-      }
-      if (startsWith(self$model_name, "rbv2")) {
-        levels = levels(as.factor(scan(paste0(self$subdir, file), quiet = TRUE)))
-        return(levels)
-      }
-      return(NULL)
+      self$task_levels
     },
     print = function(...) {
       catf("BenchmarkConfig: <%s>", self$id)
