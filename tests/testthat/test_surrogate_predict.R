@@ -1,7 +1,6 @@
 test_that("Objectives", {
   skip_if_not(check_directory_exists(workdir))
   keys = cfgs()$keys()
-  keys = setdiff(keys, "rbv2_super")
   for (k in keys) {
     print(cfg)
     cfg = cfgs(k, workdir=workdir)
