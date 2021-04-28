@@ -1,6 +1,7 @@
 # Map a character to the correct integer using a dict and impute NA's
 char_to_int = function(x, param_name, dict) {
-  x[is.na(x)] = "None"
+  if (anyNA(x)) x[is.na(x)] = "None"
+  if (typeof(x) != "character") x = as.character(x) # lcbench has integer factor task ids.
   matrix(dict[[param_name]][x,]$int)
 }
 
@@ -87,4 +88,30 @@ apply_cummean_variance_param = function(dt, mean, sum, fidelity_param, ignore = 
     dt[, (sum) := map(.SD, cumsum), by = hpars, .SDcols  = sum]
   }
   return(dt)
+}
+
+compute_metrics = function(response, prediction, stratify = factor("_full_")) {
+  if(is.null(stratify)) return(NULL)
+  map_dtr(
+    levels(stratify),
+    function(grp) {
+      map_dtr(colnames(prediction), function(nms) {
+      if (grp == "_full_") {
+        idx = rep(TRUE, nrow(prediction))
+      } else {
+        idx = (stratify == grp)
+      }
+      x = response[idx, nms]
+      y = prediction[idx, nms]
+      smp = sample(seq_along(x), min(length(x), 500L))
+      data.table(
+        variable = nms,
+        grp = as.character(grp),
+        rsq = mlr3measures::rsq(x,y),
+        roh = mlr3measures::srho(x,y),
+        ktau = mlr3measures::ktau(x[smp],y[smp]), # on sample since this is slow.
+        mae = mlr3measures::mae(x,y)
+      )
+    })
+  })
 }

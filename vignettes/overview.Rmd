@@ -15,3 +15,29 @@ knitr::opts_chunk$set(
 ```
 
 [Overview](https://docs.google.com/document/d/1uVGPaO1cbMZOLOZVHXIIiDCy46sI8TkvtEMs3bO-mQo/edit?usp=sharing)
+
+```{r setup}
+reticulate::use_condaenv('mlr3keras', required = TRUE)
+devtools::load_all()
+```
+
+
+```{r}
+cfg = cfgs("nb301", workdir=workdir)
+obj = cfg$get_objective()
+data = cfg$data
+idx = 1:1000000
+ptest = obj$eval_dt(data$xtest[idx])
+dt = rbind(
+  compute_metrics(
+    response = cfg$data$ytest[idx,],
+    prediction = as.matrix(ptest)
+  ),
+  compute_metrics(
+    response = cfg$data$ytest[idx,],
+    prediction = as.matrix(ptest),
+    stratify = cfg$data$xtest[idx, cfg$task_col]
+  )
+)
+dt
+```

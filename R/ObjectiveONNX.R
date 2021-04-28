@@ -78,7 +78,7 @@ ObjectiveONNX = R6Class("ObjectiveONNX",
         }
 
         li = c(
-          mlr3misc::imap(mlr3misc::keep(xdt, is.character), char_to_int, self$trafo_dict),
+          mlr3misc::imap(mlr3misc::keep(xdt, function(x) is.character(x) || is.factor(x)), char_to_int, self$trafo_dict),
           # Below is a little odd but required as-is since otherwise autoconvert to float64 happens
           continuous = list(reticulate::r_to_py(trafo_numerics(xdt, self$trafo_dict))$astype("float32"))
         )

@@ -32,41 +32,11 @@ fit_surrogate = function(problem_config, model_config = default_model_config(), 
   colnames(ptest) = cfg$target_variables
   colnames(data$ytest) = cfg$target_variables
 
-  # Stratify by e.g. task_id
-  if (!is.null(problem_config$task_id_column)) {
-    groups = c("full", as.character(unique(data$xtest[[problem_config$task_id_column]])))
-  } else {
-    groups = "full"
-  }
-
-
-  metrics = map_dtr(
-    groups,
-    function(grp) {
-      map_dtr(colnames(ptest), function(nms) {
-      if (grp == "full") {
-        idx = rep(TRUE, nrow(ptest))
-      } else {
-        idx = (data$xtest[[problem_config$task_id_column]] == grp)
-      }
-      x = data$ytest[idx, nms]
-      y = ptest[idx, nms]
-      smp = sample(seq_along(x), min(length(x), 500L))
-      data.table(
-        variable = nms,
-        grp = as.character(grp),
-        rsq = mlr3measures::rsq(x,y),
-        roh = mlr3measures::srho(x,y),
-        ktau = mlr3measures::ktau(x[smp],y[smp]), # on sample since this is slow.
-        mae = mlr3measures::mae(x,y)
-      )
-    })
-  })
-
-
+  metrics = compute_metrics(problem_config, data$ytest, ptest)
+  print(metrics)
   if (overwrite) data.table::fwrite(metrics, paste0(cfg$subdir, "surrogate_test_metrics.csv"))
+
   if (plot) {
-    print(metrics)
     require("ggplot2")
     require("patchwork")
     smp = sample(seq_along(ptest[,1]), min(length(ptest[,1]), 500L))

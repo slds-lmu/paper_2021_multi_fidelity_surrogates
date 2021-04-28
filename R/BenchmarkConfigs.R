@@ -25,7 +25,7 @@ BenchmarkConfigNB301 = R6Class("BenchmarkConfigNB301",
   active = list(
     data = function() {
       if (is.null(private$.data)) private$.data = preproc_data_nb301(self)
-      private$.data
+      return(private$.data)
     },
     # FIXME: we should trigger this once and then store it private
     param_set = function() readRDS(self$param_set_path)
@@ -292,7 +292,7 @@ BenchmarkConfigRBv2SVM = R6Class("BenchmarkConfigRBv2SVM",
           tags = "task_id")
         )
     },
-    data = function(x) {
+    data = function() {
       if(is.null(private$.data)) private$.data = preproc_data_rbv2_svm(self)
       private$.data
     }
@@ -363,7 +363,7 @@ BenchmarkConfigRBv2ranger = R6Class("BenchmarkConfigRBv2ranger",
         )
       )
     },
-    data = function(x) {
+    data = function() {
       if(is.null(private$.data)) private$.data = preproc_data_rbv2_ranger(self)
       private$.data
     }
@@ -425,7 +425,7 @@ BenchmarkConfigRBv2glmnet = R6Class("BenchmarkConfigRBv2glmnet",
         )
       )
     },
-    data = function(x) {
+    data = function() {
       if(is.null(private$.data)) private$.data = preproc_data_rbv2_glmnet(self)
       private$.data
     }
@@ -500,7 +500,7 @@ BenchmarkConfigRBv2xgboost = R6Class("BenchmarkConfigRBv2xgboost",
         )
       )
     },
-    data = function(x) {
+    data = function() {
       if(is.null(private$.data)) private$.data = preproc_data_rbv2_xgboost(self)
       private$.data
     }
@@ -563,7 +563,7 @@ BenchmarkConfigRBv2rpart = R6Class("BenchmarkConfigRBv2rpart",
         )
       )
     },
-    data = function(x) {
+    data = function() {
       if(is.null(private$.data)) private$.data = preproc_data_rbv2_rpart(self)
       private$.data
     }
@@ -628,7 +628,7 @@ BenchmarkConfigRBv2aknn = R6Class("BenchmarkConfigRBv2aknn",
         )
       )
     },
-    data = function(x) {
+    data = function() {
       if(is.null(private$.data)) private$.data = preproc_data_rbv2_aknn(self)
       private$.data
     }
@@ -739,7 +739,7 @@ BenchmarkConfigSuperRBv2 = R6Class("BenchmarkConfigSuperRBv2",
       })
       pc
     },
-    data = function(x) {
+    data = function() {
       if(is.null(private$.data)) private$.data = preproc_data_rbv2_super(self)
       private$.data
     }
@@ -791,7 +791,7 @@ BenchmarkConfigFCNet = R6Class("BenchmarkConfigFCNet",
         task = p_fct(levels = c("fcnet_protein_structure", "fcnet_parkinsons_telemonitoring", "fcnet_naval_propulsion", "fcnet_slice_localization"), tags = "task_id")
       )
     },
-    data = function(x) {
+    data = function() {
       if(is.null(private$.data)) private$.data = preproc_data_fcnet(self)
       private$.data
     }
@@ -853,7 +853,7 @@ BenchmarkConfigTaskSet = R6Class("BenchmarkConfigTaskSet",
         )
       )
     },
-    data = function(x) {
+    data = function() {
       if(is.null(private$.data)) private$.data = preproc_data_task_set(self)
       private$.data
     }
