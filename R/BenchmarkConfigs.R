@@ -121,7 +121,7 @@ BenchmarkConfigBranin = R6Class("BenchmarkConfigBranin",
           r = 6
           s = 10
           t = 1 / (8 * pi)
-          data.table(y = (a * ((xdt[["x2"]] - b * (xdt[["x1"]] ^ 2L) + c * xdt[["x1"]] - r) ^ 2) + ((s * (1 - t)) * cos(xdt[["x1"]])) + s -(5 * xdt[["fidelity"]] * xdt[["x1"]])))
+          data.table(y = (a * ((xdt[["x2"]] - b * (xdt[["x1"]] ^ 2L) + c * xdt[["x1"]] - r) ^ 2) + ((s * (1 - t)) * cos(xdt[["x1"]])) + s - (5 * xdt[["fidelity"]] * xdt[["x1"]])))
         },
         domain = self$param_set,
         codomain = self$codomain
@@ -155,7 +155,7 @@ BenchmarkConfigBranin = R6Class("BenchmarkConfigBranin",
       ps(
         x1 = p_dbl(lower = -5, upper = 10),
         x2 = p_dbl(lower = 0, upper = 15),
-        fidelity = p_dbl(lower = 0L, upper = 1L, tags = "budget")
+        fidelity = p_dbl(lower = 1e-8, upper = 1, tags = "budget")
       )
     }
   )
@@ -228,13 +228,86 @@ BenchmarkConfigShekel = R6Class("BenchmarkConfigShekel",
         x1 = p_dbl(lower = 0, upper = 10),
         x2 = p_dbl(lower = 0, upper = 10),
         x3 = p_dbl(lower = 0, upper = 10),
-        fidelity = p_dbl(lower = 0L, upper = 1L, tags = "budget")
+        fidelity = p_dbl(lower = 1e-8, upper = 1, tags = "budget")
       )
     }
   )
 )
 #' @include BenchmarkConfig.R
 benchmark_configs$add("shekel", BenchmarkConfigShekel)
+
+
+
+#' @export
+# https://esa.github.io/pagmo2/docs/cpp/problems/zdt.html
+# 10d zdt6 (n = 10)
+# Zitzler, Deb & Thiele, 2000
+# Fidelity is incorporated in F1, see below
+# Pareto-optimal solutions are nonuniformly distributed along the global Pareto front
+# Pareto front is biased for solutions where F1 is near 1
+# Density of solutions is low near Pareto front and highest away from it
+# F1 is partially (the exp part) approximated via second order taylor expansion around a = 0.5
+# and the extent of the second order part being incorporated is scaled by the
+# fidelity (i.e, fidelity of 0 --> first order approximation, fidelity of 1 --> second order approximation)
+BenchmarkConfigZDT6 = R6Class("BenchmarkConfigZDT6",
+  inherit = BenchmarkConfig,
+  public = list(
+    initialize = function(id = "ZDT6") {
+      super$initialize(
+        id,
+        download_url = NULL,
+        workdir = NULL,
+        model_name = "zdt1",
+        param_set_file = NULL,
+        data_file = NULL,
+        dicts_file = NULL,
+        keras_model_file = NULL,
+        onnx_model_file = NULL,
+        target_variables = c("F1", "F2"),
+        codomain = ps(
+          F1 = p_dbl(lower = -Inf, upper = Inf, tags = "minimize"),
+          F2 = p_dbl(lower = -Inf, upper = Inf, tags = "minimize")
+        ),
+        packages = NULL
+      )
+    },
+
+    setup = function() {
+      message("no setup necessary.")
+    },
+
+    get_objective = function() {
+      ObjectiveRFunDt$new(
+        fun = function(xdt) {
+          F1_first = function(a) exp(-4 * a)
+          F1_second = function(a) (sin(6 * pi * a) ^ 6)
+
+          F1_first_d1 = function(a) -4 * exp(-4 * a)
+          F1_first_d2 = function(a) 16 * exp(-4 * a)
+
+          F1_true = 1 - (F1_first(xdt[["x1"]]) * F1_second(xdt[["x1"]]))
+          F1_taylor_05 = 1 - (F1_first(0.5) + F1_first_d1(0.5) * (xdt[["x1"]] - 0.5) + xdt[["fidelity"]] * ((F1_first_d2(0.5) / 2) * ((xdt[["x1"]] - 0.5) ^ 2))) * F1_second(xdt[["x1"]])
+          F1_taylor_05 = pmin(1, pmax(0, F1_taylor_05))  # force F1 between [0, 1]
+
+          g = 1 + 9 * ((rowSums(xdt[, 2:10]) / 9) ^ (1 / 4))
+          F2 = g * (1 - ((F1_taylor_05 / g) ^ 2))
+          data.table(F1 = F1_taylor_05, F2 = F2, g = g, F1_true = F1_true)
+        },
+        domain = self$param_set,
+        codomain = self$codomain
+      )
+    }
+  ),
+  active = list(
+    param_set = function() {
+      ps = map(1:10, function(i) ParamDbl$new(paste0("x", i), lower = 0, upper = 1))
+      ps = append(ps, ParamDbl$new("fidelity", lower = 1e-8, upper = 1, tags = "budget"))
+      ParamSet$new(ps)
+    }
+  )
+)
+#' @include BenchmarkConfig.R
+benchmark_configs$add("zdt6", BenchmarkConfigZDT6)
 
 
 

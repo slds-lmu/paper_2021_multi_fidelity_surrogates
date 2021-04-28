@@ -102,7 +102,7 @@ BenchmarkConfig = R6Class("BenchmarkConfig",
     },
     print = function(...) {
       catf("BenchmarkConfig: <%s>", self$id)
-      catf('Target variables: %s', paste0(self$target_variables, collapse = ","))
+      catf('Target variables: %s', paste0(self$target_variables, collapse = ", "))
       catf('Budget parameter: "%s"', self$budget_param)
       if (!is.null(self$task_col)) {
         catf('Task parameter (n): "%s" (%i)', self$task_col, length(self$param_set$params[[self$task_col]]$levels))

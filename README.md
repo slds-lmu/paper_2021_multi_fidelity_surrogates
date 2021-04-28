@@ -9,26 +9,26 @@ algorithms across several tasks.
 
 ## Overview
 
-| instance    | space   | ndims | ntargets         | fidelity     | n\_problems |    X.R.2. | status |
-| :---------- | :------ | ----: | :--------------- | :----------- | ----------: | --------: | :----- |
-| NB301       | Cat+Dep |    34 | 2:perf(1)+rt     | epochs       |           1 |    0.9866 | ready  |
-| LCBench     | Mix     |     7 | 6:perf(5)+rt     | epochs       |          35 |    0.9820 | ready  |
-| RBv2SVM     | Mix+Dep |     7 | 6:perf(4)+rt+pt  | frac+repls   |          96 |    0.6900 | \-     |
-| RBv2rpart   | Mix     |     5 | 6:perf(4)+rt+pt  | frac+repls   |         101 |    0.3400 | \-     |
-| RBv2aknn    | Mix     |     6 | 6:perf(4)+rt+pt  | frac+repls   |          99 |    0.3680 | \-     |
-| RBv2glmnet  | Mix     |     3 | 6:perf(4)+rt+pt  | frac+repls   |          98 |    0.2590 | \-     |
-| RBv2ranger  | Mix+Dep |     9 | 6:perf(4)+rt+pt  | frac+repls   |         114 |    0.2830 | \-     |
-| RBv2xgboost | Mix+Dep |    14 | 6:perf(4)+rt+pt  | frac+repls   |         109 |    0.5770 | \-     |
-| RBv2super   | Mix+Dep |    36 | 6:perf(4)+rt+pt  | frac+repls   |          89 |        NA | \-     |
-| FCNet       | Mix     |    11 | 4:perf(2)+rt+ ms | epochs+repls |           4 |    0.7690 | ready  |
-| TaskSet     | Num     |     9 | 4:perf(4)        | epochs+repls |          20 | \-44.0000 | \-     |
+| instance    | space   | n\_dims | n\_targets       | fidelity     | n\_problems |   X.R.2. | status |
+|:------------|:--------|--------:|:-----------------|:-------------|------------:|---------:|:-------|
+| NB301       | Cat+Dep |      34 | 2:perf(1)+rt     | epochs       |           1 |   0.9866 | ready  |
+| LCBench     | Mix     |       7 | 6:perf(5)+rt     | epochs       |          35 |   0.9820 | ready  |
+| RBv2SVM     | Mix+Dep |       7 | 6:perf(4)+rt+pt  | frac+repls   |          96 |   0.6900 | \-     |
+| RBv2rpart   | Mix     |       5 | 6:perf(4)+rt+pt  | frac+repls   |         101 |   0.3400 | \-     |
+| RBv2aknn    | Mix     |       6 | 6:perf(4)+rt+pt  | frac+repls   |          99 |   0.3680 | \-     |
+| RBv2glmnet  | Mix     |       3 | 6:perf(4)+rt+pt  | frac+repls   |          98 |   0.2590 | \-     |
+| RBv2ranger  | Mix+Dep |       9 | 6:perf(4)+rt+pt  | frac+repls   |         114 |   0.2830 | \-     |
+| RBv2xgboost | Mix+Dep |      14 | 6:perf(4)+rt+pt  | frac+repls   |         109 |   0.5770 | \-     |
+| RBv2super   | Mix+Dep |      36 | 6:perf(4)+rt+pt  | frac+repls   |          89 |       NA | \-     |
+| FCNet       | Mix     |      11 | 4:perf(2)+rt+ ms | epochs+repls |           4 |   0.7690 | ready  |
+| TaskSet     | Num     |       9 | 4:perf(4)        | epochs+repls |          20 | -44.0000 | \-     |
 
-where for **ntargets** (\#number):
+where for **n\_targets** (\#number):
 
-  - perf = performance measure
-  - ms = model\_size
-  - rt = runtime
-  - pt = predicttime
+-   perf = performance measure
+-   ms = model\_size
+-   rt = runtime
+-   pt = predicttime
 
 For more information either look directly into the
 [code](https://github.com/compstat-lmu/paper_2021_multi_fidelity_surrogates/blob/main/R/BenchmarkConfigs.R)
@@ -36,10 +36,11 @@ or use the object’s printers via `cfgs("...")`.
 
 Toy test functions:
 
-| instance | space | n\_dims | n\_targets | fidelity | n\_problems |
-| :------- | :---- | ------: | ---------: | :------- | ----------: |
-| Branin   | Num   |       2 |          1 | fidelity |           1 |
-| Shekel   | Num   |       4 |          1 | fidelity |           1 |
+| instance | space | n\_dims | n\_targets | fidelity | n\_problems | status           |
+|:---------|:------|--------:|:-----------|:---------|------------:|:-----------------|
+| Branin   | Num   |       2 | 1:y        | fidelity |           1 | ready            |
+| Shekel   | Num   |       4 | 1:y        | fidelity |           1 | ready            |
+| ZDT6     | Num   |      10 | 2:F1+F2    | fidelity |           1 | needs discussion |
 
 ## NASBench-301
 
@@ -111,7 +112,7 @@ cfg$param_set$params$OpenML_task_id$levels
 cfg$task_levels
 ```
 
-If the configuration only has \(1\) task, `NULL` is returned.
+If the configuration only has 1 task, `NULL` is returned.
 
 ## Branin
 
@@ -129,7 +130,7 @@ ins = OptimInstanceMultiCrit$new(
   objective = cfg$get_objective(),
   terminator = trm("evals", n_evals = 10L)
 )
-#opt("random_search")$optimize(ins)
+opt("random_search")$optimize(ins)
 ```
 
 ## Shekel
@@ -147,7 +148,25 @@ ins = OptimInstanceSingleCrit$new(
   objective = cfg$get_objective(),
   terminator = trm("evals", n_evals = 10L)
 )
-#opt("random_search")$optimize(ins)
+opt("random_search")$optimize(ins)
+```
+
+## ZDT6
+
+We first load the config:
+
+``` r
+cfg = cfgs("zdt6")
+```
+
+this config contains our `objective` which we can use to optimize.
+
+``` r
+ins = OptimInstanceMultiCrit$new(
+  objective = cfg$get_objective(),
+  terminator = trm("evals", n_evals = 10L)
+)
+opt("random_search")$optimize(ins)
 ```
 
 ## RandomBotv2
@@ -190,7 +209,7 @@ ins = OptimInstanceMultiCrit$new(
   objective = cfg$get_objective(),
   terminator = trm("evals", n_evals = 10L)
 )
-#opt("random_search")$optimize(ins)
+opt("random_search")$optimize(ins)
 ```
 
 Example to select target variables and a task:
@@ -217,7 +236,7 @@ ins = OptimInstanceMultiCrit$new(
   objective = cfg$get_objective(),
   terminator = trm("evals", n_evals = 10L)
 )
-#opt("random_search")$optimize(ins)
+opt("random_search")$optimize(ins)
 ```
 
 ## RandomBotv2 - aknn
@@ -236,7 +255,7 @@ ins = OptimInstanceMultiCrit$new(
   objective = cfg$get_objective(),
   terminator = trm("evals", n_evals = 10L)
 )
-#opt("random_search")$optimize(ins)
+opt("random_search")$optimize(ins)
 ```
 
 ## RandomBotv2 - glmnet
@@ -255,7 +274,7 @@ ins = OptimInstanceMultiCrit$new(
   objective = cfg$get_objective(),
   terminator = trm("evals", n_evals = 10L)
 )
-#opt("random_search")$optimize(ins)
+opt("random_search")$optimize(ins)
 ```
 
 ## RandomBotv2 - ranger
@@ -274,7 +293,7 @@ ins = OptimInstanceMultiCrit$new(
   objective = cfg$get_objective(),
   terminator = trm("evals", n_evals = 10L)
 )
-#opt("random_search")$optimize(ins)
+opt("random_search")$optimize(ins)
 ```
 
 ## RandomBotv2 - xgboost
@@ -293,15 +312,15 @@ ins = OptimInstanceMultiCrit$new(
   objective = cfg$get_objective(),
   terminator = trm("evals", n_evals = 10L)
 )
-#opt("random_search")$optimize(ins)
+opt("random_search")$optimize(ins)
 ```
 
 ## RandomBotv2 - super
 
 The **super** learner is a learner that is parametrized as a choice over
-all available randombot base learners. It has a highly hierarchical,
-\(37\) dimensional parameter space that includes the configurations of
-all baselearners.
+all available randombot base learners. It has a highly hierarchical, 37
+dimensional parameter space that includes the configurations of all
+baselearners.
 
 We first load the config:
 
@@ -317,7 +336,7 @@ ins = OptimInstanceMultiCrit$new(
   objective = cfg$get_objective(),
   terminator = trm("evals", n_evals = 10L)
 )
-#opt("random_search")$optimize(ins)
+opt("random_search")$optimize(ins)
 ```
 
 ## FCNet
@@ -341,22 +360,22 @@ opt("random_search")$optimize(ins)
 
 ## Overview
 
-    #> ℹ Loading mfsurrogates
+    #> Loading mfsurrogates
     #> BenchmarkConfig: <Branin>
     #> Target variables: y
     #> Budget parameter: "fidelity"
     #> <ParamSet>
-    #>          id    class lower upper nlevels        default value
-    #> 1:       x1 ParamDbl    -5    10     Inf <NoDefault[3]>      
-    #> 2:       x2 ParamDbl     0    15     Inf <NoDefault[3]>      
-    #> 3: fidelity ParamDbl     0     1     Inf <NoDefault[3]>      
+    #>          id    class  lower upper nlevels        default value
+    #> 1:       x1 ParamDbl -5e+00    10     Inf <NoDefault[3]>      
+    #> 2:       x2 ParamDbl  0e+00    15     Inf <NoDefault[3]>      
+    #> 3: fidelity ParamDbl  1e-08     1     Inf <NoDefault[3]>      
     #> <ParamSet>
     #>    id    class lower upper nlevels        default value
     #> 1:  y ParamDbl  -Inf   Inf     Inf <NoDefault[3]>      
     #> 
     #> 
     #> BenchmarkConfig: <FCNet>
-    #> Target variables: valid_loss,valid_mse,runtime,n_params
+    #> Target variables: valid_loss, valid_mse, runtime, n_params
     #> Budget parameter: "epoch"
     #> Budget parameter: "replication"
     #> Task parameter (n): "task" (4)
@@ -384,7 +403,7 @@ opt("random_search")$optimize(ins)
     #> 
     #> 
     #> BenchmarkConfig: <LCBench>
-    #> Target variables: val_accuracy,val_cross_entropy,val_balanced_accuracy,test_cross_entropy,test_balanced_accuracy,time
+    #> Target variables: val_accuracy, val_cross_entropy, val_balanced_accuracy, test_cross_entropy, test_balanced_accuracy, time
     #> Budget parameter: "epoch"
     #> Task parameter (n): "OpenML_task_id" (35)
     #> <ParamSet>
@@ -410,7 +429,7 @@ opt("random_search")$optimize(ins)
     #> 
     #> 
     #> BenchmarkConfig: <NASBench301>
-    #> Target variables: val_accuracy,runtime
+    #> Target variables: val_accuracy, runtime
     #> Budget parameter: "epoch"
     #> <ParamSet>
     #>                                                                    id    class
@@ -531,7 +550,7 @@ opt("random_search")$optimize(ins)
     #> 
     #> 
     #> BenchmarkConfig: <RBv2_aknn>
-    #> Target variables: mmce,f1,auc,logloss,timetrain,timepredict
+    #> Target variables: mmce, f1, auc, logloss, timetrain, timepredict
     #> Budget parameter: "trainsize"
     #> Budget parameter: "repl"
     #> Task parameter (n): "task_id" (99)
@@ -558,7 +577,7 @@ opt("random_search")$optimize(ins)
     #> 
     #> 
     #> BenchmarkConfig: <RBv2_glmnet>
-    #> Target variables: mmce,f1,auc,logloss,timetrain,timepredict
+    #> Target variables: mmce, f1, auc, logloss, timetrain, timepredict
     #> Budget parameter: "trainsize"
     #> Budget parameter: "repl"
     #> Task parameter (n): "task_id" (98)
@@ -582,7 +601,7 @@ opt("random_search")$optimize(ins)
     #> 
     #> 
     #> BenchmarkConfig: <RBv2_ranger>
-    #> Target variables: mmce,f1,auc,logloss,timetrain,timepredict
+    #> Target variables: mmce, f1, auc, logloss, timetrain, timepredict
     #> Budget parameter: "trainsize"
     #> Budget parameter: "repl"
     #> Task parameter (n): "task_id" (114)
@@ -624,7 +643,7 @@ opt("random_search")$optimize(ins)
     #> 
     #> 
     #> BenchmarkConfig: <RBv2_glmnet>
-    #> Target variables: mmce,f1,auc,logloss,timetrain,timepredict
+    #> Target variables: mmce, f1, auc, logloss, timetrain, timepredict
     #> Budget parameter: "trainsize"
     #> Budget parameter: "repl"
     #> Task parameter (n): "task_id" (101)
@@ -650,7 +669,7 @@ opt("random_search")$optimize(ins)
     #> 
     #> 
     #> BenchmarkConfig: <RBv2_super>
-    #> Target variables: mmce,f1,auc,logloss,timetrain,timepredict
+    #> Target variables: mmce, f1, auc, logloss, timetrain, timepredict
     #> Budget parameter: "trainsize"
     #> Budget parameter: "repl"
     #> Task parameter (n): "task_id" (89)
@@ -757,7 +776,7 @@ opt("random_search")$optimize(ins)
     #> 
     #> 
     #> BenchmarkConfig: <RBv2_SVM>
-    #> Target variables: mmce,f1,auc,logloss,timetrain,timepredict
+    #> Target variables: mmce, f1, auc, logloss, timetrain, timepredict
     #> Budget parameter: "trainsize"
     #> Budget parameter: "repl"
     #> Task parameter (n): "task_id" (96)
@@ -796,7 +815,7 @@ opt("random_search")$optimize(ins)
     #> 
     #> 
     #> BenchmarkConfig: <RBv2_xgboost>
-    #> Target variables: mmce,f1,auc,logloss,timetrain,timepredict
+    #> Target variables: mmce, f1, auc, logloss, timetrain, timepredict
     #> Budget parameter: "trainsize"
     #> Budget parameter: "repl"
     #> Task parameter (n): "task_id" (109)
@@ -853,17 +872,17 @@ opt("random_search")$optimize(ins)
     #> Budget parameter: "fidelity"
     #> <ParamSet>
     #>          id    class lower upper nlevels        default value
-    #> 1:       x1 ParamDbl     0    10     Inf <NoDefault[3]>      
-    #> 2:       x2 ParamDbl     0    10     Inf <NoDefault[3]>      
-    #> 3:       x3 ParamDbl     0    10     Inf <NoDefault[3]>      
-    #> 4: fidelity ParamDbl     0     1     Inf <NoDefault[3]>      
+    #> 1:       x1 ParamDbl 0e+00    10     Inf <NoDefault[3]>      
+    #> 2:       x2 ParamDbl 0e+00    10     Inf <NoDefault[3]>      
+    #> 3:       x3 ParamDbl 0e+00    10     Inf <NoDefault[3]>      
+    #> 4: fidelity ParamDbl 1e-08     1     Inf <NoDefault[3]>      
     #> <ParamSet>
     #>    id    class lower upper nlevels        default value
     #> 1:  y ParamDbl  -Inf   Inf     Inf <NoDefault[3]>      
     #> 
     #> 
     #> BenchmarkConfig: <TaskSet>
-    #> Target variables: train,valid1,valid2,test
+    #> Target variables: train, valid1, valid2, test
     #> Budget parameter: "epoch"
     #> Budget parameter: "replication"
     #> Task parameter (n): "task_name" (20)
@@ -886,4 +905,26 @@ opt("random_search")$optimize(ins)
     #> 1:  train ParamDbl     0   Inf     Inf <NoDefault[3]>      
     #> 2: valid1 ParamDbl     0   Inf     Inf <NoDefault[3]>      
     #> 3: valid2 ParamDbl     0   Inf     Inf <NoDefault[3]>      
-    #> 4:   test ParamDbl     0   Inf     Inf <NoDefault[3]>
+    #> 4:   test ParamDbl     0   Inf     Inf <NoDefault[3]>      
+    #> 
+    #> 
+    #> BenchmarkConfig: <ZDT6>
+    #> Target variables: F1, F2
+    #> Budget parameter: "fidelity"
+    #> <ParamSet>
+    #>           id    class lower upper nlevels        default value
+    #>  1:       x1 ParamDbl 0e+00     1     Inf <NoDefault[3]>      
+    #>  2:       x2 ParamDbl 0e+00     1     Inf <NoDefault[3]>      
+    #>  3:       x3 ParamDbl 0e+00     1     Inf <NoDefault[3]>      
+    #>  4:       x4 ParamDbl 0e+00     1     Inf <NoDefault[3]>      
+    #>  5:       x5 ParamDbl 0e+00     1     Inf <NoDefault[3]>      
+    #>  6:       x6 ParamDbl 0e+00     1     Inf <NoDefault[3]>      
+    #>  7:       x7 ParamDbl 0e+00     1     Inf <NoDefault[3]>      
+    #>  8:       x8 ParamDbl 0e+00     1     Inf <NoDefault[3]>      
+    #>  9:       x9 ParamDbl 0e+00     1     Inf <NoDefault[3]>      
+    #> 10:      x10 ParamDbl 0e+00     1     Inf <NoDefault[3]>      
+    #> 11: fidelity ParamDbl 1e-08     1     Inf <NoDefault[3]>      
+    #> <ParamSet>
+    #>    id    class lower upper nlevels        default value
+    #> 1: F1 ParamDbl  -Inf   Inf     Inf <NoDefault[3]>      
+    #> 2: F2 ParamDbl  -Inf   Inf     Inf <NoDefault[3]>
