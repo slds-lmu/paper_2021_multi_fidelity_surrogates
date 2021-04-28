@@ -27,8 +27,8 @@ dt = data.frame(
                "RBv2glmnet", "RBv2ranger", "RBv2xgboost", "RBv2super", "FCNet", "TaskSet"),
   space = c("Cat+Dep", "Mix", "Mix+Dep", "Mix", "Mix", "Mix", "Mix+Dep",
             "Mix+Dep","Mix+Dep", "Mix", "Num"),
-  ndims = c(34L, 7L, 7L, 5L, 6L, 3L, 9L, 14L, 36L, 11L, 9L),
-  ntargets = c("2:perf(1)+rt", "6:perf(5)+rt","6:perf(4)+rt+pt","6:perf(4)+rt+pt","6:perf(4)+rt+pt", "6:perf(4)+rt+pt","6:perf(4)+rt+pt","6:perf(4)+rt+pt","6:perf(4)+rt+pt", "4:perf(2)+rt+ ms", "4:perf(4)"),
+  n_dims = c(34L, 7L, 7L, 5L, 6L, 3L, 9L, 14L, 36L, 11L, 9L),
+  n_targets = c("2:perf(1)+rt", "6:perf(5)+rt","6:perf(4)+rt+pt","6:perf(4)+rt+pt","6:perf(4)+rt+pt", "6:perf(4)+rt+pt","6:perf(4)+rt+pt","6:perf(4)+rt+pt","6:perf(4)+rt+pt", "4:perf(2)+rt+ ms", "4:perf(4)"),
   fidelity = c("epochs", "epochs", "frac+repls", "frac+repls", "frac+repls", "frac+repls", "frac+repls", "frac+repls", "frac+repls", "epochs+repls", "epochs+repls"),
   n_problems = c(1L, 35L, 96L, 101L, 99L, 98L, 114L, 109L, 89L, 4L, 20L),
   "$R^2$" = c(0.9866, 0.9820, 0.69, 0.34, 0.368, 0.259, 0.283, 0.577,  NA, 0.769, -44),
@@ -37,7 +37,7 @@ dt = data.frame(
 knitr::kable(dt)
 ```
 
-where for **ntargets** (#number):
+where for **n_targets** (#number):
 
 - perf = performance measure
 - ms = model_size
@@ -50,12 +50,13 @@ Toy test functions:
 
 ```{r, echo=FALSE}
 dt = data.frame(
-  instance = c("Branin", "Shekel"),
-  space = c("Num", "Num"),
-  n_dims = c(2L, 4L),
-  n_targets = c(1L, 1L),
-  fidelity = c("fidelity", "fidelity"),
-  n_problems = c(1L, 1L)
+  instance = c("Branin", "Shekel", "ZDT6"),
+  space = c("Num", "Num", "Num"),
+  n_dims = c(2L, 4L, 10L),
+  n_targets = c("1:y", "1:y", "2:F1+F2"),
+  fidelity = c("fidelity", "fidelity", "fidelity"),
+  n_problems = c(1L, 1L, 1L),
+  status = c("ready", "ready", "needs discussion")
 )
 knitr::kable(dt)
 ```
@@ -150,7 +151,7 @@ ins = OptimInstanceMultiCrit$new(
   objective = cfg$get_objective(),
   terminator = trm("evals", n_evals = 10L)
 )
-#opt("random_search")$optimize(ins)
+opt("random_search")$optimize(ins)
 ```
 
 ## Shekel
@@ -168,8 +169,28 @@ ins = OptimInstanceSingleCrit$new(
   objective = cfg$get_objective(),
   terminator = trm("evals", n_evals = 10L)
 )
-#opt("random_search")$optimize(ins)
+opt("random_search")$optimize(ins)
 ```
+
+
+## ZDT6
+
+We first load the config:
+
+```{r,eval=FALSE}
+cfg = cfgs("zdt6")
+```
+
+this config contains our `objective` which we can use to optimize.
+
+```{r,eval=FALSE}
+ins = OptimInstanceMultiCrit$new(
+  objective = cfg$get_objective(),
+  terminator = trm("evals", n_evals = 10L)
+)
+opt("random_search")$optimize(ins)
+```
+
 
 
 ## RandomBotv2
@@ -199,7 +220,7 @@ ins = OptimInstanceMultiCrit$new(
   objective = cfg$get_objective(),
   terminator = trm("evals", n_evals = 10L)
 )
-#opt("random_search")$optimize(ins)
+opt("random_search")$optimize(ins)
 ```
 
 Example to select target variables and a task:
@@ -226,7 +247,7 @@ ins = OptimInstanceMultiCrit$new(
   objective = cfg$get_objective(),
   terminator = trm("evals", n_evals = 10L)
 )
-#opt("random_search")$optimize(ins)
+opt("random_search")$optimize(ins)
 ```
 
 ## RandomBotv2 - aknn
@@ -245,7 +266,7 @@ ins = OptimInstanceMultiCrit$new(
   objective = cfg$get_objective(),
   terminator = trm("evals", n_evals = 10L)
 )
-#opt("random_search")$optimize(ins)
+opt("random_search")$optimize(ins)
 ```
 
 ## RandomBotv2 - glmnet
@@ -264,7 +285,7 @@ ins = OptimInstanceMultiCrit$new(
   objective = cfg$get_objective(),
   terminator = trm("evals", n_evals = 10L)
 )
-#opt("random_search")$optimize(ins)
+opt("random_search")$optimize(ins)
 ```
 
 ## RandomBotv2 - ranger
@@ -283,7 +304,7 @@ ins = OptimInstanceMultiCrit$new(
   objective = cfg$get_objective(),
   terminator = trm("evals", n_evals = 10L)
 )
-#opt("random_search")$optimize(ins)
+opt("random_search")$optimize(ins)
 ```
 
 ## RandomBotv2 - xgboost
@@ -302,7 +323,7 @@ ins = OptimInstanceMultiCrit$new(
   objective = cfg$get_objective(),
   terminator = trm("evals", n_evals = 10L)
 )
-#opt("random_search")$optimize(ins)
+opt("random_search")$optimize(ins)
 ```
 
 ## RandomBotv2 - super
@@ -325,7 +346,7 @@ ins = OptimInstanceMultiCrit$new(
   objective = cfg$get_objective(),
   terminator = trm("evals", n_evals = 10L)
 )
-#opt("random_search")$optimize(ins)
+opt("random_search")$optimize(ins)
 ```
 
 ## FCNet
@@ -349,9 +370,9 @@ opt("random_search")$optimize(ins)
 
 ## Overview
 
-```{r, echo = FALSE}
+```{r, echo=FALSE}
 devtools::load_all()
-workdir = paste0(path.expand("~"), "/LRZ Sync+Share/multifidelity_data/")
+workdir = "/tmp/multifidelity_data/"
 for (c in cfgs()$keys()) {
   cc = cfgs(c, workdir = workdir)
   print(cc)
