@@ -21,6 +21,7 @@ reticulate::use_condaenv('mlr3keras', required = TRUE)
 devtools::load_all()
 ```
 
+# Measuring Surrogate Performance
 
 ```{r}
 cfg = cfgs("nb301", workdir=workdir)
@@ -41,3 +42,11 @@ dt = rbind(
 )
 dt
 ```
+
+# Measuring the "interestingness" of the landscape
+
+ - Variation in the function?
+   Evaluate at random points and measure variance.
+   We likely to rescale to get comparable varianes?
+
+ -

@@ -76,8 +76,9 @@ tune_surrogate = function(self, save=TRUE, tune_munge=TRUE) {
     deeper_u = p_int(lower = 6, upper = 9, trafo = function(x) 2^c(x,x,x-1, x-2), depends = deeper == TRUE),
     deep = p_lgl(),
     deeper = p_lgl(),
-    munge_n =   p_int(lower = 1, upper = ifelse(tune_munge, 4, 1), trafo = function(x) {if (x == 1L) {NULL} else {10^x}}),
-    batchnorm = p_lgl()
+    munge_n =   p_int(lower = 2L, upper = ifelse(tune_munge, 4L, 2L), trafo = function(x) {if (x <= 2L) {NULL} else {10^x}}),
+    batchnorm = p_lgl(),
+    emb_multiplier = p_dbl(lower = 1.5, upper = 2)
   )
   opt = bbotk::opt("random_search")
   obj = bbotk::ObjectiveRFun$new(

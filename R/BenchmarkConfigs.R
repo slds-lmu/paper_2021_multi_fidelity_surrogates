@@ -582,6 +582,8 @@ BenchmarkConfigRBv2xgboost = R6Class("BenchmarkConfigRBv2xgboost",
 #' @include BenchmarkConfig.R
 benchmark_configs$add("rbv2_xgboost", BenchmarkConfigRBv2xgboost)
 
+
+
 BenchmarkConfigRBv2rpart = R6Class("BenchmarkConfigRBv2rpart",
   inherit = BenchmarkConfig,
   public = list(
@@ -822,6 +824,7 @@ BenchmarkConfigSuperRBv2 = R6Class("BenchmarkConfigSuperRBv2",
 benchmark_configs$add("rbv2_super", BenchmarkConfigSuperRBv2)
 
 
+
 BenchmarkConfigFCNet = R6Class("BenchmarkConfigFCNet",
   inherit = BenchmarkConfig,
   public = list(
@@ -872,6 +875,8 @@ BenchmarkConfigFCNet = R6Class("BenchmarkConfigFCNet",
 )
 #' @include BenchmarkConfig.R
 benchmark_configs$add("fcnet", BenchmarkConfigFCNet)
+
+
 
 BenchmarkConfigTaskSet = R6Class("BenchmarkConfigTaskSet",
   inherit = BenchmarkConfig,
