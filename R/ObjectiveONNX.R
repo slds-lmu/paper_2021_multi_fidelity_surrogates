@@ -63,7 +63,7 @@ ObjectiveONNX = R6Class("ObjectiveONNX",
         }
 
         # In the case of deps, params with NA will have been dropped internally
-        # We re-add them here with the right storage type 
+        # We re-add them here with the right storage type
         param_ids = self$domain$ids()
         to_add = param_ids[param_ids %nin% names(xdt)]
         for (i in seq_along(to_add)) {
@@ -76,7 +76,7 @@ ObjectiveONNX = R6Class("ObjectiveONNX",
           )
           xdt[, to_add[i] := NA_storage_type]
         }
-        
+
         li = c(
           mlr3misc::imap(mlr3misc::keep(xdt, is.character), char_to_int, self$trafo_dict),
           # Below is a little odd but required as-is since otherwise autoconvert to float64 happens

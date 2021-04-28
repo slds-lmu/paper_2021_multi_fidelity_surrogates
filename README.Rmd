@@ -24,18 +24,25 @@ This package contains several surrogates that approximate the hyperparameter res
 ```{r, echo=FALSE}
 dt = data.frame(
   instance = c("NB301", "LCBench", "RBv2SVM", "RBv2rpart", "RBv2aknn",
-               "RBv2glmnet", "RBv2ranger", "RBv2xgboost", "RBv2super" "FCNet"),
+               "RBv2glmnet", "RBv2ranger", "RBv2xgboost", "RBv2super", "FCNet", "TaskSet"),
   space = c("Cat+Dep", "Mix", "Mix+Dep", "Mix", "Mix", "Mix", "Mix+Dep",
-            "Mix+Dep","Mix+Dep", "Mix"),
-  n_dims = c(34L, 7L, 7L, 5L, 6L, 3L, 9L, 14L, 36L, 11L),
-  n_targets = c(2L, 6L, 4L, 4L, 4L, 4L, 4L, 4L, 4L, 4L),
-  fidelity = c("epochs", "epoch", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "epochs + repls"),
-  n_problems = c(1L, 35L, 98L, 22L, 33L, 56L, 114L, 119L, 122L, 4L),
-  "$R^2$" = c(0.9866, 0.9820, NA, NA, NA, NA, NA, NA, NA, 0.769),
-  status = c("ready", "ready", "-", "-", "-", "-", "-", "-", "-", "-", "ready")
+            "Mix+Dep","Mix+Dep", "Mix", "Num"),
+  ndims = c(34L, 7L, 7L, 5L, 6L, 3L, 9L, 14L, 36L, 11L, 9L),
+  ntargets = c("2:perf(1)+rt", "6:perf(5)+rt","6:perf(4)+rt+pt","6:perf(4)+rt+pt","6:perf(4)+rt+pt", "6:perf(4)+rt+pt","6:perf(4)+rt+pt","6:perf(4)+rt+pt","6:perf(4)+rt+pt", "4:perf(2)+rt+ ms", "4:perf(4)"),
+  fidelity = c("epochs", "epochs", "frac+repls", "frac+repls", "frac+repls", "frac+repls", "frac+repls", "frac+repls", "frac+repls", "epochs+repls", "epochs+repls"),
+  n_problems = c(1L, 35L, 96L, 101L, 99L, 98L, 114L, 109L, 89L, 4L, 20L),
+  "$R^2$" = c(0.9866, 0.9820, 0.69, 0.34, 0.368, 0.259, 0.283, 0.577,  NA, 0.769, -44),
+  status = c("ready", "ready", "-", "-", "-", "-", "-", "-", "-", "ready", "-")
 )
 knitr::kable(dt)
 ```
+
+where for **ntargets** (#number):
+
+- perf = performance measure
+- ms = model_size
+- rt = runtime
+- pt = predicttime
 
 For more information either look directly into the [code](https://github.com/compstat-lmu/paper_2021_multi_fidelity_surrogates/blob/main/R/BenchmarkConfigs.R) or use the object's printers via `cfgs("...")`.
 
@@ -53,6 +60,9 @@ dt = data.frame(
 knitr::kable(dt)
 ```
 
+```{r, echo=FALSE}
+library(mfsurrogates)
+```
 ## NASBench-301
 
 We first load the config:
@@ -118,7 +128,11 @@ A list of available `task_id`s can be obtained from the `param_set`:
 
 ```{r, eval=FALSE}
 cfg$param_set$params$OpenML_task_id$levels
+# or using the active binding across all configs:
+cfg$task_levels
 ```
+
+If the configuration only has $1$ task, `NULL` is returned.
 
 ## Branin
 
@@ -155,6 +169,17 @@ ins = OptimInstanceSingleCrit$new(
   terminator = trm("evals", n_evals = 10L)
 )
 #opt("random_search")$optimize(ins)
+```
+
+
+## RandomBotv2
+
+All rbv2 have been at least partially evaluated on the same `OpenML` tasks.
+In order to provide a consistent set to evaluate on, the set where all algorithms had a sufficient amount of evaluations is available as `rbv2_test_tasks`.
+All other task's in the respective config's `param_set` also have sufficient evaluations, but not consistently across all datasets and are therefore not included in the set.
+
+```{r}
+rbv2_test_tasks
 ```
 
 ## RandomBotv2 - svm
@@ -283,7 +308,7 @@ ins = OptimInstanceMultiCrit$new(
 ## RandomBotv2 - super
 
 The **super** learner is a learner that is parametrized as a choice over all available randombot base learners.
-It has a highly hierarchical, $41$ dimensional parameter space that includes the configurations of all baselearners.
+It has a highly hierarchical, $37$ dimensional parameter space that includes the configurations of all baselearners.
 
 
 We first load the config:
@@ -320,4 +345,16 @@ ins = OptimInstanceMultiCrit$new(
   terminator = trm("evals", n_evals = 10L)
 )
 opt("random_search")$optimize(ins)
+```
+
+## Overview
+
+```{r, echo = FALSE}
+devtools::load_all()
+workdir = paste0(path.expand("~"), "/LRZ Sync+Share/multifidelity_data/")
+for (c in cfgs()$keys()) {
+  cc = cfgs(c, workdir = workdir)
+  print(cc)
+  cat("\n\n")
+}
 ```

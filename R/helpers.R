@@ -80,7 +80,11 @@ save_task_ids = function(cfg, min_evals = 50L, set = NULL, out_name = "task_ids.
 apply_cummean_variance_param = function(dt, mean, sum, fidelity_param, ignore = NULL) {
   hpars = setdiff(colnames(dt), c(mean, sum, fidelity_param, ignore))
   setorderv(dt, fidelity_param)
-  dt[, (mean) := map(.SD, function(x) {cumsum(x) / length(x)}), by = hpars, .SDcols  = mean]
-  dt[, (sum) := map(.SD, cumsum), by = hpars, .SDcols  = sum]
+  if (!is.null(mean)) {
+    dt[, (mean) := map(.SD, function(x) {cumsum(x) / length(x)}), by = hpars, .SDcols  = mean]
+  }
+  if (!is.null(sum)) {
+    dt[, (sum) := map(.SD, cumsum), by = hpars, .SDcols  = sum]
+  }
   return(dt)
 }

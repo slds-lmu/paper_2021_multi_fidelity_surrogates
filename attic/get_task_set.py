@@ -1,3 +1,4 @@
+# NOTE: This was only run on GCP and not tested locally.
 import pickle as cPickle
 import numpy as np
 from matplotlib import pylab as plt
@@ -60,3 +61,36 @@ def get_task_names():
   base_dir = "gs://task_set_data/task_set_data/"
   tasks = [t.replace("/", "") for t in gfile.listdir(base_dir) if "$folder$" not in t]
   return sorted(tasks)
+
+
+if __name__ == "main":
+  n_tasks = 5
+  # Get tasks and optimizers
+  tasks = get_task_names()
+  optimizer_families = results[task_names[1]].keys()
+  optimizer_families
+  # Download results
+  results = load_tasks(tasks[range(n_tasks)])
+
+  # Download the configs for each optimizer
+  # For now, so this works in colab, load file from github.
+  import urllib
+  path = "https://raw.githubusercontent.com/google-research/google-research/master/task_set/optimizers/configs/adam8p_wide_grid.json"
+  configs = json.loads(urllib.request.urlopen(path).read())
+
+  dfs = []
+  for i in range(20):
+    task = task_names[i]
+    optimizer_names, x, y = results[task]["adam8p_wide_grid_1k"]
+    yd = y.shape
+    df = pd.DataFrame(y.reshape(yd[0]*yd[1]*yd[2],yd[3]), columns= ["train", "valid1","valid2", "test"])
+    df = df.assign(
+        epoch = [x[k] for j in range(yd[0]) for i in range(yd[1]) for k in range(yd[2])],
+        replication = [i for j in range(yd[0]) for i in range(yd[1]) for k in range(yd[2])],
+        optimizer = [optimizer_names[i] for i in range(yd[0]) for j in range(yd[1]*yd[2])]
+    )
+    df = pd.concat([df, pd.DataFrame.from_dict([configs[x.decode("utf8")][0] for x in df.optimizer])], axis=1)
+    df = df.assign(task_name = task)
+    dfs = dfs + [df]
+  dfs = pd.concat(dfs, axis=0)
+  dfs.to_csv("task_set_8p_1_20.csv")

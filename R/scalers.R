@@ -1,5 +1,6 @@
 # Scale to ~[0, 1] with some leeway e.g. scale to [0.05, 0.95] depending on params.
 scale_sigmoid = function(x, p = 0.03) {
+  assert_number(p, upper = 0.49)
   rt_min = min(x)
   rt_range = (max(x) - min(x)) / (1-2*p)
   cat("Scaling [", min(x), ";", max(x), "] to [", (min(x) - rt_min) / rt_range + p, ";", (max(x) - rt_min) / rt_range + p,"]\n")
@@ -13,6 +14,7 @@ scale_sigmoid = function(x, p = 0.03) {
 }
 
 scale_base = function(x, base = 10) {
+  assert_number(base, lower = 0)
   x = ifelse(x == 0, 1, x)
   div = max(abs(log(c(min(x), max(x)), base = base)))
   cat("Log-", base, "-scaling [", min(x), ";", max(x), "] to [", log(min(x), base)/div, ";", log(max(x), base)/div ,"]\n")
@@ -23,14 +25,16 @@ scale_base = function(x, base = 10) {
 }
 
 scale_base_0_1 = function(x, base = 10, p = 0.01) {
+  assert_number(p, upper = 0.49)
+  assert_number(base, lower = 0)
   x = ifelse(x == 0, 1, x)
+  rt_range = (max(x) - min(x)) / (1-2*p)
+  rt_min = min(x)
   cat("Log-", base, "-[0,1]-scaling [", min(x), ";", max(x), "] to [",p,";",1-p,"]\n")
   list(
     trafo = function(x) {
       x = ifelse(x == 0 | is.na(x), 1, x);
       x = log(x, base = base)
-      rt_range = (max(x) - min(x)) / (1-2*p)
-      rt_min = min(x)
       (x - rt_min) / rt_range + p
     },
     retrafo = function(x) {

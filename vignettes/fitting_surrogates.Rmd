@@ -149,6 +149,7 @@ and check whether this works
 ```{r}
 cfg = cfgs('rbv2_glmnet', workdir = workdir)
 model_config = default_model_config()
+model_config$epochs = 1L
 cfg$fit_surrogate(model_config = model_config, overwrite = TRUE)
 ```
 
@@ -168,6 +169,7 @@ save_task_ids(cfg)
 ```{r}
 cfg = cfgs('rbv2_rpart', workdir = workdir)
 model_config = default_model_config()
+model_config$epochs = 1L
 cfg$fit_surrogate(model_config = model_config, overwrite = TRUE)
 ```
 
@@ -187,6 +189,7 @@ save_task_ids(cfg)
 ```{r, eval = FALSE}
 cfg = cfgs('rbv2_xgboost', workdir = workdir)
 model_config = default_model_config()
+model_config$epochs = 1L
 cfg$fit_surrogate(model_config = model_config, overwrite = TRUE)
 ```
 
@@ -206,6 +209,7 @@ save_task_ids(cfg)
 ```{r, eval = FALSE}
 cfg = cfgs('rbv2_aknn', workdir = workdir)
 model_config = default_model_config()
+model_config$epochs = 1L
 cfg$fit_surrogate(model_config = model_config, overwrite = TRUE)
 ```
 
@@ -218,6 +222,16 @@ cfg$fit_surrogate(model_config = model_config, overwrite = TRUE)
 
 ```{r}
 save_task_ids(cfg)
+```
+
+
+## SUPERLEARN
+
+```{r, eval = FALSE}
+cfg = cfgs('rbv2_super', workdir = workdir)
+model_config = default_model_config()
+model_config$epochs = 1L
+cfg$fit_surrogate(model_config = model_config, overwrite = TRUE)
 ```
 
 ## FCNet

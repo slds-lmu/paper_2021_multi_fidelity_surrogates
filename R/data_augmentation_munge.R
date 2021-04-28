@@ -7,10 +7,8 @@ munge_data = function(data, target_vars, munge_n = NULL) {
   return(data)
 }
 
-
 augment_with_munge = function(data, target_vars, n_augment = 10000, n_max_train = 10000, stratify = "task_id") {
   require_namespaces(c("mlr3learners", "distillery"))
-
   rng = lrn("regr.ranger")
   if (is.null(stratify)) {
     stratum = FALSE
@@ -43,7 +41,6 @@ augment_with_munge = function(data, target_vars, n_augment = 10000, n_max_train 
       t = TaskRegr$new("ban", backend = dt, target = target_vars[i])
       l = rng$clone()
       l$train(t)
-      # print(l$predict(t)$score(list(msr("regr.rsq"), msr("regr.rmse"))))
       p = l$predict(tm)
       p$data$response
     })

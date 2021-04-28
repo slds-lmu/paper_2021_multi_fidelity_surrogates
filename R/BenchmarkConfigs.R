@@ -13,7 +13,6 @@ BenchmarkConfigNB301 = R6Class("BenchmarkConfigNB301",
         dicts_file = "dicts.rds",
         keras_model_file = "model.hdf5",
         onnx_model_file = "model.onnx",
-        budget_param = "epoch",
         target_variables = c("val_accuracy", "runtime"),
         codomain = ps(
           val_accuracy = p_dbl(lower = 0, upper = 1, tags = "maximize"),
@@ -52,7 +51,6 @@ BenchmarkConfigLCBench = R6Class("BenchmarkConfigLCBench",
        dicts_file = "dicts.rds",
        keras_model_file = "model.hdf5",
        onnx_model_file = "model.onnx",
-       budget_param = "epoch",
        target_variables = c("val_accuracy", "val_cross_entropy", "val_balanced_accuracy", "test_cross_entropy", "test_balanced_accuracy", "time"),
        codomain = ps(
          val_accuracy = p_dbl(lower = 0, upper = 1, tags = "maximize"),
@@ -102,7 +100,6 @@ BenchmarkConfigBranin = R6Class("BenchmarkConfigBranin",
         dicts_file = NULL,
         keras_model_file = NULL,
         onnx_model_file = NULL,
-        budget_param = "fidelity",
         target_variables = "y",
         codomain = ps(
           y = p_dbl(lower = -Inf, upper = Inf, tags = "minimize")
@@ -116,7 +113,7 @@ BenchmarkConfigBranin = R6Class("BenchmarkConfigBranin",
     },
 
     get_objective = function() {
-      ObjectiveRFunDt$new(
+      bbotk::ObjectiveRFunDt$new(
         fun = function(xdt) {
           a = 1
           b = 5.1 / (4 * (pi ^ 2))
@@ -187,7 +184,6 @@ BenchmarkConfigShekel = R6Class("BenchmarkConfigShekel",
         dicts_file = NULL,
         keras_model_file = NULL,
         onnx_model_file = NULL,
-        budget_param = "fidelity",
         target_variables = "y",
         codomain = ps(
           y = p_dbl(lower = -Inf, upper = Inf, tags = "minimize")
@@ -202,7 +198,7 @@ BenchmarkConfigShekel = R6Class("BenchmarkConfigShekel",
 
     get_objective = function(m = 10L) {
       assert_int(m, lower = 1L, upper = 20L)
-      ObjectiveRFunDt$new(
+      bbotk::ObjectiveRFunDt$new(
         fun = function(xdt) {
           xdt[["fidelity"]] =  4 * xdt[["fidelity"]]  # scale to from [0, 1] to [0, 4]
           xdt_mat = as.matrix(xdt)
@@ -242,80 +238,6 @@ benchmark_configs$add("shekel", BenchmarkConfigShekel)
 
 
 
-#' @export
-# https://esa.github.io/pagmo2/docs/cpp/problems/zdt.html
-# 10d zdt6 (n = 10)
-# Zitzler, Deb & Thiele, 2000
-# Fidelity is incorporated in F1, see below
-# Pareto-optimal solutions are nonuniformly distributed along the global Pareto front
-# Pareto front is biased for solutions where F1 is near 1
-# Density of solutions is low near Pareto front and highest away from it
-# F1 is partially (the exp part) approximated via second order taylor expansion around a = 0.5
-# and the extent of the second order part being incorporated is scaled by the
-# fidelity (i.e, fidelity of 0 --> first order approximation, fidelity of 1 --> second order approximation)
-BenchmarkConfigZDT6 = R6Class("BenchmarkConfigZDT6",
-  inherit = BenchmarkConfig,
-  public = list(
-    initialize = function(id = "ZDT6") {
-      super$initialize(
-        id,
-        download_url = NULL,
-        workdir = NULL,
-        model_name = "zdt1",
-        param_set_file = NULL,
-        data_file = NULL,
-        dicts_file = NULL,
-        keras_model_file = NULL,
-        onnx_model_file = NULL,
-        budget_param = "fidelity",
-        target_variables = c("F1", "F2"),
-        codomain = ps(
-          F1 = p_dbl(lower = -Inf, upper = Inf, tags = "minimize"),
-          F2 = p_dbl(lower = -Inf, upper = Inf, tags = "minimize")
-        ),
-        packages = NULL
-      )
-    },
-
-    setup = function() {
-      message("no setup necessary.")
-    },
-
-    get_objective = function() {
-      ObjectiveRFunDt$new(
-        fun = function(xdt) {
-          F1_first = function(a) exp(-4 * a)
-          F1_second = function(a) (sin(6 * pi * a) ^ 6)
-
-          F1_first_d1 = function(a) -4 * exp(-4 * a)
-          F1_first_d2 = function(a) 16 * exp(-4 * a)
-
-          F1_true = 1 - (F1_first(xdt[["x1"]]) * F1_second(xdt[["x1"]]))
-          F1_taylor_05 = 1 - (F1_first(0.5) + F1_first_d1(0.5) * (xdt[["x1"]] - 0.5) + xdt[["fidelity"]] * ((F1_first_d2(0.5) / 2) * ((xdt[["x1"]] - 0.5) ^ 2))) * F1_second(xdt[["x1"]])
-          F1_taylor_05 = pmin(1, pmax(0, F1_taylor_05))  # force F1 between [0, 1]
-
-          g = 1 + 9 * ((rowSums(xdt[, 2:10]) / 9) ^ (1 / 4))
-          F2 = g * (1 - ((F1_taylor_05 / g) ^ 2))
-          data.table(F1 = F1_taylor_05, F2 = F2, g = g, F1_true = F1_true)
-        },
-        domain = self$param_set,
-        codomain = self$codomain
-      )
-    }
-  ),
-  active = list(
-    param_set = function() {
-      ps = map(1:10, function(i) ParamDbl$new(paste0("x", i), lower = 0, upper = 1))
-      ps = append(ps, ParamDbl$new("fidelity", lower = 1e-8, upper = 1L, tags = "budget"))
-      ParamSet$new(ps)
-    }
-  )
-)
-#' @include BenchmarkConfig.R
-benchmark_configs$add("zdt6", BenchmarkConfigZDT6)
-
-
-
 BenchmarkConfigRBv2SVM = R6Class("BenchmarkConfigRBv2SVM",
   inherit = BenchmarkConfig,
   public = list(
@@ -326,17 +248,18 @@ BenchmarkConfigRBv2SVM = R6Class("BenchmarkConfigRBv2SVM",
         workdir = workdir,
         model_name = "rbv2_svm",
         param_set_file = NULL,
-        data_file = "data.arff",
+        data_file = "data.rds",
         dicts_file = "dicts.rds",
         keras_model_file = "model.hdf5",
         onnx_model_file = "model.onnx",
-        budget_param = "epoch",
-        target_variables = c("perf.mmce", "perf.logloss", "traintime", "predicttime"),
+        target_variables = c("mmce", "f1", "auc", "logloss", "timetrain", "timepredict"),
         codomain = ps(
-          perf.mmce = p_dbl(lower = 0, upper = 1, tags = "minimize"),
-          perf.logloss = p_dbl(lower = 0, upper = 1, tags = "minimize"),
-          traintime = p_dbl(lower = 0, upper = 1, tags = "minimize"),
-          predicttime = p_dbl(lower = 0, upper = 1, tags = "minimize")
+          mmce = p_dbl(lower = 0, upper = 1, tags = "minimize"),
+          f1 = p_dbl(lower = 0, upper = 1, tags = "maximize"),
+          auc = p_dbl(lower = 0, upper = 1, tags = "maximize"),
+          logloss = p_dbl(lower = 0, upper = Inf, tags = "minimize"),
+          timetrain = p_dbl(lower = 0, upper = 1, tags = "minimize"),
+          timepredict = p_dbl(lower = 0, upper = 1, tags = "minimize")
         ),
         packages = NULL
       )
@@ -351,9 +274,23 @@ BenchmarkConfigRBv2SVM = R6Class("BenchmarkConfigRBv2SVM",
         tolerance = p_dbl(lower = -12, upper = -3, trafo = function(x) 2^x),
         degree = p_int(lower = 2, upper = 5, depends = kernel == "polynomial"),
         shrinking = p_lgl(),
+        trainsize = p_dbl(lower = 0, upper = 1, tag = "budget"),
+        repl = p_int(lower = 1, upper = 10, tag = "budget"),
         num.impute.selected.cpo = p_fct(levels = c("impute.mean", "impute.median", "impute.hist")),
-        task_id = p_fct(levels = as.character(self$get_task_ids()), tags = "task_id")
-      )
+        task_id = p_fct(levels = c("1040", "1049", "1050", "1053", "1056", "1063", "1067", "1068",
+          "11", "1111", "12", "1220", "14", "1457", "1461", "1462", "1464",
+          "1468", "1475", "1476", "1478", "1479", "1480", "1485", "1486",
+          "1487", "1489", "1494", "1497", "15", "1501", "1510", "1515",
+          "16", "18", "181", "182", "188", "22", "23", "23381", "24", "28",
+          "29", "3", "300", "307", "31", "312", "32", "334", "37", "375",
+          "377", "38", "40496", "40498", "40499", "40536", "40670", "40701",
+          "40900", "40966", "40975", "40978", "40979", "40981", "40982",
+          "40983", "40984", "40994", "41138", "41142", "41143", "41146",
+          "41156", "41157", "41163", "41164", "41212", "41216", "4134",
+          "4135", "4154", "42", "44", "4534", "4538", "458", "46", "469",
+          "470", "50", "54", "60", "6332"),
+          tags = "task_id")
+        )
     },
     data = function(x) {
       if(is.null(private$.data)) private$.data = preproc_data_rbv2_svm(self)
@@ -376,17 +313,18 @@ BenchmarkConfigRBv2ranger = R6Class("BenchmarkConfigRBv2ranger",
         workdir = workdir,
         model_name = "rbv2_ranger",
         param_set_file = NULL,
-        data_file = "data.arff",
+        data_file = "data.rds",
         dicts_file = "dicts.rds",
         keras_model_file = "model.hdf5",
         onnx_model_file = "model.onnx",
-        budget_param = "epoch",
-        target_variables = c("perf.mmce", "perf.logloss", "traintime", "predicttime"),
+        target_variables = c("mmce", "f1", "auc", "logloss", "timetrain", "timepredict"),
         codomain = ps(
-          perf.mmce = p_dbl(lower = 0, upper = 1, tags = "minimize"),
-          perf.logloss = p_dbl(lower = 0, upper = 1, tags = "minimize"),
-          traintime = p_dbl(lower = 0, upper = 1, tags = "minimize"),
-          predicttime = p_dbl(lower = 0, upper = 1, tags = "minimize")
+          mmce = p_dbl(lower = 0, upper = 1, tags = "minimize"),
+          f1 = p_dbl(lower = 0, upper = 1, tags = "maximize"),
+          auc = p_dbl(lower = 0, upper = 1, tags = "maximize"),
+          logloss = p_dbl(lower = 0, upper = Inf, tags = "minimize"),
+          timetrain = p_dbl(lower = 0, upper = 1, tags = "minimize"),
+          timepredict = p_dbl(lower = 0, upper = 1, tags = "minimize")
         ),
         packages = NULL
       )
@@ -403,8 +341,26 @@ BenchmarkConfigRBv2ranger = R6Class("BenchmarkConfigRBv2ranger",
         min.node.size = p_int(lower = 1, upper = 100),
         splitrule = p_fct(levels = c("gini", "extratrees")),
         num.random.splits = p_int(lower = 1, upper = 100, default = 1L, depends = splitrule == "extratrees"),
+        trainsize = p_dbl(lower = 0, upper = 1, tag = "budget"),
+        repl = p_int(lower = 1, upper = 10, tag = "budget"),
         num.impute.selected.cpo = p_fct(levels = c("impute.mean", "impute.median", "impute.hist")),
-        task_id = p_fct(levels = as.character(self$get_task_ids()), tags = "task_id")
+        task_id = p_fct(levels = c("1040", "1049", "1050", "1053", "1056", "1063", "1067", "1068",
+          "11", "1111", "12", "1220", "14", "1457", "1461", "1462", "1464",
+          "1468", "1475", "1476", "1478", "1479", "1480", "1485", "1486",
+          "1487", "1489", "1494", "1497", "15", "1501", "151", "1510",
+          "1515", "1590", "16", "18", "181", "182", "188", "22", "23",
+          "23381", "23512", "23517", "24", "28", "29", "3", "300", "307",
+          "31", "312", "32", "334", "37", "375", "377", "38", "40496",
+          "40498", "40499", "40536", "40668", "40670", "40685", "40701",
+          "40900", "40927", "40966", "40975", "40978", "40979", "40981",
+          "40982", "40983", "40984", "40994", "41027", "41138", "41142",
+          "41143", "41146", "41150", "41156", "41157", "41159", "41161",
+          "41162", "41163", "41164", "41165", "41166", "41168", "41212",
+          "41216", "41278", "4134", "4135", "4154", "42", "44", "4534",
+          "4538", "4541", "458", "46", "469", "470", "50", "54", "6", "60",
+          "6332")
+          , tags = "task_id"
+        )
       )
     },
     data = function(x) {
@@ -428,17 +384,18 @@ BenchmarkConfigRBv2glmnet = R6Class("BenchmarkConfigRBv2glmnet",
         workdir = workdir,
         model_name = "rbv2_glmnet",
         param_set_file = NULL,
-        data_file = "data.arff",
+        data_file = "data.rds",
         dicts_file = "dicts.rds",
         keras_model_file = "model.hdf5",
         onnx_model_file = "model.onnx",
-        budget_param = "epoch",
-        target_variables = c("perf.mmce", "perf.logloss", "traintime", "predicttime"),
+        target_variables = c("mmce", "f1", "auc", "logloss", "timetrain", "timepredict"),
         codomain = ps(
-          perf.mmce = p_dbl(lower = 0, upper = 1, tags = "minimize"),
-          perf.logloss = p_dbl(lower = 0, upper = 1, tags = "minimize"),
-          traintime = p_dbl(lower = 0, upper = 1, tags = "minimize"),
-          predicttime = p_dbl(lower = 0, upper = 1, tags = "minimize")
+          mmce = p_dbl(lower = 0, upper = 1, tags = "minimize"),
+          f1 = p_dbl(lower = 0, upper = 1, tags = "maximize"),
+          auc = p_dbl(lower = 0, upper = 1, tags = "maximize"),
+          logloss = p_dbl(lower = 0, upper = Inf, tags = "minimize"),
+          timetrain = p_dbl(lower = 0, upper = 1, tags = "minimize"),
+          timepredict = p_dbl(lower = 0, upper = 1, tags = "minimize")
         ),
         packages = NULL
       )
@@ -449,8 +406,23 @@ BenchmarkConfigRBv2glmnet = R6Class("BenchmarkConfigRBv2glmnet",
       ps(
         alpha = p_dbl(lower = 0, upper = 1, default = 1, trafo = function(x) max(0, min(1, x))),
         s = p_dbl(lower = -10, upper = 10, default = 0, trafo = function(x) 2^x),
+        trainsize = p_dbl(lower = 0, upper = 1, tag = "budget"),
+        repl = p_int(lower = 1, upper = 10, tag = "budget"),
         num.impute.selected.cpo = p_fct(levels = c("impute.mean", "impute.median", "impute.hist")),
-        task_id = p_fct(levels = as.character(self$get_task_ids()), tags = "task_id")
+        task_id = p_fct(levels = c("1040", "1049", "1050", "1053", "1056", "1063", "1067", "1068",
+          "11", "1111", "12", "14", "1461", "1462", "1464", "1468", "1475",
+          "1476", "1478", "1479", "1480", "1485", "1486", "1487", "1489",
+          "1494", "1497", "15", "1501", "1510", "1515", "1590", "16", "18",
+          "181", "182", "188", "22", "23", "23381", "23512", "24", "28",
+          "29", "3", "307", "31", "312", "32", "334", "37", "375", "377",
+          "38", "40496", "40498", "40499", "40536", "40668", "40670", "40701",
+          "40900", "40966", "40975", "40978", "40979", "40981", "40982",
+          "40983", "40984", "40994", "41138", "41142", "41143", "41146",
+          "41156", "41157", "41159", "41161", "41162", "41212", "41278",
+          "4134", "4135", "4154", "42", "44", "4534", "4538", "4541", "458",
+          "46", "469", "470", "50", "54", "60", "6332")
+          , tags = "task_id"
+        )
       )
     },
     data = function(x) {
@@ -474,17 +446,18 @@ BenchmarkConfigRBv2xgboost = R6Class("BenchmarkConfigRBv2xgboost",
         workdir = workdir,
         model_name = "rbv2_xgboost",
         param_set_file = NULL,
-        data_file = "data.arff",
+        data_file = "data.rds",
         dicts_file = "dicts.rds",
         keras_model_file = "model.hdf5",
         onnx_model_file = "model.onnx",
-        budget_param = "epoch",
-        target_variables = c("perf.mmce", "perf.logloss", "traintime", "predicttime"),
+        target_variables = c("mmce", "f1", "auc", "logloss", "timetrain", "timepredict"),
         codomain = ps(
-          perf.mmce = p_dbl(lower = 0, upper = 1, tags = "minimize"),
-          perf.logloss = p_dbl(lower = 0, upper = 1, tags = "minimize"),
-          traintime = p_dbl(lower = 0, upper = 1, tags = "minimize"),
-          predicttime = p_dbl(lower = 0, upper = 1, tags = "minimize")
+          mmce = p_dbl(lower = 0, upper = 1, tags = "minimize"),
+          f1 = p_dbl(lower = 0, upper = 1, tags = "maximize"),
+          auc = p_dbl(lower = 0, upper = 1, tags = "maximize"),
+          logloss = p_dbl(lower = 0, upper = Inf, tags = "minimize"),
+          timetrain = p_dbl(lower = 0, upper = 1, tags = "minimize"),
+          timepredict = p_dbl(lower = 0, upper = 1, tags = "minimize")
         ),
         packages = NULL
       )
@@ -506,8 +479,25 @@ BenchmarkConfigRBv2xgboost = R6Class("BenchmarkConfigRBv2xgboost",
         colsample_bylevel = p_dbl(lower = 0.01, upper = 1, depends = booster %in% c("dart", "gbtree")),
         rate_drop = p_dbl(lower = 0, upper = 1, depends = booster == "dart"),
         skip_drop = p_dbl(lower =  0, upper = 1, depends = booster == "dart"),
+        trainsize = p_dbl(lower = 0, upper = 1, tag = "budget"),
+        repl = p_int(lower = 1, upper = 10, tag = "budget"),
         num.impute.selected.cpo = p_fct(levels = c("impute.mean", "impute.median", "impute.hist")),
-        task_id = p_fct(levels = as.character(self$get_task_ids()), tags = "task_id")
+        task_id = p_fct(levels = c("1040", "1049", "1050", "1053", "1056", "1063", "1067", "1068",
+          "11", "1111", "12", "1220", "14", "1457", "1461", "1462", "1464",
+          "1468", "1475", "1476", "1478", "1479", "1480", "1485", "1486",
+          "1487", "1489", "1494", "1497", "15", "1501", "151", "1510",
+          "1515", "1590", "16", "18", "181", "182", "188", "22", "23",
+          "23381", "23512", "24", "28", "29", "3", "300", "307", "31",
+          "312", "32", "334", "37", "375", "377", "38", "40496", "40498",
+          "40499", "40536", "40668", "40670", "40701", "40900", "40927",
+          "40966", "40975", "40978", "40979", "40981", "40982", "40983",
+          "40984", "40994", "41138", "41142", "41143", "41146", "41150",
+          "41156", "41157", "41159", "41161", "41162", "41163", "41164",
+          "41165", "41166", "41212", "41216", "41278", "4134", "4135",
+          "4154", "42", "44", "4534", "4538", "4541", "458", "46", "469",
+          "470", "50", "54", "60", "6332"),
+          tags = "task_id"
+        )
       )
     },
     data = function(x) {
@@ -529,17 +519,18 @@ BenchmarkConfigRBv2rpart = R6Class("BenchmarkConfigRBv2rpart",
         workdir = workdir,
         model_name = "rbv2_rpart",
         param_set_file = NULL,
-        data_file = "data.arff",
+        data_file = "data.rds",
         dicts_file = "dicts.rds",
         keras_model_file = "model.hdf5",
         onnx_model_file = "model.onnx",
-        budget_param = "epoch",
-        target_variables = c("perf.mmce", "perf.logloss", "traintime", "predicttime"),
+        target_variables = c("mmce", "f1", "auc", "logloss", "timetrain", "timepredict"),
         codomain = ps(
-          perf.mmce = p_dbl(lower = 0, upper = 1, tags = "minimize"),
-          perf.logloss = p_dbl(lower = 0, upper = 1, tags = "minimize"),
-          traintime = p_dbl(lower = 0, upper = 1, tags = "minimize"),
-          predicttime = p_dbl(lower = 0, upper = 1, tags = "minimize")
+          mmce = p_dbl(lower = 0, upper = 1, tags = "minimize"),
+          f1 = p_dbl(lower = 0, upper = 1, tags = "maximize"),
+          auc = p_dbl(lower = 0, upper = 1, tags = "maximize"),
+          logloss = p_dbl(lower = 0, upper = Inf, tags = "minimize"),
+          timetrain = p_dbl(lower = 0, upper = 1, tags = "minimize"),
+          timepredict = p_dbl(lower = 0, upper = 1, tags = "minimize")
         ),
         packages = NULL
       )
@@ -552,8 +543,24 @@ BenchmarkConfigRBv2rpart = R6Class("BenchmarkConfigRBv2rpart",
         maxdepth = p_int(lower = 1, upper = 30, default = 30),
         minbucket = p_int(lower = 1, upper = 100, default = 1),
         minsplit = p_int(lower = 1, upper = 100, default = 20),
+        trainsize = p_dbl(lower = 0, upper = 1, tag = "budget"),
+        repl = p_int(lower = 1, upper = 10, tag = "budget"),
         num.impute.selected.cpo = p_fct(levels = c("impute.mean", "impute.median", "impute.hist")),
-        task_id = p_fct(levels = as.character(self$get_task_ids()), tags = "task_id")
+        task_id = p_fct(levels = c("1040", "1049", "1050", "1053", "1056", "1063", "1067", "1068",
+          "11", "1111", "12", "14", "1457", "1461", "1462", "1464", "1468",
+          "1475", "1476", "1478", "1479", "1480", "1485", "1486", "1487",
+          "1489", "1494", "1497", "15", "1501", "1510", "1515", "1590",
+          "16", "18", "181", "182", "188", "22", "23", "23381", "23512",
+          "24", "28", "29", "3", "300", "307", "31", "312", "32", "334",
+          "37", "375", "377", "38", "40496", "40498", "40499", "40536",
+          "40670", "40701", "40900", "40927", "40966", "40975", "40978",
+          "40979", "40981", "40982", "40983", "40984", "40994", "41138",
+          "41142", "41143", "41146", "41156", "41157", "41159", "41161",
+          "41162", "41163", "41164", "41165", "41212", "4134", "4135",
+          "4154", "42", "44", "4534", "4538", "458", "46", "469", "470",
+          "50", "54", "60", "6332")
+          , tags = "task_id"
+        )
       )
     },
     data = function(x) {
@@ -577,17 +584,18 @@ BenchmarkConfigRBv2aknn = R6Class("BenchmarkConfigRBv2aknn",
         workdir = workdir,
         model_name = "rbv2_aknn",
         param_set_file = NULL,
-        data_file = "data.arff",
+        data_file = "data.rds",
         dicts_file = "dicts.rds",
         keras_model_file = "model.hdf5",
         onnx_model_file = "model.onnx",
-        budget_param = "epoch",
-        target_variables = c("perf.mmce", "perf.logloss", "traintime", "predicttime"),
+        target_variables = c("mmce", "f1", "auc", "logloss", "timetrain", "timepredict"),
         codomain = ps(
-          perf.mmce = p_dbl(lower = 0, upper = 1, tags = "minimize"),
-          perf.logloss = p_dbl(lower = 0, upper = 1, tags = "minimize"),
-          traintime = p_dbl(lower = 0, upper = 1, tags = "minimize"),
-          predicttime = p_dbl(lower = 0, upper = 1, tags = "minimize")
+          mmce = p_dbl(lower = 0, upper = 1, tags = "minimize"),
+          f1 = p_dbl(lower = 0, upper = 1, tags = "maximize"),
+          auc = p_dbl(lower = 0, upper = 1, tags = "maximize"),
+          logloss = p_dbl(lower = 0, upper = Inf, tags = "minimize"),
+          timetrain = p_dbl(lower = 0, upper = 1, tags = "minimize"),
+          timepredict = p_dbl(lower = 0, upper = 1, tags = "minimize")
         ),
         packages = NULL
       )
@@ -596,13 +604,28 @@ BenchmarkConfigRBv2aknn = R6Class("BenchmarkConfigRBv2aknn",
   active = list(
     param_set = function() {
       ps(
-        k = p_int(lower = 1L, upper = 50),
+        k = p_int(lower = 1L, upper = 50L),
         distance = p_fct(levels = c("l2", "cosine", "ip"), default = "l2"),
-        M = p_int(lower = 18, upper = 50),
+        M = p_int(lower = 18L, upper = 50L),
         ef = p_dbl(lower = 3, upper = 8, trafo = function(x) round(2^x)),
         ef_construction = p_dbl(lower = 4, upper = 9, trafo = function(x) round(2^x)),
+        trainsize = p_dbl(lower = 0, upper = 1, tag = "budget"),
+        repl = p_int(lower = 1, upper = 10, tag = "budget"),
         num.impute.selected.cpo = p_fct(levels = c("impute.mean", "impute.median", "impute.hist")),
-        task_id = p_fct(levels = as.character(self$get_task_ids()), tags = "task_id")
+        task_id = p_fct(levels = c("1040", "1049", "1050", "1053", "1056", "1063", "1067", "1068",
+          "11", "1111", "12", "1220", "14", "1457", "1461", "1462", "1464",
+          "1468", "1475", "1476", "1478", "1479", "1480", "1485", "1486",
+          "1487", "1489", "1494", "1497", "15", "1501", "1510", "1515",
+          "16", "18", "181", "182", "188", "22", "23", "23381", "24", "28",
+          "29", "3", "300", "307", "31", "312", "32", "334", "37", "375",
+          "377", "38", "40496", "40498", "40499", "40536", "40670", "40701",
+          "40900", "40966", "40975", "40978", "40979", "40981", "40982",
+          "40983", "40984", "40994", "41138", "41142", "41143", "41146",
+          "41156", "41157", "41159", "41161", "41162", "41163", "41164",
+          "41165", "41212", "41278", "4134", "4154", "42", "44", "4534",
+          "4538", "458", "46", "469", "470", "50", "54", "60", "6332"),
+          tags = "task_id"
+        )
       )
     },
     data = function(x) {
@@ -613,6 +636,117 @@ BenchmarkConfigRBv2aknn = R6Class("BenchmarkConfigRBv2aknn",
 )
 #' @include BenchmarkConfig.R
 benchmark_configs$add("rbv2_aknn", BenchmarkConfigRBv2aknn)
+
+
+
+BenchmarkConfigSuperRBv2 = R6Class("BenchmarkConfigSuperRBv2",
+  inherit = BenchmarkConfig,
+  public = list(
+    initialize = function(id = "RBv2_super", workdir) {
+      super$initialize(
+        id,
+        download_url = "https://syncandshare.lrz.de/dl/fiSd4UWxmx9FRrQtdYeYrxEV/rbv2_aknn/",
+        workdir = workdir,
+        model_name = "rbv2_super",
+        param_set_file = NULL,
+        data_file = "data.rds",
+        dicts_file = "dicts.rds",
+        keras_model_file = "model.hdf5",
+        onnx_model_file = "model.onnx",
+        target_variables = c("mmce", "f1", "auc", "logloss", "timetrain", "timepredict"),
+        codomain = ps(
+          mmce = p_dbl(lower = 0, upper = 1, tags = "minimize"),
+          f1 = p_dbl(lower = 0, upper = 1, tags = "maximize"),
+          auc = p_dbl(lower = 0, upper = 1, tags = "maximize"),
+          logloss = p_dbl(lower = 0, upper = Inf, tags = "minimize"),
+          timetrain = p_dbl(lower = 0, upper = 1, tags = "minimize"),
+          timepredict = p_dbl(lower = 0, upper = 1, tags = "minimize")
+        ),
+        packages = NULL
+      )
+    }
+  ),
+  active = list(
+    param_set = function() {
+      pc = ps(
+          # svm
+          svm.kernel = p_fct(levels = c("linear", "polynomial", "radial")),
+          svm.cost =  p_dbl(lower = -12, upper = 12, trafo = function(x) 2^x),
+          svm.gamma = p_dbl(lower = -12, upper = 12, trafo = function(x) 2^x, depends = svm.kernel == "radial"),
+          svm.tolerance = p_dbl(lower = -12, upper = -3, trafo = function(x) 2^x),
+          svm.degree = p_int(lower = 2, upper = 5, depends = svm.kernel == "polynomial"),
+          svm.shrinking = p_lgl(),
+          # glmnet
+          glmnet.alpha = p_dbl(lower = 0, upper = 1, default = 1, trafo = function(x) max(0, min(1, x))),
+          glmnet.s = p_dbl(lower = -10, upper = 10, default = 0, trafo = function(x) 2^x),
+          # rpart
+          rpart.cp = p_dbl(lower = -10, upper = 0, default = log2(0.01), trafo = function(x) 2^x),
+          rpart.maxdepth = p_int(lower = 1, upper = 30, default = 30),
+          rpart.minbucket = p_int(lower = 1, upper = 100, default = 1),
+          rpart.minsplit = p_int(lower = 1, upper = 100, default = 20),
+          # ranger
+          ranger.num.trees = p_int(lower = 1, upper = 2000),
+          ranger.replace = p_lgl(),
+          ranger.sample.fraction = p_dbl(lower = 0.1, upper = 1),
+          ranger.mtry.power = p_int(lower = 0, upper = 1),
+          ranger.respect.unordered.factors = p_fct(levels = c("ignore", "order", "partition")),
+          ranger.min.node.size = p_int(lower = 1, upper = 100),
+          ranger.splitrule = p_fct(levels = c("gini", "extratrees")),
+          ranger.num.random.splits = p_int(lower = 1, upper = 100, default = 1L, depends = ranger.splitrule == "extratrees"),
+          # aknn
+          aknn.k = p_int(lower = 1L, upper = 50L),
+          aknn.distance = p_fct(levels = c("l2", "cosine", "ip"), default = "l2"),
+          aknn.M = p_int(lower = 18L, upper = 50L),
+          aknn.ef = p_dbl(lower = 3, upper = 8, trafo = function(x) round(2^x)),
+          aknn.ef_construction = p_dbl(lower = 4, upper = 9, trafo = function(x) round(2^x)),
+          # xgboost
+          xgboost.booster = p_fct(levels = c("gblinear", "gbtree", "dart")),
+          xgboost.nrounds = p_int(lower = 3, upper = 11, trafo = function(x) round(2^x)),
+          xgboost.eta = p_dbl(lower = -10, upper = 0, trafo = function(x) 2^x, depends = xgboost.booster %in% c("dart", "gbtree")),
+          xgboost.gamma = p_dbl(lower = -15, upper = 3, trafo = function(x) 2^x, depends = xgboost.booster %in% c("dart", "gbtree")),
+          xgboost.lambda = p_dbl(lower = -10, upper = 10, trafo = function(x) 2^x),
+          xgboost.alpha = p_dbl(lower = -10, upper = 10, trafo = function(x) 2^x),
+          xgboost.subsample = p_dbl(lower = 0.1, upper = 1),
+          xgboost.max_depth = p_int(lower = 1, upper = 15, depends = xgboost.booster %in% c("dart", "gbtree")),
+          xgboost.min_child_weight = p_dbl(lower = 0, upper = 7, trafo = function(x) 2^x, depends = xgboost.booster %in% c("dart", "gbtree")),
+          xgboost.colsample_bytree = p_dbl(lower = 0.01, upper = 1, depends = xgboost.booster %in% c("dart", "gbtree")),
+          xgboost.colsample_bylevel = p_dbl(lower = 0.01, upper = 1, depends = xgboost.booster %in% c("dart", "gbtree")),
+          xgboost.rate_drop = p_dbl(lower = 0, upper = 1, depends = xgboost.booster == "dart"),
+          xgboost.skip_drop = p_dbl(lower =  0, upper = 1, depends = xgboost.booster == "dart"),
+          # learner
+          trainsize = p_dbl(lower = 0, upper = 1, tag = "budget"),
+          repl = p_int(lower = 1, upper = 10, tag = "budget"),
+          num.impute.selected.cpo = p_fct(levels = c("impute.mean", "impute.median", "impute.hist")),
+          learner = p_fct(levels = c("aknn", "glmnet", "ranger", "rpart", "svm", "xgboost")),
+          task_id = p_fct(levels = c("1040", "1049", "1050", "1053", "1056", "1063", "1067", "1068",
+            "11", "1111", "12", "14", "1461", "1462", "1464", "1468", "1475",
+            "1476", "1478", "1479", "1480", "1485", "1486", "1487", "1489",
+            "1494", "1497", "15", "1501", "1510", "1515", "16", "18", "181",
+            "182", "188", "22", "23", "23381", "24", "28", "29", "3", "307",
+            "31", "312", "32", "334", "37", "375", "377", "38", "40496",
+            "40498", "40499", "40536", "40670", "40701", "40900", "40966",
+            "40975", "40978", "40979", "40981", "40982", "40983", "40984",
+            "40994", "41138", "41142", "41143", "41146", "41156", "41157",
+            "41212", "4134", "4154", "42", "44", "4534", "4538", "458", "46",
+            "469", "470", "50", "54", "60", "6332"),
+            tags = "task_id"
+          )
+      )
+      # Add dependencies
+      map(pc$params$learner$levels, function(x) {
+          nms = names(pc$params)[startsWith(names(pc$params), x)]
+          map(nms, function(nm) pc$add_dep(nm, "learner", CondEqual$new(x)))
+      })
+      pc
+    },
+    data = function(x) {
+      if(is.null(private$.data)) private$.data = preproc_data_rbv2_super(self)
+      private$.data
+    }
+  )
+)
+#' @include BenchmarkConfig.R
+benchmark_configs$add("rbv2_super", BenchmarkConfigSuperRBv2)
 
 
 BenchmarkConfigFCNet = R6Class("BenchmarkConfigFCNet",
@@ -629,7 +763,6 @@ BenchmarkConfigFCNet = R6Class("BenchmarkConfigFCNet",
         dicts_file = "dicts.rds",
         keras_model_file = "model.hdf5",
         onnx_model_file = "model.onnx",
-        budget_param = "epoch",
         target_variables = c("valid_loss", "valid_mse", "runtime", "n_params"),
         codomain = ps(
           valid_loss = p_dbl(lower = 0, upper = 1, tags = "minimize"),
@@ -666,6 +799,68 @@ BenchmarkConfigFCNet = R6Class("BenchmarkConfigFCNet",
 )
 #' @include BenchmarkConfig.R
 benchmark_configs$add("fcnet", BenchmarkConfigFCNet)
+
+BenchmarkConfigTaskSet = R6Class("BenchmarkConfigTaskSet",
+  inherit = BenchmarkConfig,
+  public = list(
+    initialize = function(id = "TaskSet", workdir) {
+      super$initialize(
+        id,
+        download_url = "https://syncandshare.lrz.de/dl/fiSd4UWxmx9FRrQtdYeYrxEV/task_set/",
+        workdir = workdir,
+        model_name = "task_set",
+        param_set_file = NULL,
+        data_file = "data.rds",
+        dicts_file = "dicts.rds",
+        keras_model_file = "model.hdf5",
+        onnx_model_file = "model.onnx",
+        target_variables = c("train", "valid1", "valid2", "test"),
+        codomain = ps(
+          train = p_dbl(lower = 0, upper = Inf, tags = "minimize"),
+          valid1 = p_dbl(lower = 0, upper = Inf, tags = "minimize"),
+          valid2 = p_dbl(lower = 0, upper = Inf, tags = "minimize"),
+          test = p_dbl(lower = 0, upper = Inf, tags = "minimize")
+        ),
+        packages = NULL
+      )
+    }
+  ),
+  active = list(
+    param_set = function() {
+      ps(
+        epoch = p_int(lower = 1L, upper = 10000L, tags = "budget"),
+        replication = p_int(lower = 0L, upper = 4L, tags = "budget"),
+        learning_rate = p_dbl(lower = -8, upper = 1, trafo = function(x) 10^x),
+        beta1 = p_dbl(lower = -4, upper = 0, trafo = function(x) 10^x),
+        beta2 = p_dbl(lower = -3, upper = 0, trafo = function(x) 10^x),
+        epsilon = p_dbl(lower = -10, upper = 3, trafo = function(x) 10^x),
+        l1 = p_dbl(lower = -8, upper = 1, trafo = function(x) 10^x),
+        l2 = p_dbl(lower = -8, upper = 1, trafo = function(x) 10^x),
+        linear_decay = p_dbl(lower = -7, upper = -4, trafo = function(x) 10^x),
+        exponential_decay = p_dbl(lower = -6, upper = -3, trafo = function(x) 10^x),
+        task_name = p_fct(levels =
+          c("Associative_GRU128_BS128_Pairs10_Tokens50", "Associative_GRU256_BS128_Pairs20_Tokens50",
+            "Associative_LSTM128_BS128_Pairs10_Tokens50", "Associative_LSTM128_BS128_Pairs20_Tokens50",
+            "Associative_LSTM128_BS128_Pairs5_Tokens20", "Associative_LSTM256_BS128_Pairs20_Tokens50",
+            "Associative_LSTM256_BS128_Pairs40_Tokens100", "Associative_VRNN128_BS128_Pairs10_Tokens50",
+            "Associative_VRNN256_BS128_Pairs20_Tokens50", "Copy_GRU128_BS128_Length20_Tokens10",
+            "Copy_GRU256_BS128_Length40_Tokens50", "Copy_LSTM128_BS128_Length20_Tokens10",
+            "Copy_LSTM128_BS128_Length20_Tokens20", "Copy_LSTM128_BS128_Length5_Tokens10",
+            "Copy_LSTM128_BS128_Length50_Tokens5", "Copy_LSTM256_BS128_Length40_Tokens50",
+            "Copy_VRNN128_BS128_Length20_Tokens10", "Copy_VRNN256_BS128_Length40_Tokens50",
+            "FixedImageConvAE_cifar10_32x32x32x32x32_bs128", "FixedImageConvAE_cifar10_32x64x8x64x32_bs128"
+          ), tags = "task_id"
+        )
+      )
+    },
+    data = function(x) {
+      if(is.null(private$.data)) private$.data = preproc_data_task_set(self)
+      private$.data
+    }
+  )
+)
+#' @include BenchmarkConfig.R
+benchmark_configs$add("task_set", BenchmarkConfigTaskSet)
 
 
 # Not sure whether to include kerasff
