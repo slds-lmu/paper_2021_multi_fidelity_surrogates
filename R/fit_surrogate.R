@@ -5,7 +5,7 @@ fit_surrogate = function(problem_config, model_config = default_model_config(), 
   rs = mlr3keras::reshape_data_embedding(data$xtrain)
   embd = make_embedding_dt(data$xtrain, emb_multiplier = model_config$emb_multiplier)
 
-  input_shape =  list(ncol(data$xtrain) - ncol(data$ytrain))
+  input_shape = list(ncol(data$xtrain) - ncol(data$ytrain))
   output_shape = ncol(data$ytrain)
   model = make_architecture(embd, input_shape, output_shape, model_config)
 
