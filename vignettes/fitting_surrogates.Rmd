@@ -35,22 +35,6 @@ reticulate::use_condaenv('mlr3keras', required = TRUE)
 devtools::load_all()
 ```
 
-
-## Overview
-
-| instance    | space   | dims | ntargets | fidelity | n\_problems |       $R^2$ |
-|:------------|:--------|-----:|---------:|:---------|------------:|------------:|
-| NB301       | Cat+Dep |   34 |        2 | epochs   |           1 |      0.9866 |
-| LCBench     | Mix     |    7 |        6 | epoch    |          35 |      0.9820 |
-| RBv2SVM     | Mix+Dep |    7 |        4 | NA       |          98 |         119 |
-| RBv2rpart   | Mix     |    5 |        4 | NA       |          22 |         119 |
-| RBv2aknn    | Mix     |    6 |        4 | NA       |          33 |         119 |
-| RBv2glmnet  | Mix     |    3 |        4 | NA       |          56 |         119 |
-| RBv2ranger  | Mix+Dep |    9 |        4 | NA       |         114 |         119 |
-| RBv2xgboost | Mix+Dep |   14 |        4 | NA       |         119 |         119 |
-
-
-
 Creating a **BenchmarkConfig**:
 
 All benchmarks have an associated **BenchmarkConfig** that contains paths to relevant files and other configurations required.
