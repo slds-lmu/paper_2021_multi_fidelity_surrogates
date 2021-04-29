@@ -7,24 +7,24 @@ munge_data = function(data, target_vars, munge_n = NULL) {
   return(data)
 }
 
-augment_with_munge = function(data, target_vars, n_augment = 10000, n_max_train = 10000, stratify = "task_id") {
-  require_namespaces(c("mlr3learners", "distillery"))
-  rng = lrn("regr.ranger")
+augment_with_munge = function(data, target_vars, n_augment = 5000, n_max_train = 2000, stratify = "task_id") {
+  require_namespaces(c("mlr3", "mlr3learners", "distillery"))
+  rng = mlr3::lrn("regr.ranger")
   if (is.null(stratify)) {
-    stratum = FALSE
+    strats = FALSE
   } else {
     strats = unique(data[[stratify]])
   }
   news = map(strats, function(stratum) {
     print(paste0("stratum:", stratum))
-    if (!is.character(stratum)) {
+    if (!(is.character(stratum) || is.factor(stratum))) {
       dt = copy(data)
     } else {
       dt = copy(data)[data[[stratify]] == stratum,]
       set(dt, j=stratify, value=NULL)
     }
     dt[, which(colnames(dt) %in% target_vars[-1]) := NULL]
-    t = TaskRegr$new("ban", backend = dt, target = target_vars[1])
+    t = mlr3::TaskRegr$new("ban", backend = dt, target = target_vars[1])
     tm = t$clone()$filter(sample(t$row_ids, min(length(t$row_ids), n_augment)))
     orig_rows = tm$row_ids
     while (tm$nrow < n_augment + length(orig_rows)) {
@@ -32,13 +32,13 @@ augment_with_munge = function(data, target_vars, n_augment = 10000, n_max_train 
       tm$rbind(x)
     }
     tm$filter(setdiff(tm$row_ids, orig_rows))
-    y_predict = map_dtc(1:4, function(i) {
+    y_predict = map_dtc(seq_along(target_vars), function(i) {
       dt = copy(data)
       dt = dt[data[[stratify]] == stratum,]
       set(dt, j=stratify, value=NULL)
       dt = dt[sample(seq_len(nrow(dt)), min(nrow(dt), n_max_train)),]
       dt[, which(colnames(dt) %in% target_vars[-i]) := NULL]
-      t = TaskRegr$new("ban", backend = dt, target = target_vars[i])
+      t = mlr3::TaskRegr$new("ban", backend = dt, target = target_vars[i])
       l = rng$clone()
       l$train(t)
       p = l$predict(tm)

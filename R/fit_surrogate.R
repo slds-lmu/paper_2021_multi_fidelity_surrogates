@@ -34,7 +34,6 @@ fit_surrogate = function(problem_config, model_config = default_model_config(), 
 
   metrics = compute_metrics(data$ytest, ptest)
   print(metrics)
-  if (overwrite) data.table::fwrite(metrics, paste0(problem_config$subdir, "surrogate_test_metrics.csv"))
 
   if (plot) {
     require("ggplot2")
@@ -47,6 +46,8 @@ fit_surrogate = function(problem_config, model_config = default_model_config(), 
     p = p1 + p2
     print(p)
     if (overwrite) ggsave(paste0(problem_config$subdir, "surrogate_test_metrics.pdf"), plot = p)
+    if (overwrite) data.table::fwrite(metrics, paste0(problem_config$subdir, "surrogate_test_metrics.csv"))
+
   }
   return(metrics)
 }
@@ -86,7 +87,7 @@ tune_surrogate = function(self, save=TRUE, tune_munge=TRUE) {
       xs = mlr3misc::insert_named(default_model_config(), xs)
       ret = fit_surrogate(self, xs, plot = FALSE)
       keras::k_clear_session()
-      list(rsq = ret[grp == "full",][1,]$rsq, metrics = ret)
+      list(rsq = ret[grp == "_full_",][1,]$rsq, metrics = ret)
     },
     domain = p,
     codomain = ps(rsq = p_dbl(lower = 0, upper = 1, tags = "maximize")),
