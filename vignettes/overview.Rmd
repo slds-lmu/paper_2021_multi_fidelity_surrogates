@@ -48,5 +48,3 @@ dt
  - Variation in the function?
    Evaluate at random points and measure variance.
    We likely to rescale to get comparable varianes?
-
- -
