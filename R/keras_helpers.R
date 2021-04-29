@@ -2,22 +2,35 @@
 make_architecture = function(embedding, input_shape, output_shape, mcfg) {
   inputs = embedding$layers
   # Wide part
-  wide = inputs %>% layer_dense(output_shape)
+  model = inputs %>% layer_dense(output_shape)
   # Deep part
-  deep = inputs
-  for (i in seq_len(length(mcfg$deep_u))) {
-    if (mcfg$batchnorm) deep = deep %>% layer_batch_normalization()
-    if (mcfg$dropout) deep = deep %>% layer_dropout(mcfg$dropout_p)
-    deep = deep %>%
-      layer_dense(
-        units = mcfg$deep_u[i],
-        input_shape = if (i == 1) input_shape else NULL,
-        activation = mcfg$activation
-      )
+  if (mcfg$deep) {
+    deep = inputs
+    for (i in seq_len(length(mcfg$deep_u))) {
+      if (mcfg$batchnorm) deep = deep %>% layer_batch_normalization()
+      if (mcfg$dropout) deep = deep %>% layer_dropout(mcfg$dropout_p)
+      deep = deep %>%
+        layer_dense(
+          units = mcfg$deep_u[i],
+          input_shape = if (i == 1) input_shape else NULL,
+          activation = mcfg$activation
+        )
+    }
+    model = layer_add(inputs = list(model, deep %>% layer_dense(units = output_shape)))
   }
-  model = layer_add(inputs = list(wide, deep %>% layer_dense(units = output_shape)))
+  # Deeper part
   if (mcfg$deeper) {
-    deeper = make_layers(inputs, units=mcfg$deeper_u, batchnorm=mcfg$batchnorm, dropout = mcfg$dropout, dropout_p = mcfg$dropout_p, activation=mcfg$activation)
+    deeper = inputs
+    for (i in seq_len(length(mcfg$deeper_u))) {
+      if (mcfg$batchnorm) deeper = deeper %>% layer_batch_normalization()
+      if (mcfg$dropout) deeper = deeper %>% layer_dropout(mcfg$dropout_p)
+      deeper = deeper %>%
+        layer_dense(
+          units = units[i],
+          input_shape = if (i == 1) input_shape else NULL,
+          activation = mcfg$activation
+        )
+    }
     model = layer_add(inputs = list(model, deeper %>% layer_dense(units = output_shape)))
   }
   model = model %>% layer_activation("sigmoid")
@@ -60,9 +73,13 @@ make_embedding = function(task, embed_size = NULL, embed_dropout = 0, embed_batc
       if (length(embed_size) == 0) embed_size = min(600L, round(emb_multiplier * n_cat^0.56))
       input = layer_input(shape = 1, dtype = "int32", name = feat_name)
       layers = input %>%
-        layer_embedding(input_dim = as.numeric(n_cat), output_dim = as.numeric(embed_size),
-                        input_length = 1L, name = paste0("embed_", feat_name),
-                        embeddings_initializer = initializer_he_uniform()) %>%
+        layer_embedding(
+          input_dim = as.numeric(n_cat),
+          output_dim = as.numeric(embed_size),
+          input_length = 1L,
+          name = paste0("embed_", feat_name),
+          embeddings_initializer = initializer_he_uniform()
+        ) %>%
         layer_dropout(embed_dropout, input_shape = as.numeric(embed_size)) %>%
         layer_flatten()
       return(list(input = input, layers = layers))
@@ -84,19 +101,6 @@ make_embedding = function(task, embed_size = NULL, embed_dropout = 0, embed_batc
   else
     layers = unname(embds[[1]]$layers)
   return(list(inputs = lapply(embds, function(x) x$input), layers = layers))
-}
-
-make_layers = function(input, units, batchnorm, dropout, dropout_p, activation) {
-  for (i in seq_len(length(units))) {
-    if (batchnorm) input = input %>% layer_batch_normalization()
-    if (dropout) input = input %>% layer_dropout(dropout_p)
-    input = input %>%
-      layer_dense(
-        units = units[i],
-        activation = activation
-      )
-  }
-  return(input)
 }
 
 keras_to_onnx = function(keras_model, onnx_model) {
