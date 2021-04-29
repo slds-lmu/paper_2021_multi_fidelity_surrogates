@@ -29,12 +29,12 @@ fit_surrogate = function(problem_config, model_config = default_model_config(), 
   # Test Data Metrics & Plots
   rs2 = mlr3keras::reshape_data_embedding(data$xtest)
   ptest = as.matrix(predict(model, rs2$data))
-  colnames(ptest) = cfg$target_variables
-  colnames(data$ytest) = cfg$target_variables
+  colnames(ptest) = problem_config$target_variables
+  colnames(data$ytest) = problem_config$target_variables
 
-  metrics = compute_metrics(problem_config, data$ytest, ptest)
+  metrics = compute_metrics(data$ytest, ptest)
   print(metrics)
-  if (overwrite) data.table::fwrite(metrics, paste0(cfg$subdir, "surrogate_test_metrics.csv"))
+  if (overwrite) data.table::fwrite(metrics, paste0(problem_config$subdir, "surrogate_test_metrics.csv"))
 
   if (plot) {
     require("ggplot2")
@@ -46,7 +46,7 @@ fit_surrogate = function(problem_config, model_config = default_model_config(), 
     p2 = plot(history)
     p = p1 + p2
     print(p)
-    if (overwrite) ggsave(paste0(cfg$subdir, "surrogate_test_metrics.pdf"), plot = p)
+    if (overwrite) ggsave(paste0(problem_config$subdir, "surrogate_test_metrics.pdf"), plot = p)
   }
   return(metrics)
 }
