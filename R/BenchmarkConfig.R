@@ -24,7 +24,7 @@ BenchmarkConfig = R6Class("BenchmarkConfig",
       self$download_url = download_url
       self$workdir = if (!is.null(workdir)) if (!endsWith(workdir, "/")) paste0(workdir, "/") else workdir
       self$model_name = model_name
-      self$subdir = if (!is.null(workdir) && !is.null(model_name)) paste0(workdir, model_name, "/") else NULL
+      self$subdir = if (!is.null(workdir) && !is.null(model_name)) paste0(self$workdir, model_name, "/") else NULL
       self$param_set_file = param_set_file
       self$data_file = data_file
       self$dicts_file = dicts_file
@@ -46,7 +46,7 @@ BenchmarkConfig = R6Class("BenchmarkConfig",
       }
 
       # Do only download data if explicitly set.
-      if (data && !(is.null(self$data_file)) && (!test_file_exists(self$param_set_path) || force_download)) {
+      if (data && !(is.null(self$data_file)) && (!test_file_exists(self$data_set_path) || force_download)) {
         download.file(paste0(self$download_url, self$data_file), destfile = self$data_path)
       }
 
@@ -119,8 +119,14 @@ BenchmarkConfig = R6Class("BenchmarkConfig",
       }
       fit_surrogate(self, model_config, overwrite = overwrite, plot = plot)
     },
-    tune_surrogate = function(tune_munge=TRUE) {
-      tune_surrogate(self,tune_munge=tune_munge)
+    tune_surrogate = function(continue = FALSE, save = FALSE, tune_munge = TRUE) {
+      tune_surrogate(self, continue = continue, save = save, tune_munge = tune_munge)
+    },
+    best_surrogate_config = function() {
+      ins_path = paste0(self$subdir, "OptimInstance.rds")
+      assert_file_exists(ins_path)
+      ins = readRDS(ins_path)
+      ins$archive$best()
     }
   ),
   active = list(
