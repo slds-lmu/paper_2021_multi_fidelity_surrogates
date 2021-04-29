@@ -34,7 +34,7 @@ scale_base_0_1 = function(x, base = 10, p = 0.01) {
   list(
     trafo = function(x) {
       x = ifelse(x == 0 | is.na(x), 1, x);
-      x = log(x, base = base)
+      if (base > 1) x = log(x, base = base)
       (x - rt_min) / rt_range + p
     },
     retrafo = function(x) {
