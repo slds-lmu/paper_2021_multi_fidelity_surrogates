@@ -26,7 +26,7 @@ make_architecture = function(embedding, input_shape, output_shape, mcfg) {
       if (mcfg$dropout) deeper = deeper %>% layer_dropout(mcfg$dropout_p)
       deeper = deeper %>%
         layer_dense(
-          units = units[i],
+          units = mcfg$deeper_u[i],
           input_shape = if (i == 1) input_shape else NULL,
           activation = mcfg$activation
         )
