@@ -837,7 +837,7 @@ BenchmarkConfigFCNet = R6Class("BenchmarkConfigFCNet",
         dicts_file = "dicts.rds",
         keras_model_file = "model.hdf5",
         onnx_model_file = "model.onnx",
-        target_variables = c("valid_loss", "valid_mse", "runtime", "n_params"),
+        target_variables = c("valid_loss", "runtime", "n_params"),
         codomain = ps(
           valid_loss = p_dbl(lower = 0, upper = 1, tags = "minimize"),
           valid_mse = p_dbl(lower = 0, upper = 1, tags = "minimize"),

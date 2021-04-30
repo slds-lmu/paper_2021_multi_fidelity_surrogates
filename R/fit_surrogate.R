@@ -91,13 +91,19 @@ tune_surrogate = function(self, continue = FALSE, save = TRUE, tune_munge = TRUE
       xs = mlr3misc::insert_named(default_model_config(), xs)
       ret = fit_surrogate(self, xs, overwrite = FALSE, plot = FALSE)
       keras::k_clear_session()
-      list(rsq = ret[grp == "_full_",][1, ]$rsq, metrics = ret)
+      rsq = setNames(ret$rsq, nm = paste0("rsq_", self$target_variables))
+      rsq[is.na(rsq)] = -Inf
+      c(as.list(rsq), metrics = ret)
     },
     domain = p,
-    codomain = ps(rsq = p_dbl(lower = 0, upper = 1, tags = "maximize")),
+    codomain = ParamSet$new(
+      map(self$target_variables, function(tv) {
+        ParamDbl$new(paste0("rsq_", tv), lower = -Inf, upper = 1, tags = "maximize")
+      })
+    ),
     check_values = FALSE
   )
-  ins = bbotk::OptimInstanceSingleCrit$new(obj, terminator = bbotk::trm("evals", n_evals = 10L))
+  ins = bbotk::OptimInstanceMultiCrit$new(obj, terminator = bbotk::trm("evals", n_evals = 1L))
   if (continue) {
     assert_file_exists(ins_path)
     old_ins = readRDS(ins_path)
