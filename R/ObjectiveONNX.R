@@ -61,7 +61,6 @@ ObjectiveONNX = R6Class("ObjectiveONNX",
             xdt[, constant$id := constant$default]
           }
         }
-
         # In the case of deps, params with NA will have been dropped internally
         # We re-add them here with the right storage type
         param_ids = self$domain$ids()
@@ -76,6 +75,8 @@ ObjectiveONNX = R6Class("ObjectiveONNX",
           )
           xdt[, to_add[i] := NA_storage_type]
         }
+        # Re-order columns in case the order changed through trafos.
+        xdt = xdt[, (c(param_ids, self$constants$ids())), with = FALSE]
 
         li = c(
           mlr3misc::imap(mlr3misc::keep(xdt, function(x) is.character(x) || is.factor(x)), char_to_int, self$trafo_dict),
