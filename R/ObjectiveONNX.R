@@ -76,6 +76,8 @@ ObjectiveONNX = R6Class("ObjectiveONNX",
           )
           xdt[, to_add[i] := NA_storage_type]
         }
+        # Re-order columns in case the order changed through trafos.
+        xdt = xdt[, (param_ids), with = FALSE]
 
         li = c(
           mlr3misc::imap(mlr3misc::keep(xdt, function(x) is.character(x) || is.factor(x)), char_to_int, self$trafo_dict),
