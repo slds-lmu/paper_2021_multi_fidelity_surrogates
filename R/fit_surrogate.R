@@ -102,7 +102,7 @@ tune_surrogate = function(self, continue = FALSE, save = TRUE, tune_munge = TRUE
       keras::k_clear_session()
       rsq = setNames(ret$rsq, nm = paste0("rsq_", self$target_variables))
       rsq[is.na(rsq)] = -Inf
-      c(as.list(rsq), metrics = ret)
+      append(as.list(rsq), list(metrics = ret))
     },
     domain = p,
     codomain = ParamSet$new(
