@@ -7,7 +7,7 @@ munge_data = function(data, target_vars, munge_n = NULL) {
   return(data)
 }
 
-augment_with_munge = function(data, target_vars, n_augment = 5000, n_max_train = 2000, stratify = "task_id") {
+augment_with_munge = function(data, target_vars, n_augment = 5000, n_max_train = 5000, stratify = "task_id") {
   require_namespaces(c("mlr3", "mlr3learners", "distillery"))
   rng = mlr3::lrn("regr.ranger")
   if (is.null(stratify)) {
