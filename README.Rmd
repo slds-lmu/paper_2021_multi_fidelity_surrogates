@@ -27,11 +27,11 @@ dt = data.frame(
                "RBv2glmnet", "RBv2ranger", "RBv2xgboost", "RBv2super", "FCNet", "TaskSet"),
   space = c("Cat+Dep", "Mix", "Mix+Dep", "Mix", "Mix", "Mix", "Mix+Dep",
             "Mix+Dep","Mix+Dep", "Mix", "Num"),
-  n_dims = c(34L, 7L, 7L, 5L, 6L, 3L, 9L, 14L, 36L, 11L, 9L),
+  n_dims = c(34L, 7L, 6L, 5L, 6L, 3L, 8L, 14L, 34L, 11L, 9L),
   n_targets = c("2:perf(1)+rt", "6:perf(5)+rt","6:perf(4)+rt+pt","6:perf(4)+rt+pt","6:perf(4)+rt+pt", "6:perf(4)+rt+pt","6:perf(4)+rt+pt","6:perf(4)+rt+pt","6:perf(4)+rt+pt", "4:perf(2)+rt+ ms", "4:perf(4)"),
   fidelity = c("epochs", "epochs", "frac+repls", "frac+repls", "frac+repls", "frac+repls", "frac+repls", "frac+repls", "frac+repls", "epochs+repls", "epochs+repls"),
   n_problems = c(1L, 35L, 96L, 101L, 99L, 98L, 114L, 109L, 89L, 4L, 20L),
-  "$R^2$" = c(0.9866, 0.9820, 0.69, 0.34, 0.368, 0.259, 0.283, 0.577,  NA, 0.769, -44),
+  "$R^2$" = c(0.9866, 0.9820, 0.69, 0.34, 0.368, 0.259, 0.363, 0.577,  0.799, 0.769, -44),
   status = c("ready", "ready", "-", "-", "-", "-", "-", "-", "-", "ready", "-")
 )
 knitr::kable(dt)
@@ -442,3 +442,4 @@ knitr::kable(perfs[, c(6,1,2:5)])
 |valid1                 |full   | -68.2954432|  0.0363588|  0.0007753| 0.5433312|task_set     |
 |valid2                 |full   | -66.5712313|  0.0328444| -0.0072158| 0.5414447|task_set     |
 |test                   |full   | -65.4814749|  0.0367477| -0.0360162| 0.5392328|task_set     |
+>>>>>>> deaa82311a67d789871eaf5c5e12ccff0992547e
