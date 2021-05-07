@@ -119,8 +119,8 @@ BenchmarkConfig = R6Class("BenchmarkConfig",
       }
       fit_surrogate(self, model_config, overwrite = overwrite, plot = plot)
     },
-    tune_surrogate = function(continue = FALSE, save = FALSE, tune_munge = TRUE) {
-      tune_surrogate(self, continue = continue, save = save, tune_munge = tune_munge)
+    tune_surrogate = function(continue = FALSE, save = FALSE, tune_munge = TRUE, n_evals = 10L) {
+      tune_surrogate(self, continue = continue, save = save, tune_munge = tune_munge, n_evals = n_evals)
     },
     best_surrogate_config = function() {
       ins_path = paste0(self$subdir, "OptimInstance.rds")

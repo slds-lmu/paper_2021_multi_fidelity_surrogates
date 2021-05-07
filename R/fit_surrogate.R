@@ -47,8 +47,8 @@ fit_surrogate = function(problem_config, model_config = default_model_config(), 
   if (plot) {
     require("ggplot2")
     require("patchwork")
-    smp = sample(seq_along(ptest[,1]), min(length(ptest[,1]), 500L))
-    p1 = ggplot(data.frame(x = data$ytest[smp,1], y = ptest[smp,1]), aes(x=x, y=y)) +
+    smp = sample(seq_along(ptest[, 1L]), min(length(ptest[, 1L]), 500L))
+    p1 = ggplot(data.frame(x = data$ytest[smp, 1L], y = ptest[smp, 1L]), aes(x = x, y = y)) +
       geom_point() +
       geom_abline(slope = 1, color = "blue")
     p2 = plot(history)
@@ -66,7 +66,7 @@ default_model_config = function() {
     activation = "elu",
     deep_u = c(512, 512),
     deeper_u = c(512, 512, 256, 128),
-    optimizer = keras::optimizer_adam(3*10^-4),
+    optimizer = keras::optimizer_adam(3 * 10^-4),
     deep = TRUE,
     deeper = TRUE,
     batchnorm = FALSE,
@@ -79,7 +79,7 @@ default_model_config = function() {
   )
 }
 
-tune_surrogate = function(self, continue = FALSE, save = TRUE, tune_munge = TRUE) {
+tune_surrogate = function(self, continue = FALSE, save = TRUE, tune_munge = TRUE, n_evals = 10L) {
   ins_path = paste0(self$subdir, "OptimInstance.rds")
   if (save && test_file_exists(ins_path) && !continue) {
     stopf(paste(ins_path, "exists and saving would overwrite it and continue = FALSE."))
@@ -100,13 +100,19 @@ tune_surrogate = function(self, continue = FALSE, save = TRUE, tune_munge = TRUE
       xs = mlr3misc::insert_named(default_model_config(), xs)
       ret = fit_surrogate(self, xs, overwrite = FALSE, plot = FALSE)
       keras::k_clear_session()
-      list(rsq = ret[grp == "_full_",][1, ]$rsq, metrics = ret)
+      rsq = setNames(ret$rsq, nm = paste0("rsq_", self$target_variables))
+      rsq[is.na(rsq)] = -Inf
+      append(as.list(rsq), list(metrics = ret))
     },
     domain = p,
-    codomain = ps(rsq = p_dbl(lower = 0, upper = 1, tags = "maximize")),
+    codomain = ParamSet$new(
+      map(self$target_variables, function(tv) {
+        ParamDbl$new(paste0("rsq_", tv), lower = -Inf, upper = 1, tags = "maximize")
+      })
+    ),
     check_values = FALSE
   )
-  ins = bbotk::OptimInstanceSingleCrit$new(obj, terminator = bbotk::trm("evals", n_evals = 10L))
+  ins = bbotk::OptimInstanceMultiCrit$new(obj, terminator = bbotk::trm("evals", n_evals = n_evals))
   if (continue) {
     assert_file_exists(ins_path)
     old_ins = readRDS(ins_path)
