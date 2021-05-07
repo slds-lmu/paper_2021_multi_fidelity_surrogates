@@ -31,7 +31,7 @@ fit_surrogate = function(problem_config, model_config = default_model_config(), 
     )
   # Save model
   if (overwrite) {
-    keras::save_model_hdf5(model, problem_config$keras_model_path, overwrite = overwrite)
+    keras::save_model_hdf5(model, problem_config$keras_model_path, overwrite = overwrite, include_optimizer = FALSE)
     keras_to_onnx(problem_config$keras_model_path, problem_config$onnx_model_path)
   }
 
