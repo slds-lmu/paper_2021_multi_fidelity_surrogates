@@ -1,11 +1,11 @@
-preproc_data_task_set = function(config, seed = 123L, n_max = 5*10^6, frac = .1) {
+preproc_data_task_set = function(config) {
   set.seed(seed)
   path = config$data_path
   dt = readRDS(path)
   dt[, optimizer := NULL]
-  dt = dt[replication == 0L]  # FIXME: replications are not multifidelity here
-  dt[, replication := NULL]
-  tt = split_by_col(dt, by = "task_name", frac = frac)
+  tt = list(test = dt[replication == 1L], train = dt[replication == 0L])
+  tt$test[, replication := NULL]
+  tt$train[, replication := NULL]
 
   # Preproc train data
   train = tt$train
@@ -14,7 +14,6 @@ preproc_data_task_set = function(config, seed = 123L, n_max = 5*10^6, frac = .1)
     train = train[-upper_outliers, ]
   }
   train = preproc_iid(train)
-  train = sample_max(train, n_max)
   trafos = c(
     map(train[, config$target_variables, with = FALSE], scale_base_0_1, base = 10),
     map(train[, c("epoch", "learning_rate", "epsilon", "l1", "l2", "linear_decay", "exponential_decay"), with = FALSE], scale_standard),
