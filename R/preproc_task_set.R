@@ -1,5 +1,4 @@
 preproc_data_task_set = function(config) {
-  set.seed(seed)
   path = config$data_path
   dt = readRDS(path)
   dt[, optimizer := NULL]
@@ -23,17 +22,12 @@ preproc_data_task_set = function(config) {
   y = as.matrix(train[, config$target_variables, with = FALSE])
   train = train[, (config$target_variables) := NULL]
 
-  if (frac) {
-    # Preproc test data
-    oob = tt$test
-    oob = preproc_iid(oob)
-    oob[, names(trafos) := pmap(list(.SD, trafos), function(x, t) {t$trafo(x)}), .SDcols = names(trafos)]
-    ytest = as.matrix(oob[, config$target_variables, with = FALSE])
-    oob = oob[, (config$target_variables) := NULL]
-  } else {
-    oob = NULL
-    ytest = NULL
-  }
+  # Preproc test data
+  oob = tt$test
+  oob = preproc_iid(oob)
+  oob[, names(trafos) := pmap(list(.SD, trafos), function(x, t) {t$trafo(x)}), .SDcols = names(trafos)]
+  ytest = as.matrix(oob[, config$target_variables, with = FALSE])
+  oob = oob[, (config$target_variables) := NULL]
 
   list(
     xtrain = train,
