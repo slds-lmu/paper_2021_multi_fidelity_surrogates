@@ -115,3 +115,21 @@ compute_metrics = function(response, prediction, stratify = factor("_full_")) {
     })
   })
 }
+
+drop_outliers = function(train, mult=5) {
+  qmask = imap(keep(train, is.numeric), function(x, nm) {
+    qs = quantile(x, c(.001, .999), na.rm=TRUE)
+    if (min(x, na.rm=TRUE) > 0) {
+      mask_min = (x > qs[1]/mult)
+    } else { 
+      mask_min = (x > qs[1]*mult) 
+    } 
+    if (max(x, na.rm=TRUE) > 0) {
+      mask_max = (x < qs[2]*mult)
+    } else { 
+      mask_max = (x < qs[2]/mult)
+    }
+    return((mask_min & mask_max) | is.na(x))
+  })
+  train[Reduce("&", qmask),]
+}

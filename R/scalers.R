@@ -38,7 +38,13 @@ scale_base_0_1 = function(x, base = 10, p = 0.01) {
       (x - rt_min) / rt_range + p
     },
     retrafo = function(x) {
-      ((base^x)-p) * rt_range + rt_min
+      clip_01(((base^x)-p) * rt_range + rt_min)
     }
   )
+}
+
+
+clip_01 = function(x) {
+  x[x < 0] = 0
+  x[x > 1] = 1
 }

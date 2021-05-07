@@ -4,7 +4,7 @@ fit_surrogate = function(problem_config, model_config = default_model_config(), 
 
   # Re-order columns to make sure column order matches
   x_ids = problem_config$param_set$ids()
-  y_ids = problem_config$codomain$ids()
+  y_ids = problem_config$codomain$ids()[1]
   data$xtrain = data$xtrain[, x_ids, with = FALSE]
   data$xtest = data$xtest[, x_ids, with = FALSE]
   data$ytrain = data$ytrain[, y_ids]
@@ -64,8 +64,8 @@ fit_surrogate = function(problem_config, model_config = default_model_config(), 
 default_model_config = function() {
   list(
     activation = "elu",
-    deep_u = c(512, 512),
-    deeper_u = c(512, 512, 256, 128),
+    deep_u = c(512L, 512L),
+    deeper_u = c(512L, 512L, 256L, 128L),
     optimizer = keras::optimizer_adam(3*10^-4),
     deep = TRUE,
     deeper = TRUE,

@@ -370,6 +370,18 @@ opt("random_search")$optimize(ins)
 
 ## Overview
 
+```{r,echo=FALSE}
+perfs = rbindlist(map(cfgs()$keys(), function(k) {
+  sdir = cfgs(k, workdir=workdir)$subdir
+  if (!is.null(sdir)) {
+     file = paste0(sdir, "surrogate_test_metrics.csv")
+     fread(file)[, problem := k]
+  }
+}), fill=TRUE)
+perfs[, grp := NULL]
+knitr::kable(perfs[, c(6,1,2:5)])
+```
+
 |variable               |grp    |         rsq|        roh|       ktau|       mae|problem      |
 |:----------------------|:------|-----------:|----------:|----------:|---------:|:------------|
 |valid_loss             |full   |   0.7697238|  0.9735305|  0.8929699| 0.0208658|fcnet        |

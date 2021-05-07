@@ -245,7 +245,9 @@ preproc_data_rbv2_aknn = function(config, seed = 123L, frac=.1, n_max=5e6, n_min
   tt = split_by_col(dt, frac = frac)
 
   train = tt$train
+  train = drop_outliers(train)
   train = sample_max(train, n_max)
+
   train = preproc_iid(train)
   train = apply_cummean_variance_param(train, mean = c("mmce", "f1", "auc", "logloss", "timepredict"), sum = "timetrain", "repl", ignore=NULL)
   trafos = c(
@@ -255,6 +257,7 @@ preproc_data_rbv2_aknn = function(config, seed = 123L, frac=.1, n_max=5e6, n_min
     map(train[, c("ef", "ef_construction"), with = FALSE], scale_base)
   )
   train[, names(trafos) := pmap(list(.SD, trafos), function(x, t) {t$trafo(x)}), .SDcols = names(trafos)]
+  print(summary(train))
   y = as.matrix(train[, config$target_variables, with = FALSE])
   train = train[, (config$target_variables) := NULL]
 

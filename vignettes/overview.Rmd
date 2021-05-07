@@ -24,15 +24,15 @@ devtools::load_all()
 # Current performances
 
 ```{r}
-devtools::load_all()
-knitr::kable(
-rbindlist(map(cfgs()$keys(), function(k) {
+perfs = rbindlist(map(cfgs()$keys(), function(k) {
   sdir = cfgs(k, workdir=workdir)$subdir
   if (!is.null(sdir)) {
      file = paste0(sdir, "surrogate_test_metrics.csv")
      fread(file)[, problem := k]
   }
-}), fill=TRUE))
+}), fill=TRUE)
+perfs[, grp := NULL]
+knitr::kable(perfs[, c(6,1,2:5)])
 ```
 
 
