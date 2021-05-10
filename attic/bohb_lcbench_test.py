@@ -11,7 +11,7 @@ from hpbandster.core.worker import Worker
 import hpbandster.core.nameserver as hpns
 from hpbandster.optimizers import BOHB as BOHB
 
-class nb301(Worker):
+class lcbench(Worker):
 
     def __init__(self, *args, sleep_interval=0, **kwargs):
         super().__init__(*args, **kwargs)
@@ -19,9 +19,9 @@ class nb301(Worker):
         self.sleep_interval = sleep_interval
         base = importr("base")
         self.mfsurrogates = importr("mfsurrogates")
-        self.session = onnxruntime.InferenceSession("attic/multifidelity_data/nb301/model.onnx")
-        self.param_set = base.readRDS("attic/multifidelity_data/nb301/param_set.rds")
-        self.trafo_dict = base.readRDS("attic/multifidelity_data/nb301/dicts.rds")
+        self.session = onnxruntime.InferenceSession("attic/multifidelity_data/lcbench/model.onnx")
+        self.param_set = base.readRDS("attic/multifidelity_data/lcbench/param_set.rds")
+        self.trafo_dict = base.readRDS("attic/multifidelity_data/lcbench/dicts.rds")
 
         pandas2ri.activate()
 
@@ -37,6 +37,9 @@ class nb301(Worker):
                 'info' (dict)
         """
 
+        # FIXME: if we want to set the OpenML_task_id constant we could add this here (using the correct cs below)
+        #        we could then proceed to add a task_id to the constuctor
+        config.update({"OpenML_task_id": "3945"})  # FIXME: budget trafo to match epoch range and int
         config.update({"epoch": int(budget)})  # FIXME: budget trafo to match epoch range and int
         xdt = pd.DataFrame.from_dict([config])
         xdt = pandas2ri.py2rpy(xdt)
@@ -55,7 +58,7 @@ class nb301(Worker):
     
     @staticmethod
     def get_configspace():
-        with open('src/configspaces/configspace_nb301_drop_epoch.json', 'r') as f:
+        with open('src/configspaces/configspace_lcbench_drop_OpenML_task_id_epoch.json', 'r') as f:
             json_string = f.read()
             cs = json.read(json_string)
         return(cs)
@@ -65,12 +68,12 @@ class nb301(Worker):
 NS = hpns.NameServer(run_id='example1', host='127.0.0.1', port=None)
 NS.start()
 
-w = nb301(sleep_interval=0, nameserver='127.0.0.1',run_id='example1')
+w = lcbench(sleep_interval=0, nameserver='127.0.0.1',run_id='example1')
 w.run(background=True)
 
 bohb = BOHB(configspace=w.get_configspace(),
             run_id='example1', nameserver='127.0.0.1',
-            min_budget=1, max_budget=50)
+            min_budget=1, max_budget=52)
 
 res = bohb.run(n_iterations=1)
 
