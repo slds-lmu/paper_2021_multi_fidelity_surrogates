@@ -107,7 +107,8 @@ compute_metrics = function(response, prediction, stratify = factor("_full_")) {
       data.table(
         variable = nms,
         grp = as.character(grp),
-        rsq = mlr3measures::rsq(x,y),
+        #rsq = mlr3measures::rsq(x,y),
+        rsq = rsq_(x,y),
         roh = mlr3measures::srho(x,y),
         ktau = mlr3measures::ktau(x[smp],y[smp]), # on sample since this is slow.
         mae = mlr3measures::mae(x,y)
@@ -115,3 +116,9 @@ compute_metrics = function(response, prediction, stratify = factor("_full_")) {
     })
   })
 }
+
+# classical rsq
+rsq_ = function(truth, response) {
+  mlr3measures::srho(truth, response) ^ 2
+}
+

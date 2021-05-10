@@ -905,7 +905,6 @@ BenchmarkConfigTaskSet = R6Class("BenchmarkConfigTaskSet",
     param_set = function() {
       ps(
         epoch = p_int(lower = 1L, upper = 10000L, tags = "budget"),
-        replication = p_int(lower = 0L, upper = 4L, tags = "budget"),
         learning_rate = p_dbl(lower = -8, upper = 1, trafo = function(x) 10^x),
         beta1 = p_dbl(lower = -4, upper = 0, trafo = function(x) 10^x),
         beta2 = p_dbl(lower = -3, upper = 0, trafo = function(x) 10^x),
