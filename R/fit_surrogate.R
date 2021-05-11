@@ -32,7 +32,7 @@ fit_surrogate = function(problem_config, model_config = default_model_config(), 
     )
   # Save model
   if (overwrite) {
-    keras::save_model_hdf5(model, problem_config$keras_model_path, overwrite = overwrite)
+    keras::save_model_hdf5(model, problem_config$keras_model_path, overwrite = overwrite, include_optimizer = FALSE)
     keras_to_onnx(problem_config$keras_model_path, problem_config$onnx_model_path)
   }
 
@@ -102,7 +102,7 @@ default_model_config = function() {
   )
 }
 
-tune_surrogate = function(self, continue = FALSE, save = TRUE, tune_munge = TRUE) {
+tune_surrogate = function(self, continue = FALSE, save = TRUE, tune_munge = TRUE, n_evals = 10L) {
   ins_path = paste0(self$subdir, "OptimInstance.rds")
   if (save && test_file_exists(ins_path) && !continue) {
     stopf(paste(ins_path, "exists and saving would overwrite it and continue = FALSE."))
@@ -123,13 +123,19 @@ tune_surrogate = function(self, continue = FALSE, save = TRUE, tune_munge = TRUE
       xs = mlr3misc::insert_named(default_model_config(), xs)
       ret = fit_surrogate(self, xs, overwrite = FALSE, plot = FALSE)
       keras::k_clear_session()
-      list(rsq = ret[grp == "_full_",][1, ]$rsq, metrics = ret)
+      rsq = setNames(ret$rsq, nm = paste0("rsq_", self$target_variables))
+      rsq[is.na(rsq)] = -Inf
+      append(as.list(rsq), list(metrics = ret))
     },
     domain = p,
-    codomain = ps(rsq = p_dbl(lower = 0, upper = 1, tags = "maximize")),
+    codomain = ParamSet$new(
+      map(self$target_variables, function(tv) {
+        ParamDbl$new(paste0("rsq_", tv), lower = -Inf, upper = 1, tags = "maximize")
+      })
+    ),
     check_values = FALSE
   )
-  ins = bbotk::OptimInstanceSingleCrit$new(obj, terminator = bbotk::trm("evals", n_evals = 10L))
+  ins = bbotk::OptimInstanceMultiCrit$new(obj, terminator = bbotk::trm("evals", n_evals = n_evals))
   if (continue) {
     assert_file_exists(ins_path)
     old_ins = readRDS(ins_path)

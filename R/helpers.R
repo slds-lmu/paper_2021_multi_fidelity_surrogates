@@ -82,7 +82,7 @@ apply_cummean_variance_param = function(dt, mean, sum, fidelity_param, ignore = 
   hpars = setdiff(colnames(dt), c(mean, sum, fidelity_param, ignore))
   setorderv(dt, fidelity_param)
   if (!is.null(mean)) {
-    dt[, (mean) := map(.SD, function(x) {cumsum(x) / length(x)}), by = hpars, .SDcols  = mean]
+    dt[, (mean) := map(.SD, function(x) {cummean(x)}), by = hpars, .SDcols  = mean]
   }
   if (!is.null(sum)) {
     dt[, (sum) := map(.SD, cumsum), by = hpars, .SDcols  = sum]
@@ -107,7 +107,8 @@ compute_metrics = function(response, prediction, stratify = factor("_full_")) {
       data.table(
         variable = nms,
         grp = as.character(grp),
-        rsq = mlr3measures::rsq(x,y),
+        #rsq = mlr3measures::rsq(x,y),
+        rsq = rsq_(x,y),
         roh = mlr3measures::srho(x,y),
         ktau = mlr3measures::ktau(x[smp],y[smp]), # on sample since this is slow.
         mae = mlr3measures::mae(x,y)
@@ -116,20 +117,11 @@ compute_metrics = function(response, prediction, stratify = factor("_full_")) {
   })
 }
 
-drop_outliers = function(train, mult=5) {
-  qmask = imap(keep(train, is.numeric), function(x, nm) {
-    qs = quantile(x, c(.001, .999), na.rm=TRUE)
-    if (min(x, na.rm=TRUE) > 0) {
-      mask_min = (x > qs[1]/mult)
-    } else { 
-      mask_min = (x > qs[1]*mult) 
-    } 
-    if (max(x, na.rm=TRUE) > 0) {
-      mask_max = (x < qs[2]*mult)
-    } else { 
-      mask_max = (x < qs[2]/mult)
-    }
-    return((mask_min & mask_max) | is.na(x))
-  })
-  train[Reduce("&", qmask),]
+# classical rsq
+rsq_ = function(truth, response) {
+  mlr3measures::srho(truth, response) ^ 2
+}
+
+cummean = function(x) {
+  cumsum(x) / seq_len(length(x))
 }

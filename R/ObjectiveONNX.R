@@ -97,3 +97,36 @@ ObjectiveONNX = R6Class("ObjectiveONNX",
     }
   )
 )
+
+#' @export
+convert_for_onnx = function(xdt, param_set, trafo_dict) {
+  setDT(xdt)
+  param_ids = param_set$ids()
+  constant_ids = NULL
+  ids = c(param_ids, constant_ids)  # FIXME: why would we treat constants differently (also above)?
+  missing = ids[mlr3misc::`%nin%`(ids, names(xdt))]
+  if (length(missing)) {
+    xdt[, (missing) := NA]
+  }
+  xdt = xdt[, (c(param_ids, constant_ids)), with = FALSE]
+  xdt = convert_storage_type(xdt, param_set = param_set)
+
+  li = c(
+    mlr3misc::imap(mlr3misc::keep(xdt, function(x) is.character(x) || is.factor(x)), char_to_int, trafo_dict),
+    continuous = list(trafo_numerics(xdt, trafo_dict))
+  )
+  li
+}
+
+convert_storage_type = function(xdt, param_set = param_set) {
+  imap(xdt, function(x, nm) {
+    switch(param_set$storage_type[[nm]],
+      "character" = as.character(x),
+      "integer" = as.integer(x),
+      "logical" = as.logical(x),
+      "numeric" = as.numeric(x)
+      # FIXME: list for uty not supported
+    )
+  })
+}
+

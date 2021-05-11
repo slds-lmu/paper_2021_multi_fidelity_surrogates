@@ -4,3 +4,5 @@
 .Ruserdata
 inst/doc
 .vscode/settings.json
+attic/multifidelity_data
+reticulate.R
