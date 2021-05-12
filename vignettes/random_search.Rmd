@@ -1,0 +1,220 @@
+---
+title: "Random Search Experiments"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{random_search_experiments}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+```{r}
+run_long = FALSE
+```
+
+```{r setup, eval = run_long}
+reticulate::use_condaenv('mlr3keras', required = TRUE)
+devtools::load_all()
+library("bbotk")
+library("data.table")
+library("ggplot2")
+```
+
+# Current performances
+
+```{r, eval = run_long}
+keys = cfgs()$keys()
+instances = rbindlist(map(keys, function(x) {
+  cf = cfgs(x, workdir=workdir)
+  tgt = ifelse(x == "task_set", cf$target_variables[2], cf$target_variables[1])
+  data.table(cfg = x, level = cf$task_levels, tgt = tgt)
+}), fill=TRUE)
+instances
+```
+
+```{r}
+make_objective = function(i) {
+  cf = cfgs(instances$cfg[i], workdir = workdir)
+  if (instances$cfg[i] == "nb301") {
+    obj = cf$get_objective(task = NULL, instances$tgt[i])
+  } else if (is.na(instances$level[i])) {
+    obj = cf$get_objective()
+  } else {
+    obj = cf$get_objective(
+      instances$level[i],
+      instances$tgt[i]
+    )
+  }
+  i
+  return(obj)
+}
+```
+
+```{r, eval = run_long}
+run_rs = function(i) {
+  n_evals = 10^6
+  batch_size = 10^4
+  ins = OptimInstanceSingleCrit$new(
+    objective = make_objective(i),
+    terminator = trm("combo",
+      terminators = list(
+        trm("evals", n_evals = n_evals),
+        trm("stagnation_batch", n = 5L, threshold = 10^-3)
+      ),
+      any = TRUE
+    )
+  )
+  opt("random_search", batch_size = batch_size)$optimize(ins)
+
+  ins$archive$data[, evals := seq_len(nrow(ins$archive$data))]
+  ins$archive$data[, c("evals" , instances$tgt[i]), with = FALSE]
+
+  minimize = ins$objective$codomain$tags[[instances$tgt[i]]] == "minimize"
+  dt = ins$archive$data
+  if (minimize) {
+    dt$objective_bbotk = cummin(ins$archive$data[[instances$tgt[i]]])
+    dt = dt[which(objective_bbotk != shift(objective_bbotk)),]
+  } else {
+    dt$objective_bbotk = cummax(ins$archive$data[[instances$tgt[i]]])
+    dt = dt[objective_bbotk != shift(objective_bbotk)]
+  }
+  dt = cbind(dt, instances[i,])
+  dt[, level := ifelse(is.na(level), "none", level)]
+  return(dt)
+}
+
+run_cfg = function(cfg) {
+  is = which(instances$cfg == cfg)
+  if (length(is) > 5) is = sample(is, min(length(is), 5))
+  rbindlist(map(is, run_rs))
+}
+```
+
+
+
+```{r, eval = run_long}
+cfg = "branin"
+dt = run_cfg(cfg)
+p = ggplot(dt, aes(x = evals, y = objective_bbotk, color = level)) +
+  geom_point() +
+  geom_line() +
+  geom_text(aes(label=round(objective_bbotk, 3)), vjust=-.5) +
+  scale_x_log10() +
+  theme_bw() +
+  ggtitle(cfg)
+ggsave(paste0("attic/random_search/", cfg, "_random_search.pdf"), p)
+```
+
+
+
+```{r, eval = run_long}
+cfg = "fcnet"
+dt = run_cfg(cfg)
+p = ggplot(dt, aes(x = evals, y = objective_bbotk, color = level)) +
+  geom_point() +
+  geom_line() +
+  geom_text(aes(label=round(objective_bbotk, 3)), vjust=-.5) +
+  scale_x_log10() +
+  theme_bw() +
+  ggtitle(cfg)
+ggsave(paste0("attic/random_search/", cfg, "_random_search.pdf"), p)
+```
+
+
+```{r, eval = run_long}
+cfg = "nb301"
+dt = run_cfg(cfg)
+p = ggplot(dt, aes(x = evals, y = objective_bbotk, color = level)) +
+  geom_point() +
+  geom_line() +
+  scale_x_log10() +
+  theme_bw()
+ggsave(paste0("attic/random_search/", cfg, "_random_search.pdf"), p)
+```
+
+
+```{r, eval = run_long}
+cfg = "rbv2_aknn"
+dt = run_cfg(cfg)
+p = ggplot(dt, aes(x = evals, y = objective_bbotk, color = level)) +
+  geom_point() +
+  geom_line() +
+  scale_x_log10() +
+  theme_bw()
+ggsave(paste0("attic/random_search/", cfg, "_random_search.pdf"), p)
+```
+
+
+```{r, eval = run_long}
+cfg = "rbv2_rpart"
+dt = run_cfg(cfg)
+p = ggplot(dt, aes(x = evals, y = objective_bbotk, color = level)) +
+  geom_point() +
+  geom_line() +
+  scale_x_log10() +
+  theme_bw()
+ggsave(paste0("attic/random_search/", cfg, "_random_search.pdf"), p)
+```
+
+
+```{r, eval = run_long}
+cfg = "rbv2_ranger"
+dt = run_cfg(cfg)
+p = ggplot(dt, aes(x = evals, y = objective_bbotk, color = level)) +
+  geom_point() +
+  geom_line() +
+  scale_x_log10() +
+  theme_bw()
+ggsave(paste0("attic/random_search/", cfg, "_random_search.pdf"), p)
+```
+
+
+```{r, eval = run_long}
+cfg = "rbv2_glmnet"
+dt = run_cfg(cfg)
+p = ggplot(dt, aes(x = evals, y = objective_bbotk, color = level)) +
+  geom_point() +
+  geom_line() +
+  scale_x_log10() +
+  theme_bw()
+ggsave(paste0("attic/random_search/", cfg, "_random_search.pdf"), p)
+```
+
+```{r, eval = run_long}
+cfg = "rbv2_svm"
+dt = run_cfg(cfg)
+p = ggplot(dt, aes(x = evals, y = objective_bbotk, color = level)) +
+  geom_point() +
+  geom_line() +
+  scale_x_log10() +
+  theme_bw()
+ggsave(paste0("attic/random_search/", cfg, "_random_search.pdf"), p)
+```
+
+```{r, eval = run_long}
+cfg = "rbv2_super"
+dt = run_cfg(cfg)
+p = ggplot(dt, aes(x = evals, y = objective_bbotk, color = level)) +
+  geom_point() +
+  geom_line() +
+  scale_x_log10() +
+  theme_bw()
+ggsave(paste0("attic/random_search/", cfg, "_random_search.pdf"), p)
+```
+
+```{r, eval = run_long}
+cfg = "rbv2_xgboost"
+dt = run_cfg(cfg)
+p = ggplot(dt, aes(x = evals, y = objective_bbotk, color = level)) +
+  geom_point() +
+  geom_line() +
+  scale_x_log10() +
+  theme_bw()
+ggsave(paste0("attic/random_search/", cfg, "_random_search.pdf"), p)
+```
