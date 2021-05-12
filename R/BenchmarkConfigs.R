@@ -869,7 +869,6 @@ BenchmarkConfigTaskSet = R6Class("BenchmarkConfigTaskSet",
     initialize = function(id = "TaskSet", workdir) {
       super$initialize(
         id,
-        download_url = "https://syncandshare.lrz.de/dl/fiSd4UWxmx9FRrQtdYeYrxEV/task_set/",
         workdir = workdir,
         model_name = "task_set",
         param_set_file = NULL,
