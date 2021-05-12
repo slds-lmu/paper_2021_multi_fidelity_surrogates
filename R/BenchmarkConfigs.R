@@ -5,7 +5,6 @@ BenchmarkConfigNB301 = R6Class("BenchmarkConfigNB301",
     initialize = function(id = "NASBench301", workdir) {
       super$initialize(
         id,
-        download_url = "https://syncandshare.lrz.de/dl/fiSd4UWxmx9FRrQtdYeYrxEV/nb301/",
         workdir = workdir,
         model_name = "nb301",
         param_set_file = "param_set.rds",
@@ -43,7 +42,6 @@ BenchmarkConfigLCBench = R6Class("BenchmarkConfigLCBench",
    initialize = function(id = "LCBench", workdir) {
      super$initialize(
        id,
-       download_url = "https://syncandshare.lrz.de/dl/fiSd4UWxmx9FRrQtdYeYrxEV/lcbench/",
        workdir = workdir,
        model_name = "lcbench",
        param_set_file = "param_set.rds",
@@ -92,7 +90,6 @@ BenchmarkConfigBranin = R6Class("BenchmarkConfigBranin",
     initialize = function(id = "Branin") {
       super$initialize(
         id,
-        download_url = NULL,
         workdir = NULL,
         model_name = "branin",
         param_set_file = NULL,
@@ -176,7 +173,6 @@ BenchmarkConfigShekel = R6Class("BenchmarkConfigShekel",
     initialize = function(id = "Shekel") {
       super$initialize(
         id,
-        download_url = NULL,
         workdir = NULL,
         model_name = "shekel",
         param_set_file = NULL,
@@ -255,7 +251,6 @@ BenchmarkConfigZDT6 = R6Class("BenchmarkConfigZDT6",
     initialize = function(id = "ZDT6") {
       super$initialize(
         id,
-        download_url = NULL,
         workdir = NULL,
         model_name = "zdt1",
         param_set_file = NULL,
@@ -317,7 +312,6 @@ BenchmarkConfigRBv2SVM = R6Class("BenchmarkConfigRBv2SVM",
     initialize = function(id = "RBv2_SVM", workdir) {
       super$initialize(
         id,
-        download_url = "https://syncandshare.lrz.de/dl/fiSd4UWxmx9FRrQtdYeYrxEV/rbv2_svm/",
         workdir = workdir,
         model_name = "rbv2_svm",
         param_set_file = NULL,
@@ -382,7 +376,6 @@ BenchmarkConfigRBv2ranger = R6Class("BenchmarkConfigRBv2ranger",
     initialize = function(id = "RBv2_ranger", workdir) {
       super$initialize(
         id,
-        download_url = "https://syncandshare.lrz.de/dl/fiSd4UWxmx9FRrQtdYeYrxEV/rbv2_ranger/",
         workdir = workdir,
         model_name = "rbv2_ranger",
         param_set_file = NULL,
@@ -453,7 +446,6 @@ BenchmarkConfigRBv2glmnet = R6Class("BenchmarkConfigRBv2glmnet",
     initialize = function(id = "RBv2_glmnet", workdir) {
       super$initialize(
         id,
-        download_url = "https://syncandshare.lrz.de/dl/fiSd4UWxmx9FRrQtdYeYrxEV/rbv2_glmnet/",
         workdir = workdir,
         model_name = "rbv2_glmnet",
         param_set_file = NULL,
@@ -515,7 +507,6 @@ BenchmarkConfigRBv2xgboost = R6Class("BenchmarkConfigRBv2xgboost",
     initialize = function(id = "RBv2_xgboost", workdir) {
       super$initialize(
         id,
-        download_url = "https://syncandshare.lrz.de/dl/fiSd4UWxmx9FRrQtdYeYrxEV/rbv2_xgboost/",
         workdir = workdir,
         model_name = "rbv2_xgboost",
         param_set_file = NULL,
@@ -590,7 +581,6 @@ BenchmarkConfigRBv2rpart = R6Class("BenchmarkConfigRBv2rpart",
     initialize = function(id = "RBv2_glmnet", workdir) {
       super$initialize(
         id,
-        download_url = "https://syncandshare.lrz.de/dl/fiSd4UWxmx9FRrQtdYeYrxEV/rbv2_rpart/",
         workdir = workdir,
         model_name = "rbv2_rpart",
         param_set_file = NULL,
@@ -655,7 +645,6 @@ BenchmarkConfigRBv2aknn = R6Class("BenchmarkConfigRBv2aknn",
     initialize = function(id = "RBv2_aknn", workdir) {
       super$initialize(
         id,
-        download_url = "https://syncandshare.lrz.de/dl/fiSd4UWxmx9FRrQtdYeYrxEV/rbv2_aknn/",
         workdir = workdir,
         model_name = "rbv2_aknn",
         param_set_file = NULL,
@@ -720,7 +709,6 @@ BenchmarkConfigSuperRBv2 = R6Class("BenchmarkConfigSuperRBv2",
     initialize = function(id = "RBv2_super", workdir) {
       super$initialize(
         id,
-        download_url = "https://syncandshare.lrz.de/dl/fiSd4UWxmx9FRrQtdYeYrxEV/rbv2_aknn/",
         workdir = workdir,
         model_name = "rbv2_super",
         param_set_file = NULL,
@@ -829,7 +817,6 @@ BenchmarkConfigFCNet = R6Class("BenchmarkConfigFCNet",
     initialize = function(id = "FCNet", workdir) {
       super$initialize(
         id,
-        download_url = "https://syncandshare.lrz.de/dl/fiSd4UWxmx9FRrQtdYeYrxEV/fcnet_tabular_benchmarks/",
         workdir = workdir,
         model_name = "fcnet_tabular_benchmarks",
         param_set_file = NULL,
