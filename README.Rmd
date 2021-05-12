@@ -21,20 +21,32 @@ This package contains several surrogates that approximate the hyperparameter res
 
 ## Overview
 
+
 ```{r, echo=FALSE}
+library(mlr3misc)
+library(mfsurrogates)
 dt = data.frame(
-  instance = c("NB301", "LCBench", "RBv2SVM", "RBv2rpart", "RBv2aknn",
-               "RBv2glmnet", "RBv2ranger", "RBv2xgboost", "RBv2super", "FCNet", "TaskSet"),
+  instance = c("nb301", "lcbench", "rbv2_ranger", "rbv2_rpart", "rbv2_aknn",
+               "rbv2_glmnet", "rbv2_ranger", "rbv2_xgboost", "rbv2_super", "fcnet", "task_set"),
   space = c("Cat+Dep", "Mix", "Mix+Dep", "Mix", "Mix", "Mix", "Mix+Dep",
             "Mix+Dep","Mix+Dep", "Mix", "Num"),
   n_dims = c(34L, 7L, 6L, 5L, 6L, 3L, 8L, 14L, 34L, 11L, 9L),
   n_targets = c("2:perf(1)+rt", "6:perf(5)+rt","6:perf(4)+rt+pt","6:perf(4)+rt+pt","6:perf(4)+rt+pt", "6:perf(4)+rt+pt","6:perf(4)+rt+pt","6:perf(4)+rt+pt","6:perf(4)+rt+pt", "4:perf(2)+rt+ ms", "4:perf(4)"),
   fidelity = c("epochs", "epochs", "frac+repls", "frac+repls", "frac+repls", "frac+repls", "frac+repls", "frac+repls", "frac+repls", "epochs+repls", "epochs+repls"),
   n_problems = c(1L, 35L, 96L, 101L, 99L, 98L, 114L, 109L, 89L, 4L, 20L),
-  "$R^2$" = c(0.9866, 0.9820, 0.69, 0.34, 0.368, 0.259, 0.363, 0.577,  0.799, 0.769, -44),
-  status = c("ready", "ready", "-", "-", "-", "-", "-", "-", "-", "ready", "-")
+  status = "ready"
 )
-knitr::kable(dt)
+
+metrics = data.table(do.call("rbind",
+  map(dt$instance, function(x) {
+  x = fread(paste0(cfgs(x, workdir=workdir)$subdir, "surrogate_test_metrics.csv"))
+  x = t(apply(keep(x, is.numeric), 2, range))[c("rsq", "roh"),]
+  paste0(round(x[,1], 2), "-", round(x[,2],2))
+  })
+))
+colnames(metrics) = c("Rsq", "Rho")
+
+knitr::kable(cbind(dt, metrics))
 ```
 
 where for **n_targets** (#number):
@@ -61,9 +73,7 @@ dt = data.frame(
 knitr::kable(dt)
 ```
 
-```{r, echo=FALSE}
-library(mfsurrogates)
-```
+
 ## NASBench-301
 
 We first load the config:
