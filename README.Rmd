@@ -22,9 +22,10 @@ This package contains several surrogates that approximate the hyperparameter res
 ## Overview
 
 
-```{r, echo=FALSE}
+```{r, eval = FALSE, echo=FALSE}
 library(mlr3misc)
 library(mfsurrogates)
+library(data.table)
 dt = data.frame(
   instance = c("nb301", "lcbench", "rbv2_ranger", "rbv2_rpart", "rbv2_aknn",
                "rbv2_glmnet", "rbv2_ranger", "rbv2_xgboost", "rbv2_super", "fcnet", "task_set"),
@@ -48,6 +49,22 @@ colnames(metrics) = c("Rsq", "Rho")
 
 knitr::kable(cbind(dt, metrics))
 ```
+
+
+|instance     |space   | n_dims|n_targets        |fidelity     | n_problems|status |Rsq       |Rho        |
+|:------------|:-------|------:|:----------------|:------------|----------:|:------|:---------|:----------|
+|nb301        |Cat+Dep |     34|2:perf(1)+rt     |epochs       |          1|ready  |0.6-0.99  |0.91-0.99  |
+|lcbench      |Mix     |      7|6:perf(5)+rt     |epochs       |         35|ready  |0.95-1    |0.94-1     |
+|rbv2_ranger  |Mix+Dep |      6|6:perf(4)+rt+pt  |frac+repls   |         96|ready  |0.4-0.98  |0.64-0.99  |
+|rbv2_rpart   |Mix     |      5|6:perf(4)+rt+pt  |frac+repls   |        101|ready  |0-0.99    |0.02-1     |
+|rbv2_aknn    |Mix     |      6|6:perf(4)+rt+pt  |frac+repls   |         99|ready  |0.4-0.97  |0.63-0.98  |
+|rbv2_glmnet  |Mix     |      3|6:perf(4)+rt+pt  |frac+repls   |         98|ready  |0.02-0.98 |-0.15-0.99 |
+|rbv2_ranger  |Mix+Dep |      8|6:perf(4)+rt+pt  |frac+repls   |        114|ready  |0.4-0.98  |0.64-0.99  |
+|rbv2_xgboost |Mix+Dep |     14|6:perf(4)+rt+pt  |frac+repls   |        109|ready  |0.53-0.98 |0.72-0.99  |
+|rbv2_super   |Mix+Dep |     34|6:perf(4)+rt+pt  |frac+repls   |         89|ready  |0.65-0.97 |0.81-0.99  |
+|fcnet        |Mix     |     11|4:perf(2)+rt+ ms |epochs+repls |          4|ready  |0.77-1    |0.97-1     |
+|task_set     |Num     |      9|4:perf(4)        |epochs+repls |         20|ready  |0.12-0.15 |0.35-0.39  |
+
 
 where for **n_targets** (#number):
 

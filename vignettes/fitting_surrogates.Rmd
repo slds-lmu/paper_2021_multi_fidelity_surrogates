@@ -238,19 +238,18 @@ set.seed(444L)
 keys = cfgs()$keys()
 instances = rbindlist(map(keys, function(x) {
   cf = cfgs(x, workdir=workdir)
-
-  test = TRUE
-  if (startsWith("rbv2", x)) {
-    test = cf$task_levels %in% rbv2_test_tasks
-  }
   data.table(
     cfg = x,
     level = cf$task_levels,
-    test = test
+    test = TRUE
   )
 }), fill=TRUE)
-instances[sample(.N, ceiling(0.15 * .N)), test := FALSE, by = cfg]
-instances[cfg == "fcnet", test := TRUE]
+instances = instances[cfg %in% c("fcnet", "rbv2_super", "nb301", "zdt6", "branin", "shekel", "lcbench")]
+instances[sample(.N, ceiling(0.3 * .N)), test := FALSE, by = cfg]
+instances[cfg %in% c("fcnet", "branin", "shekel", "zdt6", "nb391"), test := TRUE]
+
+
+
 saveRDS(instances, "inst/instances.rds")
 ```
 
