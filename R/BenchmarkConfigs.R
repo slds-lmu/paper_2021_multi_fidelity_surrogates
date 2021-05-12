@@ -737,7 +737,7 @@ BenchmarkConfigSuperRBv2 = R6Class("BenchmarkConfigSuperRBv2",
           svm.cost =  p_dbl(lower = -12, upper = 12, trafo = function(x) 2^x),
           svm.gamma = p_dbl(lower = -12, upper = 12, trafo = function(x) 2^x, depends = svm.kernel == "radial"),
           svm.tolerance = p_dbl(lower = -12, upper = -3, trafo = function(x) 2^x),
-          svm.degree = p_int(lower = 2, upper = 5, depends = svm.kernel == "polynomial"), 
+          svm.degree = p_int(lower = 2, upper = 5, depends = svm.kernel == "polynomial"),
           # glmnet
           glmnet.alpha = p_dbl(lower = 0, upper = 1, default = 1, trafo = function(x) max(0, min(1, x))),
           glmnet.s = p_dbl(lower = -10, upper = 10, default = 0, trafo = function(x) 2^x),
@@ -803,6 +803,12 @@ BenchmarkConfigSuperRBv2 = R6Class("BenchmarkConfigSuperRBv2",
     data = function() {
       if(is.null(private$.data)) private$.data = preproc_data_rbv2_super(self)
       private$.data
+    },
+    opt_param_set = function() {
+      ps = self$param_set$clone()
+      ps$subset(setdiff(ps$ids(), "repl"))
+      ps$add(ParamInt$new("repl", lower = 10, upper = 10))
+      return(ps)
     }
   )
 )

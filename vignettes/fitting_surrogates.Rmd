@@ -248,8 +248,6 @@ instances = instances[cfg %in% c("fcnet", "rbv2_super", "nb301", "zdt6", "branin
 instances[sample(.N, ceiling(0.3 * .N)), test := FALSE, by = cfg]
 instances[cfg %in% c("fcnet", "branin", "shekel", "zdt6", "nb391"), test := TRUE]
 
-
-
 saveRDS(instances, "inst/instances.rds")
 ```
 

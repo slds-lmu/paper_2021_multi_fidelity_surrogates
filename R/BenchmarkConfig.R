@@ -78,7 +78,7 @@ BenchmarkConfig = R6Class("BenchmarkConfig",
       ObjectiveONNX$new(
         model_path = self$onnx_model_path,
         trafo_dict = readRDS(self$dicts_path),
-        domain = self$param_set,
+        domain = self$opt_param_set,
         full_codomain_names = self$codomain$ids(),  # needed to set the names
         codomain = codomain,
         task = task
@@ -141,6 +141,9 @@ BenchmarkConfig = R6Class("BenchmarkConfig",
     },
     param_set = function() {
       stop("Abstract")
+    },
+    opt_param_set = function() {
+      self$param_set
     },
     dicts_path = function() {
       paste0(self$subdir, self$dicts_file)
