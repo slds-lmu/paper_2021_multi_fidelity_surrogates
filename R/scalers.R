@@ -13,6 +13,28 @@ scale_sigmoid = function(x, p = 0.03) {
   )
 }
 
+scale_standard = function(x) {
+  x = ifelse(x == 0, 1, x)
+  mu = mean(x)
+  sigma = sd(x)
+  list(
+    trafo = function(x) {x = ifelse(x == 0 | is.na(x), 1, x); (x - mu) / sigma},
+    retrafo = function(x) {(x * sigma) + mu}
+  )
+}
+
+scale_log_left_standard = function(x, constant = 1) {
+  assert_number(constant, lower = 0)
+  x = ifelse(x == 0, 1, x)
+  x_trafoed = log(constant - x)
+  mu = mean(x_trafoed)
+  sigma = sd(x_trafoed)
+  list(
+    trafo = function(x) {x = ifelse(x == 0 | is.na(x), 1, x); (log(constant - x) - mu) / sigma},
+    retrafo = function(x) {constant - exp(x * sigma + mu)}
+  )
+}
+
 scale_base = function(x, base = 10) {
   assert_number(base, lower = 0)
   x = ifelse(x == 0, 1, x)
@@ -38,7 +60,12 @@ scale_base_0_1 = function(x, base = 10, p = 0.01) {
       (x - rt_min) / rt_range + p
     },
     retrafo = function(x) {
-      ((base^x)-p) * rt_range + rt_min
+      clip_01(((base^x)-p) * rt_range + rt_min)
     }
   )
+}
+
+clip_01 = function(x) {
+  x[x < 0] = 0
+  x[x > 1] = 1
 }

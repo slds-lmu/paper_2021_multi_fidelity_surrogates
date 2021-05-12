@@ -2,9 +2,7 @@ preproc_data_fcnet = function(config, seed = 123L, n_max = 5*10^6, frac = .1) {
   set.seed(seed)
   path = config$data_path
   dt = readRDS(path)
-  dt = dt[replication == 1]  # FIXME: replications are weird here, for now only use the first
-  dt[, valid_mse := NULL]  # FIXME: valid_loss = valid_mse
-  tt = split_by_col(dt, by = "task", frac = frac)
+  tt = split_by_col(dt, by = "task", pars = get_pars(config), frac = frac)
 
   # Preproc train data
   train = tt$train

@@ -5,10 +5,11 @@ fit_surrogate = function(problem_config, model_config = default_model_config(), 
   # Re-order columns to make sure column order matches
   x_ids = problem_config$param_set$ids()
   y_ids = problem_config$codomain$ids()
+
   data$xtrain = data$xtrain[, x_ids, with = FALSE]
   data$xtest = data$xtest[, x_ids, with = FALSE]
-  data$ytrain = data$ytrain[, y_ids]
-  data$ytest = data$ytest[, y_ids]
+  data$ytrain = data$ytrain[, y_ids, drop = FALSE]
+  data$ytest = data$ytest[, y_ids, drop = FALSE]
 
   data = munge_data(data, target_vars = problem_config$target_variables, munge_n = model_config$munge_n)
   rs = mlr3keras::reshape_data_embedding(data$xtrain)
@@ -31,15 +32,15 @@ fit_surrogate = function(problem_config, model_config = default_model_config(), 
     )
   # Save model
   if (overwrite) {
-    keras::save_model_hdf5(model, problem_config$keras_model_path, overwrite = overwrite)
+    keras::save_model_hdf5(model, problem_config$keras_model_path, overwrite = overwrite, include_optimizer = FALSE)
     keras_to_onnx(problem_config$keras_model_path, problem_config$onnx_model_path)
   }
 
   # Test Data Metrics & Plots
   rs2 = mlr3keras::reshape_data_embedding(data$xtest)
   ptest = as.matrix(predict(model, rs2$data))
-  colnames(ptest) = problem_config$target_variables
-  colnames(data$ytest) = problem_config$target_variables
+  colnames(ptest) = y_ids
+  colnames(data$ytest) = y_ids
 
   metrics = compute_metrics(data$ytest, ptest)
   print(metrics)
@@ -47,16 +48,38 @@ fit_surrogate = function(problem_config, model_config = default_model_config(), 
   if (plot) {
     require("ggplot2")
     require("patchwork")
-    smp = sample(seq_along(ptest[, 1L]), min(length(ptest[, 1L]), 500L))
-    p1 = ggplot(data.frame(x = data$ytest[smp, 1L], y = ptest[smp, 1L]), aes(x = x, y = y)) +
+
+    # Test data
+    smp = sample(seq_along(ptest[,1]), min(length(ptest[,1]), 500L))
+    dt = data.frame(cbind(
+      melt(data.table(ptest[smp,,drop=FALSE]), variable.name = "metric", value.name = "predicted", measure.vars = y_ids),
+      melt(data.table(data$ytest[smp,,drop=FALSE]), variable.name = "metric", value.name = "truth", measure.vars = y_ids)[, -"metric", with=FALSE]
+    ))
+    p1 = ggplot(dt, aes(x=truth, y=predicted, color=metric)) +
       geom_point() +
-      geom_abline(slope = 1, color = "blue")
-    p2 = plot(history)
-    p = p1 + p2
+      geom_abline(slope = 1, color = "blue") + 
+      ggtitle("Test data")
+  
+    # Train data
+    smp = sample(seq_len(nrow(data$xtrain)), min(nrow(data$xtrain), 500L))
+    rs3 = mlr3keras::reshape_data_embedding(data$xtrain[smp,])
+    ptrain = as.matrix(predict(model, rs3$data))
+    colnames(ptrain) = y_ids
+    colnames(data$ytrain) = y_ids
+    dt = data.frame(cbind(
+      melt(data.table(ptrain), variable.name = "metric", value.name = "predicted", measure.vars = y_ids),
+      melt(data.table(data$ytrain[smp,,drop=FALSE]), variable.name = "metric", value.name = "truth", measure.vars = y_ids)[, -"metric", with=FALSE]
+    ))
+    p2 = ggplot(dt, aes(x=truth, y=predicted, color=metric)) +
+      geom_point() +
+      geom_abline(slope = 1, color = "blue")+ 
+      ggtitle("Train data")
+    # History
+    p3 = plot(history)
+    p = p1 + p2 + p3
     print(p)
     if (overwrite) ggsave(paste0(problem_config$subdir, "surrogate_test_metrics.pdf"), plot = p)
     if (overwrite) data.table::fwrite(metrics, paste0(problem_config$subdir, "surrogate_test_metrics.csv"))
-
   }
   return(metrics)
 }
@@ -64,9 +87,9 @@ fit_surrogate = function(problem_config, model_config = default_model_config(), 
 default_model_config = function() {
   list(
     activation = "elu",
-    deep_u = c(512, 512),
-    deeper_u = c(512, 512, 256, 128),
-    optimizer = keras::optimizer_adam(3 * 10^-4),
+    deep_u = c(512L, 512L),
+    deeper_u = c(512L, 512L, 256L, 128L),
+    optimizer = keras::optimizer_adam(3*10^-4),
     deep = TRUE,
     deeper = TRUE,
     batchnorm = FALSE,

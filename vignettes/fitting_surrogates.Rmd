@@ -231,9 +231,38 @@ cfg$fit_surrogate(model_config = model_config, overwrite = TRUE)
 
 ## Determining task_ids for evaluation
 
+70 / 30 train-test split
+
 ```{r}
-map(cfgs()$keys()[4:9], function(x) {
-  cfgs(x)$get_task_id_param()$levels
-})
+set.seed(444L)
+keys = cfgs()$keys()
+instances = rbindlist(map(keys, function(x) {
+  cf = cfgs(x, workdir=workdir)
+
+  test = TRUE
+  if (startsWith("rbv2", x)) {
+    test = cf$task_levels %in% rbv2_test_tasks
+  }
+  data.table(
+    cfg = x,
+    level = cf$task_levels,
+    test = test
+  )
+}), fill=TRUE)
+instances[sample(.N, ceiling(0.15 * .N)), test := FALSE, by = cfg]
+instances[cfg == "fcnet", test := TRUE]
+saveRDS(instances, "inst/instances.rds")
 ```
 
+using it to obtain a list of `ObjectiveFunctions`.
+
+```{r}
+# The instantiation should probably not happen all together but later on.
+instances = readRDS(system.file("instances.rds", package = "mfsurrogates"))
+train = instances[test == FALSE, ]
+
+# For each row, we can now instantiate the objective:
+i = 1
+cf = cfgs(train$cfg[i], workdir=workdir)
+obj = cf$get_objective(train$level[i])
+```

@@ -40,13 +40,31 @@ weights_from_target = function(y, minimize = TRUE, j = 1L, wts_pow = 0L) {
   }
 }
 
-split_by_col = function(dt, by = 'task_id', frac = 0.1) {
+# get the parameters of a config (only search space without `task_id`, `budget`)
+get_pars = function(config) {
+  ps = config$param_set
+  ids = ps$ids()
+  setdiff(ids, c(ps$ids(tags = "task_id"), ps$ids(tags = "budget")))
+}
+
+# split data into train and test stratified by column `by`
+# if `pars` is not null, additionally blocking is performed with respect to `pars` and `by`,
+# e.g, a specific config for a specific task will always belong either to train or test with all its budget
+# only meaningful if a single budget parameter is present (e.g., epoch)
+split_by_col = function(dt, by = "task_id", pars = NULL, frac = 0.1) {
   dt[, rn := seq_len(nrow(dt))]
-  test_idx = dt[, .(rn = sample(rn, ceiling(.N * frac))), keyby = by]
+  if (!is.null(pars)) {
+    dt[, id  := .GRP, keyby = c(by, pars)]
+    uids = unique(dt$id)
+    test_idx = dt[id %in% sample(uids, size = ceiling(length(uids) * frac))]
+    dt[, "id" := NULL]
+  } else {
+    test_idx = dt[, .(id = sample(id, ceiling(.N * frac))), keyby = by]
+  }
   dt[, "rn" := NULL]
   list(
-    test = dt[test_idx$rn,],
-    train = dt[!test_idx$rn,]
+    test = dt[test_idx$rn, ],
+    train = dt[!test_idx$rn, ]
   )
 }
 
@@ -82,7 +100,7 @@ apply_cummean_variance_param = function(dt, mean, sum, fidelity_param, ignore = 
   hpars = setdiff(colnames(dt), c(mean, sum, fidelity_param, ignore))
   setorderv(dt, fidelity_param)
   if (!is.null(mean)) {
-    dt[, (mean) := map(.SD, function(x) {cumsum(x) / length(x)}), by = hpars, .SDcols  = mean]
+    dt[, (mean) := map(.SD, function(x) {cummean(x)}), by = hpars, .SDcols  = mean]
   }
   if (!is.null(sum)) {
     dt[, (sum) := map(.SD, cumsum), by = hpars, .SDcols  = sum]
@@ -107,11 +125,21 @@ compute_metrics = function(response, prediction, stratify = factor("_full_")) {
       data.table(
         variable = nms,
         grp = as.character(grp),
-        rsq = mlr3measures::rsq(x,y),
+        #rsq = mlr3measures::rsq(x,y),
+        rsq = rsq_(x,y),
         roh = mlr3measures::srho(x,y),
         ktau = mlr3measures::ktau(x[smp],y[smp]), # on sample since this is slow.
         mae = mlr3measures::mae(x,y)
       )
     })
   })
+}
+
+# classical rsq
+rsq_ = function(truth, response) {
+  mlr3measures::srho(truth, response) ^ 2
+}
+
+cummean = function(x) {
+  cumsum(x) / seq_len(length(x))
 }

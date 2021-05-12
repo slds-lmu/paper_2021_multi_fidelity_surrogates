@@ -19,9 +19,9 @@ BenchmarkConfig = R6Class("BenchmarkConfig",
     eval_task_ids_file = "task_ids.txt",
 
 
-    initialize = function(id, download_url, workdir, model_name, param_set_file = NULL, data_file, dicts_file, keras_model_file, onnx_model_file, target_variables, codomain, packages) {
+    initialize = function(id, workdir, model_name, param_set_file = NULL, data_file, dicts_file, keras_model_file, onnx_model_file, target_variables, codomain, packages) {
       self$id = assert_string(id)
-      self$download_url = download_url
+      self$download_url = paste0("https://syncandshare.lrz.de/dl/fiCMkzqj1bv1LfCUyvZKmLvd/", model_name, "/")
       self$workdir = if (!is.null(workdir)) if (!endsWith(workdir, "/")) paste0(workdir, "/") else workdir
       self$model_name = model_name
       self$subdir = if (!is.null(workdir) && !is.null(model_name)) paste0(self$workdir, model_name, "/") else NULL
