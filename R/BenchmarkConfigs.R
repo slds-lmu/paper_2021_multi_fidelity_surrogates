@@ -824,10 +824,9 @@ BenchmarkConfigFCNet = R6Class("BenchmarkConfigFCNet",
         dicts_file = "dicts.rds",
         keras_model_file = "model.hdf5",
         onnx_model_file = "model.onnx",
-        target_variables = c("valid_loss", "valid_mse", "runtime", "n_params"),
+        target_variables = c("valid_loss", "runtime", "n_params"),
         codomain = ps(
           valid_loss = p_dbl(lower = 0, upper = 1, tags = "minimize"),
-          valid_mse = p_dbl(lower = 0, upper = 1, tags = "minimize"),
           runtime = p_dbl(lower = 0, upper = Inf, tags = "minimize"),
           n_params = p_dbl(lower = 0, upper = Inf, tags = "minimize")
         ),
@@ -839,7 +838,6 @@ BenchmarkConfigFCNet = R6Class("BenchmarkConfigFCNet",
     param_set = function() {
       ps(
         epoch = p_int(lower = 1L, upper = 100L, tags = "budget"),
-        replication = p_int(lower = 1L, upper = 4L, tags = "budget"),
         activation_fn_1 = p_fct(levels = c("relu", "tanh")),
         activation_fn_2 = p_fct(levels = c("relu", "tanh")),
         batch_size = p_int(lower = 8L, upper = 64L),
