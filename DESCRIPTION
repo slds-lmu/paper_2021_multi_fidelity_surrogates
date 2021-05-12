@@ -15,7 +15,7 @@ Config/reticulate:
     )
   )
 Depends:
-    R (>= 3.2)
+    R (>= 3.5.0)
 Imports:
     bbotk,
     data.table,
