@@ -15,7 +15,7 @@ preproc_data_task_set = function(config) {
   }
   train = preproc_iid(train)
   trafos = c(
-    map(train[, config$target_variables, with = FALSE], scale_base_0_1, base = 10),
+    map(train[, config$target_variables, with = FALSE], scale_neg_exp),
     map(train[, c("epoch", "learning_rate", "epsilon", "l1", "l2", "linear_decay", "exponential_decay"), with = FALSE], scale_standard),
     map(train[, c("beta1", "beta2"), with = FALSE], scale_log_left_standard, constant = 1)
   )
