@@ -49,18 +49,42 @@ scale_base = function(x, base = 10) {
 scale_base_0_1 = function(x, base = 10, p = 0.01) {
   assert_number(p, upper = 0.49)
   assert_number(base, lower = 0)
-  x = ifelse(x == 0, 1, x)
-  rt_range = (max(x) - min(x)) / (1-2*p)
-  rt_min = min(x)
+  if (any(x < 0) && base > 1) stop("Can not log-scale negative values")
+  if (base > 1) {
+    # Offset 0 with a low value rt_0.
+    rt_0 = min(x[x > 0], na.rm=TRUE) / base
+    x = x + rt_0
+    rt_min = min(log(x, base = base), na.rm = TRUE)
+    rt_max = max(log(x, base = base), na.rm = TRUE)
+  } else if (base == 1) {
+    rt_min = min(x, na.rm = TRUE)
+    rt_max = max(x, na.rm = TRUE)
+  }
+  rt_range = (rt_max - rt_min) / (1 - 2*p)
   cat("Log-", base, "-[0,1]-scaling [", min(x), ";", max(x), "] to [",p,";",1-p,"]\n")
   list(
     trafo = function(x) {
-      x = ifelse(x == 0 | is.na(x), 1, x);
-      if (base > 1) x = log(x, base = base)
-      (x - rt_min) / rt_range + p
+      if (base > 1) x = log(x + rt_0, base = base)
+      ((x - rt_min) / rt_range) + p
     },
     retrafo = function(x) {
-      clip_01(((base^x)-p) * rt_range + rt_min)
+      if (base > 1) {
+        x = (((x - p) * rt_range) + rt_min)
+        base^x - rt_0
+      } else {
+        ((x - p) * rt_range) + rt_min
+      }
+    }
+  )
+}
+
+scale_neg_exp = function(x) {
+  list(
+    trafo = function(x) {
+      exp(-x)
+    },
+    retrafo = function(x) {
+      -log(x)
     }
   )
 }

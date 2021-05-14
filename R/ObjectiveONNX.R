@@ -25,7 +25,7 @@ ObjectiveONNX = R6Class("ObjectiveONNX",
     #'   Dictionary containing feature transformations before beeing fed to the NN.
     #' @param id (`character(1)`).
     #' @param properties (`character()`).
-    initialize = function(model_path, trafo_dict, domain, full_codomain_names, codomain = NULL, task = NULL, id = "ONNX", active_session = TRUE,
+    initialize = function(model_path, trafo_dict, domain, full_codomain_names, codomain = NULL, task = NULL, id = "ONNX", active_session = TRUE, retrafo = FALSE,
       properties = character(), constants = NULL, check_values = FALSE) {
       self$check_values = check_values
       if (is.null(codomain)) {
@@ -90,7 +90,12 @@ ObjectiveONNX = R6Class("ObjectiveONNX",
         } else {
           session = self$session
         }
-        setNames(data.table(session$run(NULL, li)[[1L]]), nm = full_codomain_names)
+        dt = setNames(data.table(session$run(NULL, li)[[1L]]), nm = full_codomain_names)
+        if (retrafo) {
+          to_transform = intersect(names(self$trafo_dict), full_codomain_names)
+          dt[, (to_transform) := pmap_dtc(list(.SD, self$trafo_dict[to_transform]), function(x, tfs) tfs$retrafo(x)), .SDcols = to_transform]
+        }
+        return(dt)
       }
       super$initialize(id = id, fun = fun, domain = new_domain, codomain = codomain,
         properties = properties, constants = constants, check_values = check_values)

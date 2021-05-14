@@ -37,6 +37,7 @@ Suggests:
     farff,
     knitr,
     distillery,
+    markdown,
     rmarkdown,
     testthat (>= 3.0.0)
 Remotes:

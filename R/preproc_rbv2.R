@@ -293,7 +293,7 @@ preproc_data_rbv2_super = function(config, seed = 123L, frac=.1, n_max=5e6) {
   set.seed(seed)
   dt = data.table(readRDS(config$data_path))
   dt[, repl := as.numeric(repl)]
-  dt = sample_max(dt, 10*n_max)
+  dt = sample_max(dt, 2*n_max)
   dt = dt[repl <= 10L,]
   dt[, num.threads := NULL]
   dt[, task_id := droplevels(task_id)]
@@ -306,10 +306,12 @@ preproc_data_rbv2_super = function(config, seed = 123L, frac=.1, n_max=5e6) {
   train = tt$train
   train = sample_max(train, n_max)
   train = preproc_iid(train)
-  train = apply_cummean_variance_param(train, mean = c("mmce", "f1", "auc", "logloss", "timepredict"), sum = "timetrain", "repl", ignore=NULL)
+  train = apply_cummean_variance_param(train, mean = c("mmce", "f1", "auc", "logloss", "timepredict", "timetrain"),  sum = NULL, fidelity_param = "repl", ignore=NULL)
+
   trafos = c(
     map(train[, c("mmce", "f1", "auc"), with = FALSE], scale_base_0_1, p = .01, base = 1),
-    map(train[, c("logloss","timetrain", "timepredict"), with = FALSE], scale_base_0_1, p = .01, base = 10),
+    map(train[, c("logloss"), with = FALSE], scale_neg_exp),
+    map(train[, c("timetrain", "timepredict"), with = FALSE], scale_base_0_1, p = .01, base = 10),
     map(train[, c("glmnet.s"), with = FALSE], scale_base, base = 2L),
     map(train[, c("aknn.k", "aknn.M"), with = FALSE], scale_sigmoid, p = 0),
     map(train[, c("aknn.ef", "aknn.ef_construction"), with = FALSE], scale_base),
@@ -328,7 +330,7 @@ preproc_data_rbv2_super = function(config, seed = 123L, frac=.1, n_max=5e6) {
   if (frac) {
     oob = tt$test
     oob = preproc_iid(oob)
-    oob = apply_cummean_variance_param(oob, mean = c("mmce", "f1", "auc", "logloss", "timepredict"), sum = "timetrain", "repl", ignore=NULL)
+    oob = apply_cummean_variance_param(oob, mean = c("mmce", "f1", "auc", "logloss", "timepredict", "timetrain"),  sum = NULL, fidelity_param = "repl", ignore=NULL)
     oob[, names(trafos) := pmap(list(.SD, trafos), function(x, t) {t$trafo(x)}), .SDcols = names(trafos)]
     ytest = as.matrix(oob[, config$target_variables, with = FALSE])
     oob = oob[, (config$target_variables) := NULL]

@@ -218,3 +218,14 @@ p = ggplot(dt, aes(x = evals, y = objective_bbotk, color = level)) +
   theme_bw()
 ggsave(paste0("attic/random_search/", cfg, "_random_search.pdf"), p)
 ```
+
+```{r, eval = run_long}
+cfg = "lcbench"
+dt = run_cfg(cfg)
+p = ggplot(dt, aes(x = evals, y = objective_bbotk, color = level)) +
+  geom_point() +
+  geom_line() +
+  scale_x_log10() +
+  theme_bw()
+ggsave(paste0("attic/random_search/", cfg, "_random_search.pdf"), p)
+```

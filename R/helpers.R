@@ -52,19 +52,18 @@ get_pars = function(config) {
 # e.g, a specific config for a specific task will always belong either to train or test with all its budget
 # only meaningful if a single budget parameter is present (e.g., epoch)
 split_by_col = function(dt, by = "task_id", pars = NULL, frac = 0.1) {
-  dt[, rn := seq_len(nrow(dt))]
   if (!is.null(pars)) {
     dt[, id  := .GRP, keyby = c(by, pars)]
     uids = unique(dt$id)
     test_idx = dt[id %in% sample(uids, size = ceiling(length(uids) * frac))]
-    dt[, "id" := NULL]
   } else {
+    dt[, id := seq_len(nrow(dt))]
     test_idx = dt[, .(id = sample(id, ceiling(.N * frac))), keyby = by]
   }
-  dt[, "rn" := NULL]
+  dt[, "id" := NULL]
   list(
-    test = dt[test_idx$rn, ],
-    train = dt[!test_idx$rn, ]
+    test = dt[test_idx$id, ],
+    train = dt[!test_idx$id, ]
   )
 }
 
