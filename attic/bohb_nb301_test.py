@@ -22,6 +22,7 @@ class nb301(Worker):
         self.session = onnxruntime.InferenceSession("attic/multifidelity_data/nb301/model.onnx")
         self.param_set = base.readRDS("attic/multifidelity_data/nb301/param_set.rds")
         self.trafo_dict = base.readRDS("attic/multifidelity_data/nb301/dicts.rds")
+        self.target_names = ["val_accuracy", "runtime"]
 
         pandas2ri.activate()
 
@@ -45,14 +46,15 @@ class nb301(Worker):
         li = { key : li_.rx2(key) for key in li_.names }
         li["continuous"] = np.atleast_2d(li["continuous"]).astype("float32")
         res = self.session.run(None, li)[0]
-
+        res = self.mfsurrogates.retrafo_predictions(res, param_set = self.target_names, trafo_dict = self.trafo_dict)
+        # res['logloss']
         time.sleep(self.sleep_interval)
 
         return({
                     'loss': float(res[0,0]),  # this is the a mandatory field to run hyperband
                     'info': "empty"  # can be used for any user-defined information - also mandatory
                 })
-    
+
     @staticmethod
     def get_configspace():
         with open('src/configspaces/configspace_nb301_drop_epoch.json', 'r') as f:

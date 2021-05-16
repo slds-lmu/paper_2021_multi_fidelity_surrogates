@@ -92,10 +92,11 @@ ObjectiveONNX = R6Class("ObjectiveONNX",
         } else {
           session = self$session
         }
-        dt = setNames(data.table(session$run(NULL, li)[[1L]]), nm = full_codomain_names)
+        dt = session$run(NULL, li)[[1L]]
         if (retrafo) {
-          to_transform = intersect(names(self$trafo_dict), full_codomain_names)
-          dt[, (to_transform) := pmap_dtc(list(.SD, self$trafo_dict[to_transform]), function(x, tfs) tfs$retrafo(x)), .SDcols = to_transform]
+          dt = retrafo_predictions(dt, full_codomain_names, self$trafo_dict)
+        } else {
+          dt = setNames(data.table(dt, full_codomain_names))
         }
         return(dt)
       }

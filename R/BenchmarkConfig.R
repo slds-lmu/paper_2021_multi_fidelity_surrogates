@@ -68,7 +68,7 @@ BenchmarkConfig = R6Class("BenchmarkConfig",
       message("setup sucessful.")
     },
 
-    get_objective = function(task = NULL, target_variables = NULL, retrafo = FALSE) {
+    get_objective = function(task = NULL, target_variables = NULL, retrafo = TRUE) {
       assert_subset(target_variables, choices = self$target_variables, empty.ok = TRUE)
       assert_subset(task, choices = self$get_task_ids(), empty.ok = TRUE)
       codomain = self$codomain$clone(deep = TRUE)

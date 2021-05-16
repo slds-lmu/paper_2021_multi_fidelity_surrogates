@@ -15,7 +15,7 @@ BenchmarkConfigNB301 = R6Class("BenchmarkConfigNB301",
         target_variables = c("val_accuracy", "runtime"),
         codomain = ps(
           val_accuracy = p_dbl(lower = 0, upper = 1, tags = "maximize"),
-          runtime = p_dbl(lower = 0, upper = 1, tags = "minimize")
+          runtime = p_dbl(lower = 0, upper = Inf, tags = "minimize")
         ),
         packages = NULL
       )
@@ -52,11 +52,11 @@ BenchmarkConfigLCBench = R6Class("BenchmarkConfigLCBench",
        target_variables = c("val_accuracy", "val_cross_entropy", "val_balanced_accuracy", "test_cross_entropy", "test_balanced_accuracy", "time"),
        codomain = ps(
          val_accuracy = p_dbl(lower = 0, upper = 1, tags = "maximize"),
-         val_cross_entropy = p_dbl(lower = 0, upper = 1, tags = "maximize"),
+         val_cross_entropy = p_dbl(lower = 0, upper = Inf, tags = "minimize"),
          val_balanced_accuracy = p_dbl(lower = 0, upper = 1, tags = "maximize"),
-         test_cross_entropy = p_dbl(lower = 0, upper = 1, tags = "maximize"),
+         test_cross_entropy = p_dbl(lower = 0, upper = Inf, tags = "minimize"),
          test_balanced_accuracy = p_dbl(lower = 0, upper = 1, tags = "maximize"),
-         time = p_dbl(lower = 0, upper = 1, tags = "minimize")
+         time = p_dbl(lower = 0, upper = Inf, tags = "minimize")
        ),
        packages = NULL
      )
@@ -721,9 +721,9 @@ BenchmarkConfigSuperRBv2 = R6Class("BenchmarkConfigSuperRBv2",
           mmce = p_dbl(lower = 0, upper = 1, tags = "minimize"),
           f1 = p_dbl(lower = 0, upper = 1, tags = "maximize"),
           auc = p_dbl(lower = 0, upper = 1, tags = "maximize"),
-          logloss = p_dbl(lower = 0, upper = Inf, tags = "minimize"),
-          timetrain = p_dbl(lower = 0, upper = 1, tags = "minimize"),
-          timepredict = p_dbl(lower = 0, upper = 1, tags = "minimize")
+          logloss = p_dbl(lower = 0, upper = Inf, tags = "minimize"), # has to be maximized for retrafo = FALSE, minimized for retrafo = TRUE
+          timetrain = p_dbl(lower = 0, upper = Inf, tags = "minimize"),
+          timepredict = p_dbl(lower = 0, upper = Inf, tags = "minimize")
         ),
         packages = NULL
       )
@@ -807,7 +807,7 @@ BenchmarkConfigSuperRBv2 = R6Class("BenchmarkConfigSuperRBv2",
     opt_param_set = function() {
       ps = self$param_set$clone()
       ps$subset(setdiff(ps$ids(), "repl"))
-      ps$add(ParamInt$new("repl", lower = 10, upper = 10))
+      ps$add(ParamInt$new("repl", lower = 10, upper = 10, default = 10, tags = "constant"))
       return(ps)
     }
   )
