@@ -45,12 +45,13 @@ class nb301(Worker):
         li_ = self.mfsurrogates.convert_for_onnx(xdt, param_set = self.param_set, trafo_dict = self.trafo_dict)
         li = { key : li_.rx2(key) for key in li_.names }
         li["continuous"] = np.atleast_2d(li["continuous"]).astype("float32")
-        res = self.session.run(None, li)[0]
-        res = self.mfsurrogates.retrafo_predictions(res, param_set = self.target_names, trafo_dict = self.trafo_dict)
+        res_ = self.session.run(None, li)[0]
+        res_ = self.mfsurrogates.retrafo_predictions(res_, param_set = self.target_names, trafo_dict = self.trafo_dict)
+        res =  { key : res_.rx2(key) for key in res_.names } # convert to dict
         time.sleep(self.sleep_interval)
 
         return({
-                    'loss': float(res[0,0]),  # this is the a mandatory field to run hyperband
+                    'loss': float(res['val_accuracy']),  # this is the a mandatory field to run hyperband
                     'info': "empty"  # can be used for any user-defined information - also mandatory
                 })
 
