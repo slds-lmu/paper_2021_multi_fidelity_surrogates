@@ -1,4 +1,5 @@
 preproc_data_fcnet = function(config, seed = 123L, n_max = 5*10^6, frac = .1) {
+  browser()
   set.seed(seed)
   path = config$data_path
   dt = readRDS(path)
@@ -7,8 +8,8 @@ preproc_data_fcnet = function(config, seed = 123L, n_max = 5*10^6, frac = .1) {
 
   # Preproc train data
   train = tt$train
-  # We get rid of some upper outliers in training
-  upper_outliers = which(rowSums(train[, map(.SD, function(tv) tv > quantile(tv, 0.9999)), .SDcols = config$target_variables]) >= 1)
+  # We get rid of some upper outliers in training. This leads to mathematical instabilities otherwise.
+  upper_outliers = which(rowSums(train[, map(.SD, function(tv) tv > quantile(tv, 0.999)), .SDcols = config$target_variables]) >= 1)
   if (length(upper_outliers)) {
     train = train[-upper_outliers, ]
   }
