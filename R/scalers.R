@@ -36,13 +36,20 @@ scale_log_left_standard = function(x, constant = 1) {
 }
 
 scale_base = function(x, base = 10) {
-  assert_number(base, lower = 0)
-  x = ifelse(x == 0, 1, x)
-  div = max(abs(log(c(min(x), max(x)), base = base)))
+  assert_number(base, lower = 1+1e-36)
+  assert_numeric(x, lower = 0)
+  rt_0 = min(x[x > 0], na.rm = TRUE) / base
+  div = max(abs(log(c(min(x, na.rm = TRUE), max(x, na.rm = TRUE)), base = base)))
   cat("Log-", base, "-scaling [", min(x), ";", max(x), "] to [", log(min(x), base)/div, ";", log(max(x), base)/div ,"]\n")
   list(
-    trafo = function(x) {x = ifelse(x == 0 | is.na(x), 1, x); log(x, base = base) / div},
-    retrafo = function(x) {base ^ (x*div)}
+    trafo = function(x) {
+      x = x + rt_0
+      x[is.na(x)] = rt_0
+      log(x, base = base) / div
+    },
+    retrafo = function(x) {
+      (base ^ (x*div)) - rt_0
+    }
   )
 }
 
