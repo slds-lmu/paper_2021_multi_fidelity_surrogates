@@ -31,7 +31,7 @@ conda_install(
 ```
 
 ```{r setup}
-reticulate::use_condaenv('mlr3keras', required = TRUE)
+reticulate::use_condaenv(envname, required = TRUE)
 devtools::load_all()
 ```
 
@@ -42,7 +42,6 @@ All benchmarks have an associated **BenchmarkConfig** that contains paths to rel
 In order to fit surrogates or to get the objective we first instantiate the **Config** object.
 
 ```{r}
-workdir = paste0(path.expand("~"), "/LRZ Sync+Share/multifidelity_data/")
 cfg = BenchmarkConfigNB301$new(workdir = workdir)
 ```
 

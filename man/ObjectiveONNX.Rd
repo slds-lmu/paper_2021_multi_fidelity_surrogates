@@ -42,6 +42,7 @@ Creates a new instance of this [R6][R6::R6Class] class.
   task = NULL,
   id = "ONNX",
   active_session = TRUE,
+  retrafo = FALSE,
   properties = character(),
   constants = NULL,
   check_values = FALSE
@@ -58,6 +59,9 @@ Path to the onnx Model.}
 Dictionary containing feature transformations before beeing fed to the NN.}
 
 \item{\code{id}}{(`character(1)`).}
+
+\item{\code{retrafo}}{(`character`)\cr
+Should params be trafoed back to their original range before return?}
 
 \item{\code{properties}}{(`character()`).}
 }

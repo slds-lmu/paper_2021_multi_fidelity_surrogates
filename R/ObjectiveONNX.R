@@ -25,6 +25,8 @@ ObjectiveONNX = R6Class("ObjectiveONNX",
     #'   Dictionary containing feature transformations before beeing fed to the NN.
     #' @param id (`character(1)`).
     #' @param properties (`character()`).
+    #' @param retrafo (`character`)\cr
+    #'  Should params be trafoed back to their original range before return?
     initialize = function(model_path, trafo_dict, domain, full_codomain_names, codomain = NULL, task = NULL, id = "ONNX", active_session = TRUE, retrafo = FALSE,
       properties = character(), constants = NULL, check_values = FALSE) {
       self$check_values = check_values
