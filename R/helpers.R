@@ -67,15 +67,15 @@ split_by_col = function(dt, by = "task_id", pars = NULL, frac = 0.1) {
   )
 }
 
-preproc_iid = function(dt) {
-    dt = map_dtc(dt, function(x) {
-    if (is.logical(x)) x = as.numeric(x)
-    if (is.character(x)) x = as.factor(x)
-    if (is.numeric(x) | is.integer(x)) x[is.na(x)] = 0
-    if (is.factor(x)) x = fct_drop(fct_explicit_na(x, "None"))
-    if (length(unique(x)) == 1) x = NULL
-    return(x)
-  })
+preproc_iid = function(dt, keep_cols = NULL) {
+    dt = imap_dtc(dt, function(x, nm) {
+      if (is.logical(x)) x = as.numeric(x)
+      if (is.character(x)) x = as.factor(x)
+      if (is.numeric(x) | is.integer(x)) x[is.na(x)] = 0
+      if (is.factor(x)) x = fct_drop(fct_explicit_na(x, "None"))
+      if (length(unique(x)) == 1 && !(nm %in% keep_cols)) x = NULL
+      return(x)
+    })
 }
 
 # cfg: A config

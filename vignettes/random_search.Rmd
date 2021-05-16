@@ -42,7 +42,7 @@ instances
 make_objective = function(i) {
   cf = cfgs(instances$cfg[i], workdir = workdir)
   if (instances$cfg[i] == "nb301") {
-    obj = cf$get_objective(task = NULL, instances$tgt[i])
+    obj = cf$get_objective(task = NULL, instances$tgt[i], retrafo = TRUE)
   } else if (is.na(instances$level[i])) {
     obj = cf$get_objective()
   } else {

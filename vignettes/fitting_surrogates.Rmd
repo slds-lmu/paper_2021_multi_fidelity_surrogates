@@ -223,8 +223,6 @@ cfg$fit_surrogate(model_config = model_config, overwrite = TRUE)
 ```{r}
 cfg = cfgs('fcnet', workdir = workdir)
 model_config = default_model_config()
-model_config$epochs = 1L
-model_config$activation = "relu"
 cfg$fit_surrogate(model_config = model_config, overwrite = TRUE)
 ```
 

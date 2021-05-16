@@ -1,4 +1,4 @@
-# FIXME: replication istead of repl and task_id 
+# FIXME: replication istead of repl and task_id
 # FIXME: split_by_col blocking
 preproc_data_rbv2_svm = function(config, seed = 123L, frac=.1, n_max=5e6, n_min_task=800L) {
   set.seed(seed)
@@ -37,7 +37,7 @@ preproc_data_rbv2_svm = function(config, seed = 123L, frac=.1, n_max=5e6, n_min_
     oob = oob[, (config$target_variables) := NULL]
   } else {
     oob = NULL
-    ytest = NULL
+    ytest = NULLc
   }
   list(
     xtrain = train,
@@ -298,7 +298,7 @@ preproc_data_rbv2_super = function(config, seed = 123L, frac=.1, n_max=5e6) {
   dt[, num.threads := NULL]
   dt[, task_id := droplevels(task_id)]
   dt[, learner := droplevels(learner)]
-  dt[, svm.shrinking := NULL]  
+  dt[, svm.shrinking := NULL]
   dt[, ranger.replace := NULL]
 
   # Split into train and test

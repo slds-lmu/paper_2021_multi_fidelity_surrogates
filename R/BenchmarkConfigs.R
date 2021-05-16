@@ -859,6 +859,11 @@ BenchmarkConfigFCNet = R6Class("BenchmarkConfigFCNet",
     data = function() {
       if(is.null(private$.data)) private$.data = preproc_data_fcnet(self)
       private$.data
+    },
+    opt_param_set = function() {
+      ps = self$param_set$clone()
+      ps$add(ParamInt$new("replication", lower = 4, upper = 4))
+      return(ps)
     }
   )
 )

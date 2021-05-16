@@ -79,6 +79,8 @@ scale_base_0_1 = function(x, base = 10, p = 0.01) {
 }
 
 scale_neg_exp = function(x) {
+  if (any (x > 700)) stop("Neg-exp scaling for values > 700 is mathematically unstable!")
+
   cat("exp(-x) scaling [", min(x), ";", max(x), "]\n")
   list(
     trafo = function(x) {

@@ -57,9 +57,9 @@ fit_surrogate = function(problem_config, model_config = default_model_config(), 
     ))
     p1 = ggplot(dt, aes(x=truth, y=predicted, color=metric)) +
       geom_point() +
-      geom_abline(slope = 1, color = "blue") + 
+      geom_abline(slope = 1, color = "blue") +
       ggtitle("Test data")
-  
+
     # Train data
     smp = sample(seq_len(nrow(data$xtrain)), min(nrow(data$xtrain), 500L))
     rs3 = mlr3keras::reshape_data_embedding(data$xtrain[smp,])
@@ -72,7 +72,7 @@ fit_surrogate = function(problem_config, model_config = default_model_config(), 
     ))
     p2 = ggplot(dt, aes(x=truth, y=predicted, color=metric)) +
       geom_point() +
-      geom_abline(slope = 1, color = "blue")+ 
+      geom_abline(slope = 1, color = "blue")+
       ggtitle("Train data")
     # History
     p3 = plot(history)
