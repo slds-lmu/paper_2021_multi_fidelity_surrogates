@@ -94,7 +94,7 @@ ObjectiveONNX = R6Class("ObjectiveONNX",
         }
         dt = session$run(NULL, li)[[1L]]
         if (retrafo) {
-          dt = retrafo_predictions(dt, full_codomain_names, self$trafo_dict)
+          dt = data.table(retrafo_predictions(dt, full_codomain_names, self$trafo_dict))
         } else {
           dt = setNames(data.table(dt, full_codomain_names))
         }

@@ -47,7 +47,6 @@ class nb301(Worker):
         li["continuous"] = np.atleast_2d(li["continuous"]).astype("float32")
         res = self.session.run(None, li)[0]
         res = self.mfsurrogates.retrafo_predictions(res, param_set = self.target_names, trafo_dict = self.trafo_dict)
-        # res['logloss']
         time.sleep(self.sleep_interval)
 
         return({
