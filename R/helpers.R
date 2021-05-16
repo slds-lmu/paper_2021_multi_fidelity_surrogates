@@ -144,10 +144,10 @@ cummean = function(x) {
 }
 
 
-#'@export
+#' @export
 retrafo_predictions = function(dt, target_names, trafo_dict) {
   dt = setNames(data.table(dt), target_names)
   to_transform = intersect(names(trafo_dict), target_names)
   dt[, (to_transform) := pmap_dtc(list(.SD, trafo_dict[to_transform]), function(x, tfs) tfs$retrafo(x)), .SDcols = to_transform]
-  return(data.frame)
+  return(data.frame(dt))
 }

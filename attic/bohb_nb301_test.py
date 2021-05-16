@@ -46,7 +46,7 @@ class nb301(Worker):
         li = { key : li_.rx2(key) for key in li_.names }
         li["continuous"] = np.atleast_2d(li["continuous"]).astype("float32")
         res_ = self.session.run(None, li)[0]
-        res_ = self.mfsurrogates.retrafo_predictions(res_, param_set = self.target_names, trafo_dict = self.trafo_dict)
+        res_ = self.mfsurrogates.retrafo_predictions(res_, target_names = self.target_names, trafo_dict = self.trafo_dict)
         res =  { key : res_.rx2(key) for key in res_.names } # convert to dict
         time.sleep(self.sleep_interval)
 
