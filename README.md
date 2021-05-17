@@ -194,7 +194,7 @@ opt("random_search")$optimize(ins)
 Example to select target variables and a task:
 
 ``` r
-objective = cfg$get_objective(task = "3", target_variables = c("perf.mmce", "traintime"))
+objective = cfg$get_objective(task = "3", target_variables = c("mmce", "timetrain"))
 objective$codomain
 objective$constants
 ```
