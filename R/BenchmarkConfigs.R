@@ -853,7 +853,9 @@ BenchmarkConfigFCNet = R6Class("BenchmarkConfigFCNet",
         lr_schedule = p_fct(levels = c("const", "cosine")),
         n_units_1 = p_dbl(lower = 2, upper = 7, tags = c("int", "log"), trafo = function(x) as.integer(round(exp(x)))),
         n_units_2 = p_dbl(lower = 2, upper = 7, tags = c("int", "log"), trafo = function(x) as.integer(round(exp(x)))),
+        replication = p_int(lower = 0L, upper = 4L, tags = "budget"),
         task = p_fct(levels = c("fcnet_protein_structure", "fcnet_parkinsons_telemonitoring", "fcnet_naval_propulsion", "fcnet_slice_localization"), tags = "task_id")
+
       )
     },
     data = function() {
@@ -862,7 +864,8 @@ BenchmarkConfigFCNet = R6Class("BenchmarkConfigFCNet",
     },
     opt_param_set = function() {
       ps = self$param_set$clone()
-      ps$add(ParamInt$new("replication", lower = 4, upper = 4))
+      ps$subset(setdiff(ps$ids(), "replication"))
+      ps$add(ParamInt$new("replication", lower = 4, upper = 4, default = 4L, tags = "constant"))
       return(ps)
     }
   )
