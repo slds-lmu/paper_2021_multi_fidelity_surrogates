@@ -1,5 +1,4 @@
 preproc_data_fcnet = function(config, seed = 123L, n_max = 5*10^6, frac = .1) {
-  browser()
   set.seed(seed)
   path = config$data_path
   dt = readRDS(path)
