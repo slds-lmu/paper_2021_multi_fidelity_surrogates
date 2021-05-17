@@ -853,7 +853,7 @@ BenchmarkConfigFCNet = R6Class("BenchmarkConfigFCNet",
         lr_schedule = p_fct(levels = c("const", "cosine")),
         n_units_1 = p_int(lower = 4L, upper = 9L, trafo = function(x) 2^x),
         n_units_2 = p_int(lower = 4L, upper = 9, trafo = function(x) 2^x),
-        replication = p_int(lower =0L, upper = 4L, tags = "budget"),
+        replication = p_int(lower = 0L, upper = 4L, tags = "budget"),
         task = p_fct(levels = c("fcnet_protein_structure", "fcnet_parkinsons_telemonitoring", "fcnet_naval_propulsion", "fcnet_slice_localization"), tags = "task_id")
 
       )
