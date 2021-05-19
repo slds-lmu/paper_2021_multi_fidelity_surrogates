@@ -325,8 +325,8 @@ BenchmarkConfigRBv2SVM = R6Class("BenchmarkConfigRBv2SVM",
           f1 = p_dbl(lower = 0, upper = 1, tags = "maximize"),
           auc = p_dbl(lower = 0, upper = 1, tags = "maximize"),
           logloss = p_dbl(lower = 0, upper = Inf, tags = "minimize"),
-          timetrain = p_dbl(lower = 0, upper = 1, tags = "minimize"),
-          timepredict = p_dbl(lower = 0, upper = 1, tags = "minimize")
+          timetrain = p_dbl(lower = 0, upper = Inf, tags = "minimize"),
+          timepredict = p_dbl(lower = 0, upper = Inf, tags = "minimize")
         ),
         packages = NULL
       )
@@ -340,7 +340,6 @@ BenchmarkConfigRBv2SVM = R6Class("BenchmarkConfigRBv2SVM",
         gamma = p_dbl(lower = -10, upper = 10, tags = "log", trafo = function(x) exp(x), depends = kernel == "radial"),
         tolerance = p_dbl(lower = -10, upper = log(2), tags = "log", trafo = function(x) exp(x)),
         degree = p_int(lower = 2, upper = 5, depends = kernel == "polynomial"),
-        # shrinking = p_lgl(),
         trainsize = p_dbl(lower = 0.05, upper = 1, tag = "budget"),
         repl = p_int(lower = 1, upper = 10, tag = "budget"),
         num.impute.selected.cpo = p_fct(levels = c("impute.mean", "impute.median", "impute.hist")),
@@ -362,6 +361,12 @@ BenchmarkConfigRBv2SVM = R6Class("BenchmarkConfigRBv2SVM",
     data = function() {
       if(is.null(private$.data)) private$.data = preproc_data_rbv2_svm(self)
       private$.data
+    },
+    opt_param_set = function() {
+      ps = self$param_set$clone()
+      ps$subset(setdiff(ps$ids(), "repl"))
+      ps$add(ParamInt$new("repl", lower = 10, upper = 10, default = 10, tags = "constant"))
+      return(ps)
     }
   )
 )
@@ -389,8 +394,8 @@ BenchmarkConfigRBv2ranger = R6Class("BenchmarkConfigRBv2ranger",
           f1 = p_dbl(lower = 0, upper = 1, tags = "maximize"),
           auc = p_dbl(lower = 0, upper = 1, tags = "maximize"),
           logloss = p_dbl(lower = 0, upper = Inf, tags = "minimize"),
-          timetrain = p_dbl(lower = 0, upper = 1, tags = "minimize"),
-          timepredict = p_dbl(lower = 0, upper = 1, tags = "minimize")
+          timetrain = p_dbl(lower = 0, upper = Inf, tags = "minimize"),
+          timepredict = p_dbl(lower = 0, upper = Inf, tags = "minimize")
         ),
         packages = NULL
       )
@@ -432,6 +437,12 @@ BenchmarkConfigRBv2ranger = R6Class("BenchmarkConfigRBv2ranger",
     data = function() {
       if(is.null(private$.data)) private$.data = preproc_data_rbv2_ranger(self)
       private$.data
+    },
+    opt_param_set = function() {
+      ps = self$param_set$clone()
+      ps$subset(setdiff(ps$ids(), "repl"))
+      ps$add(ParamInt$new("repl", lower = 10, upper = 10, default = 10, tags = "constant"))
+      return(ps)
     }
   )
 )
@@ -459,8 +470,8 @@ BenchmarkConfigRBv2glmnet = R6Class("BenchmarkConfigRBv2glmnet",
           f1 = p_dbl(lower = 0, upper = 1, tags = "maximize"),
           auc = p_dbl(lower = 0, upper = 1, tags = "maximize"),
           logloss = p_dbl(lower = 0, upper = Inf, tags = "minimize"),
-          timetrain = p_dbl(lower = 0, upper = 1, tags = "minimize"),
-          timepredict = p_dbl(lower = 0, upper = 1, tags = "minimize")
+          timetrain = p_dbl(lower = 0, upper = Inf, tags = "minimize"),
+          timepredict = p_dbl(lower = 0, upper = Inf, tags = "minimize")
         ),
         packages = NULL
       )
@@ -493,6 +504,12 @@ BenchmarkConfigRBv2glmnet = R6Class("BenchmarkConfigRBv2glmnet",
     data = function() {
       if(is.null(private$.data)) private$.data = preproc_data_rbv2_glmnet(self)
       private$.data
+    },
+    opt_param_set = function() {
+      ps = self$param_set$clone()
+      ps$subset(setdiff(ps$ids(), "repl"))
+      ps$add(ParamInt$new("repl", lower = 10, upper = 10, default = 10, tags = "constant"))
+      return(ps)
     }
   )
 )
@@ -520,8 +537,8 @@ BenchmarkConfigRBv2xgboost = R6Class("BenchmarkConfigRBv2xgboost",
           f1 = p_dbl(lower = 0, upper = 1, tags = "maximize"),
           auc = p_dbl(lower = 0, upper = 1, tags = "maximize"),
           logloss = p_dbl(lower = 0, upper = Inf, tags = "minimize"),
-          timetrain = p_dbl(lower = 0, upper = 1, tags = "minimize"),
-          timepredict = p_dbl(lower = 0, upper = 1, tags = "minimize")
+          timetrain = p_dbl(lower = 0, upper = Inf, tags = "minimize"),
+          timepredict = p_dbl(lower = 0, upper = Inf, tags = "minimize")
         ),
         packages = NULL
       )
@@ -567,6 +584,12 @@ BenchmarkConfigRBv2xgboost = R6Class("BenchmarkConfigRBv2xgboost",
     data = function() {
       if(is.null(private$.data)) private$.data = preproc_data_rbv2_xgboost(self)
       private$.data
+    },
+    opt_param_set = function() {
+      ps = self$param_set$clone()
+      ps$subset(setdiff(ps$ids(), "repl"))
+      ps$add(ParamInt$new("repl", lower = 10, upper = 10, default = 10, tags = "constant"))
+      return(ps)
     }
   )
 )
@@ -594,8 +617,8 @@ BenchmarkConfigRBv2rpart = R6Class("BenchmarkConfigRBv2rpart",
           f1 = p_dbl(lower = 0, upper = 1, tags = "maximize"),
           auc = p_dbl(lower = 0, upper = 1, tags = "maximize"),
           logloss = p_dbl(lower = 0, upper = Inf, tags = "minimize"),
-          timetrain = p_dbl(lower = 0, upper = 1, tags = "minimize"),
-          timepredict = p_dbl(lower = 0, upper = 1, tags = "minimize")
+          timetrain = p_dbl(lower = 0, upper = Inf, tags = "minimize"),
+          timepredict = p_dbl(lower = 0, upper = Inf, tags = "minimize")
         ),
         packages = NULL
       )
@@ -631,6 +654,12 @@ BenchmarkConfigRBv2rpart = R6Class("BenchmarkConfigRBv2rpart",
     data = function() {
       if(is.null(private$.data)) private$.data = preproc_data_rbv2_rpart(self)
       private$.data
+    },
+    opt_param_set = function() {
+      ps = self$param_set$clone()
+      ps$subset(setdiff(ps$ids(), "repl"))
+      ps$add(ParamInt$new("repl", lower = 10, upper = 10, default = 10, tags = "constant"))
+      return(ps)
     }
   )
 )
@@ -658,8 +687,8 @@ BenchmarkConfigRBv2aknn = R6Class("BenchmarkConfigRBv2aknn",
           f1 = p_dbl(lower = 0, upper = 1, tags = "maximize"),
           auc = p_dbl(lower = 0, upper = 1, tags = "maximize"),
           logloss = p_dbl(lower = 0, upper = Inf, tags = "minimize"),
-          timetrain = p_dbl(lower = 0, upper = 1, tags = "minimize"),
-          timepredict = p_dbl(lower = 0, upper = 1, tags = "minimize")
+          timetrain = p_dbl(lower = 0, upper = Inf, tags = "minimize"),
+          timepredict = p_dbl(lower = 0, upper = Inf, tags = "minimize")
         ),
         packages = NULL
       )
@@ -695,6 +724,12 @@ BenchmarkConfigRBv2aknn = R6Class("BenchmarkConfigRBv2aknn",
     data = function() {
       if(is.null(private$.data)) private$.data = preproc_data_rbv2_aknn(self)
       private$.data
+    },
+    opt_param_set = function() {
+      ps = self$param_set$clone()
+      ps$subset(setdiff(ps$ids(), "repl"))
+      ps$add(ParamInt$new("repl", lower = 10, upper = 10, default = 10, tags = "constant"))
+      return(ps)
     }
   )
 )
@@ -721,7 +756,7 @@ BenchmarkConfigSuperRBv2 = R6Class("BenchmarkConfigSuperRBv2",
           mmce = p_dbl(lower = 0, upper = 1, tags = "minimize"),
           f1 = p_dbl(lower = 0, upper = 1, tags = "maximize"),
           auc = p_dbl(lower = 0, upper = 1, tags = "maximize"),
-          logloss = p_dbl(lower = 0, upper = Inf, tags = "minimize"), # has to be maximized for retrafo = FALSE, minimized for retrafo = TRUE
+          logloss = p_dbl(lower = 0, upper = Inf, tags = "minimize"),
           timetrain = p_dbl(lower = 0, upper = Inf, tags = "minimize"),
           timepredict = p_dbl(lower = 0, upper = Inf, tags = "minimize")
         ),
