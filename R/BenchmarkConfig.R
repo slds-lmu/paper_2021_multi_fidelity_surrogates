@@ -9,6 +9,7 @@ BenchmarkConfig = R6Class("BenchmarkConfig",
     param_set_file = NULL,
     data_file = NULL,
     dicts_file = NULL,
+    data_order_file = NULL,
     keras_model_file = NULL,
     onnx_model_file = NULL,
     target_variables = NULL,
@@ -18,8 +19,7 @@ BenchmarkConfig = R6Class("BenchmarkConfig",
     all_task_ids_file = "task_ids.txt",
     eval_task_ids_file = "task_ids.txt",
 
-
-    initialize = function(id, workdir, model_name, param_set_file = NULL, data_file, dicts_file, keras_model_file, onnx_model_file, target_variables, codomain, packages) {
+    initialize = function(id, workdir, model_name, param_set_file = NULL, data_file, data_order_file, dicts_file, keras_model_file, onnx_model_file, target_variables, codomain, packages) {
       self$id = assert_string(id)
       self$download_url = paste0("https://syncandshare.lrz.de/dl/fiCMkzqj1bv1LfCUyvZKmLvd/", model_name, "/")
       self$workdir = if (!is.null(workdir)) if (!endsWith(workdir, "/")) paste0(workdir, "/") else workdir
@@ -27,6 +27,7 @@ BenchmarkConfig = R6Class("BenchmarkConfig",
       self$subdir = if (!is.null(workdir) && !is.null(model_name)) paste0(self$workdir, model_name, "/") else NULL
       self$param_set_file = param_set_file
       self$data_file = data_file
+      self$data_order_file = data_order_file
       self$dicts_file = dicts_file
       self$keras_model_file = keras_model_file
       self$onnx_model_file = onnx_model_file
@@ -37,6 +38,7 @@ BenchmarkConfig = R6Class("BenchmarkConfig",
 
     setup = function(force_download = FALSE, data = FALSE) {
       assert_flag(force_download)
+      assert_flag(data)
       if (!test_directory(self$workdir)) {
         dir.create(self$workdir, recursive = TRUE)
       }
@@ -45,9 +47,12 @@ BenchmarkConfig = R6Class("BenchmarkConfig",
         dir.create(self$subdir)
       }
 
-      # Do only download data if explicitly set.
       if (data && !(is.null(self$data_file)) && (!test_file_exists(self$data_set_path) || force_download)) {
         download.file(paste0(self$download_url, self$data_file), destfile = self$data_path)
+      }
+
+      if (!(is.null(self$data_order_file)) && (!test_file_exists(self$data_order_path) || force_download)) {
+        download.file(paste0(self$download_url, self$data_order_file), destfile = self$data_order_path)
       }
 
       if (!(is.null(self$param_set_file)) && (!test_file_exists(self$param_set_path) || force_download)) {
@@ -77,6 +82,7 @@ BenchmarkConfig = R6Class("BenchmarkConfig",
       }
       ObjectiveONNX$new(
         model_path = self$onnx_model_path,
+        data_order = readRDS(self$data_order_path),
         trafo_dict = readRDS(self$dicts_path),
         domain = self$opt_param_set,
         full_codomain_names = self$codomain$ids(),  # needed to set the names
@@ -84,6 +90,12 @@ BenchmarkConfig = R6Class("BenchmarkConfig",
         task = task,
         retrafo = retrafo
       )
+    },
+    save_data_order = function() {
+      order = get_data_order(self)
+      cat("Data order:\n")
+      print(order)
+      saveRDS(order, self$data_order_path)
     },
     save_trafo_dict = function() {
         trafos = c(
@@ -122,6 +134,7 @@ BenchmarkConfig = R6Class("BenchmarkConfig",
     },
     fit_surrogate = function(model_config = default_model_config(), overwrite = FALSE, plot = TRUE) {
       if (overwrite) {
+        self$save_data_order()
         self$save_trafo_dict()
       }
       fit_surrogate(self, model_config, overwrite = overwrite, plot = plot)
@@ -142,6 +155,9 @@ BenchmarkConfig = R6Class("BenchmarkConfig",
     },
     data_path = function() {
       paste0(self$subdir, self$data_file)
+    },
+    data_order_path = function() {
+      paste0(self$subdir, self$data_order_file)
     },
     param_set_path = function() {
       paste0(self$subdir, self$param_set_file)
@@ -188,7 +204,6 @@ BenchmarkConfig = R6Class("BenchmarkConfig",
     .data = NULL
   )
 )
-
 
 #' @title Dictionary of Configurations
 #'

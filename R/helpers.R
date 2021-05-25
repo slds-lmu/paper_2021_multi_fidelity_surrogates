@@ -136,3 +136,10 @@ retrafo_predictions = function(dt, target_names, trafo_dict) {
   dt[, (to_transform) := pmap_dtc(list(.SD, trafo_dict[to_transform]), function(x, tfs) tfs$retrafo(x)), .SDcols = to_transform]
   return(data.frame(dt))
 }
+
+get_data_order = function(cfg) {
+  data = cfg$data
+  nms = names(data$xtrain)
+  stopifnot(nms == names(data$xtest))
+  nms
+}
