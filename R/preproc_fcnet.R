@@ -3,7 +3,7 @@ preproc_data_fcnet = function(config, seed = 123L, n_max = 5*10^6, frac = .1) {
   path = config$data_path
   dt = readRDS(path)
   dt = dt[, valid_mse := NULL]
-  tt = split_by_col(dt, by = "task", pars = get_pars(config), frac = frac)
+  tt = split_by_col(dt, by = "task", frac = frac)
 
   # Preproc train data
   train = tt$train

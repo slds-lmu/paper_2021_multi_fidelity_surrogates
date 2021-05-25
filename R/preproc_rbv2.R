@@ -1,5 +1,3 @@
-# FIXME: replication istead of repl and task_id
-# FIXME: split_by_col blocking
 preproc_data_rbv2_svm = function(config, seed = 123L, frac=.1, n_max=5e6, n_min_task=800L) {
   set.seed(seed)
   dt = data.table(readRDS(config$data_path))

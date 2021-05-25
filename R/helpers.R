@@ -40,30 +40,13 @@ weights_from_target = function(y, minimize = TRUE, j = 1L, wts_pow = 0L) {
   }
 }
 
-# get the parameters of a config (only search space without `task_id`, `budget`)
-get_pars = function(config) {
-  ps = config$param_set
-  ids = ps$ids()
-  setdiff(ids, c(ps$ids(tags = "task_id"), ps$ids(tags = "budget")))
-}
-
-# split data into train and test stratified by column `by`
-# if `pars` is not null, additionally blocking is performed with respect to `pars` and `by`,
-# e.g, a specific config for a specific task will always belong either to train or test with all its budget
-# only meaningful if a single budget parameter is present (e.g., epoch)
-split_by_col = function(dt, by = "task_id", pars = NULL, frac = 0.1) {
-  if (!is.null(pars)) {
-    dt[, id  := .GRP, keyby = c(by, pars)]
-    uids = unique(dt$id)
-    test_idx = dt[id %in% sample(uids, size = ceiling(length(uids) * frac))]
-  } else {
-    dt[, id := seq_len(nrow(dt))]
-    test_idx = dt[, .(id = sample(id, ceiling(.N * frac))), keyby = by]
-  }
-  dt[, "id" := NULL]
+split_by_col = function(dt, by = 'task_id', frac = 0.1) {
+  dt[, rn := seq_len(nrow(dt))]
+  test_idx = dt[, .(rn = sample(rn, ceiling(.N * frac))), keyby = by]
+  dt[, "rn" := NULL]
   list(
-    test = dt[test_idx$id, ],
-    train = dt[!test_idx$id, ]
+    test = dt[test_idx$rn,],
+    train = dt[!test_idx$rn,]
   )
 }
 
