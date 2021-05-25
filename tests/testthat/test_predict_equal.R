@@ -45,12 +45,10 @@ predictions_equal = function(cfg) {
 
 test_that("predict equal", {
   skip_if_not(check_directory_exists(workdir))
-  cfgs = setdiff(benchmark_configs$keys(), c("branin", "shekel", "zdt6", "fcnet", "task_set", "rbv2_super"))
+  # FIXME: fcnet and task_set not stable yet
+  cfgs = setdiff(benchmark_configs$keys(), c("branin", "shekel", "zdt6", "fcnet", "task_set"))
   for (cfg in cfgs) {
     config = benchmark_configs$get(cfg, workdir = workdir)
-    config$setup(force = TRUE, data = TRUE)
-    config$save_trafo_dict()
-    config$save_data_order()    
     expect_true(predictions_equal(config))
   }
 })

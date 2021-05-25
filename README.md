@@ -13,7 +13,7 @@ algorithms across several tasks.
 |:----|:--------------|:--------|--------:|:-----------------|:-----------|------------:|:-------|:----------|:-----------|
 | 1   | nb301         | Cat+Dep |      34 | 2:perf(1)+rt     | epoch      |           1 | ready  | 0.6-0.99  | 0.91-0.99  |
 | 2   | lcbench       | Mix     |       7 | 6:perf(5)+rt     | epoch      |          35 | ready  | 0.95-1    | 0.94-1     |
-| 10  | fcnet         | Mix     |      11 | 4:perf(2)+rt+ ms | epoch+repl |           4 | ready  | 0.87-1    | 0.93-1     |
+| 10  | fcnet         | Mix     |      11 | 4:perf(2)+rt+ ms | epoch+repl |           4 | \-     | 0.87-1    | 0.93-1     |
 | 9   | rbv2\_super   | Mix+Dep |      34 | 6:perf(4)+rt+pt  | frac+repl  |          89 | ready  | 0.86-0.99 | 0.93-0.99  |
 | 3   | rbv2\_ranger  | Mix+Dep |       6 | 6:perf(4)+rt+pt  | frac+repl  |          96 | ready  | 0.4-0.98  | 0.64-0.99  |
 | 4   | rbv2\_rpart   | Mix     |       5 | 6:perf(4)+rt+pt  | frac+repl  |         101 | ready  | 0-0.99    | 0.02-1     |
@@ -21,7 +21,7 @@ algorithms across several tasks.
 | 6   | rbv2\_glmnet  | Mix     |       3 | 6:perf(4)+rt+pt  | frac+repl  |          98 | ready  | 0.02-0.98 | -0.15-0.99 |
 | 7   | rbv2\_ranger  | Mix+Dep |       8 | 6:perf(4)+rt+pt  | frac+repl  |         114 | ready  | 0.4-0.98  | 0.64-0.99  |
 | 8   | rbv2\_xgboost | Mix+Dep |      14 | 6:perf(4)+rt+pt  | frac+repl  |         109 | ready  | 0.53-0.98 | 0.72-0.99  |
-| 11  | task\_set     | Num     |       9 | 4:perf(4)        | epoch+repl |          20 | ready  | 0.12-0.15 | 0.35-0.39  |
+| 11  | task\_set     | Num     |       9 | 4:perf(4)        | epoch+repl |          20 | \-     | 0.12-0.15 | 0.35-0.39  |
 
 where for **n\_targets** (\#number):
 
@@ -50,7 +50,7 @@ We first load the config:
 library(checkmate)
 library(paradox)
 library(mfsurrogates)
-workdir = "/tmp/multifidelity_data/"
+workdir = "../multifidelity_data/"
 cfg = cfgs("nb301", workdir = workdir)
 cfg$setup()  # automatic download of files; necessary if you didn't download manually
 cfg
@@ -76,7 +76,6 @@ specific `task_id` here.
 We first load the config:
 
 ``` r
-workdir = "/tmp/multifidelity_data/"
 cfg = cfgs("lcbench", workdir = workdir)
 cfg$setup()
 ```
@@ -176,7 +175,6 @@ opt("random_search")$optimize(ins)
 We first load the config:
 
 ``` r
-workdir = "/tmp/multifidelity_data/"
 cfg = cfgs("rbv2_svm", workdir = workdir)
 cfg$setup()
 ```
@@ -204,7 +202,6 @@ objective$constants
 We first load the config:
 
 ``` r
-workdir = "/tmp/multifidelity_data/"
 cfg = cfgs("rbv2_rpart", workdir = workdir)
 ```
 
@@ -223,7 +220,6 @@ opt("random_search")$optimize(ins)
 We first load the config:
 
 ``` r
-workdir = "/tmp/multifidelity_data/"
 cfg = cfgs("rbv2_aknn", workdir = workdir)
 ```
 
@@ -242,7 +238,6 @@ opt("random_search")$optimize(ins)
 We first load the config:
 
 ``` r
-workdir = "/tmp/multifidelity_data/"
 cfg = cfgs("rbv2_glmnet", workdir = workdir)
 ```
 
@@ -261,7 +256,6 @@ opt("random_search")$optimize(ins)
 We first load the config:
 
 ``` r
-workdir = "/tmp/multifidelity_data/"
 cfg = cfgs("rbv2_ranger", workdir = workdir)
 ```
 
@@ -280,7 +274,6 @@ opt("random_search")$optimize(ins)
 We first load the config:
 
 ``` r
-workdir = "/tmp/multifidelity_data/"
 cfg = cfgs("rbv2_xgboost", workdir = workdir)
 ```
 
@@ -304,7 +297,6 @@ baselearners.
 We first load the config:
 
 ``` r
-workdir = "/tmp/multifidelity_data/"
 cfg = cfgs("rbv2_super", workdir = workdir)
 ```
 
@@ -323,7 +315,6 @@ opt("random_search")$optimize(ins)
 We first load the config:
 
 ``` r
-workdir = "/tmp/multifidelity_data/"
 cfg = cfgs("fcnet", workdir = workdir)
 ```
 
