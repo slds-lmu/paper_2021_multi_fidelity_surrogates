@@ -19,9 +19,10 @@ class rbv2_super(Worker):
         self.sleep_interval = sleep_interval
         base = importr("base")
         self.mfsurrogates = importr("mfsurrogates")
-        self.session = onnxruntime.InferenceSession("attic/multifidelity_data/rbv2_super/model.onnx")
-        self.param_set = base.readRDS("attic/multifidelity_data/rbv2_super/param_set.rds")  # FIXME: download manually from lrz
-        self.trafo_dict = base.readRDS("attic/multifidelity_data/rbv2_super/dicts.rds")
+        self.session = onnxruntime.InferenceSession("multifidelity_data/rbv2_super/model.onnx")
+        self.param_set = base.readRDS("multifidelity_data/rbv2_super/param_set.rds")  # FIXME: download manually from lrz
+        self.data_order = base.readRDS("multifidelity_data/rbv2_super/data_order.rds")
+        self.trafo_dict = base.readRDS("multifidelity_data/rbv2_super/dicts.rds")
 
         pandas2ri.activate()
 
@@ -45,7 +46,7 @@ class rbv2_super(Worker):
         xdt = pd.DataFrame.from_dict([config])
         xdt = pandas2ri.py2rpy(xdt)
 
-        li_ = self.mfsurrogates.convert_for_onnx(xdt, param_set = self.param_set, trafo_dict = self.trafo_dict)
+        li_ = self.mfsurrogates.convert_for_onnx(xdt, data_order = self.data_order, param_set = self.param_set, trafo_dict = self.trafo_dict)
         li = { key : li_.rx2(key) for key in li_.names }
         li["continuous"] = np.atleast_2d(li["continuous"]).astype("float32")
         res = self.session.run(None, li)[0]
@@ -59,7 +60,7 @@ class rbv2_super(Worker):
     
     @staticmethod
     def get_configspace():
-        with open('src/configspaces/configspace_rbv2_super_drop_trainsize_repl_task_id.json', 'r') as f:
+        with open('paper_2021_multi_fidelity_surrogates/src/configspaces/configspace_rbv2_super_drop_trainsize_repl_task_id.json', 'r') as f:
             json_string = f.read()
             cs = json.read(json_string)
         return(cs)
