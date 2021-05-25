@@ -15,7 +15,7 @@ preproc_data_rbv2_svm = function(config, seed = 123L, frac=.1, n_max=5e6, n_min_
   train = tt$train
   train = sample_max(train, n_max)
   train = preproc_iid(train)
-  oob = apply_cummean_variance_param(oob, mean = c("mmce", "f1", "auc", "logloss", "timepredict", "timetrain"),  sum = NULL, fidelity_param = "repl", ignore=NULL)
+  train = apply_cummean_variance_param(train, mean = c("mmce", "f1", "auc", "logloss", "timepredict", "timetrain"),  sum = NULL, fidelity_param = "repl", ignore = NULL)
   trafos = c(
     map(train[, c("mmce", "f1", "auc"), with = FALSE], scale_base_0_1, p = .01, base = 1),
     map(train[, c("logloss"), with = FALSE], scale_neg_exp),
@@ -30,7 +30,7 @@ preproc_data_rbv2_svm = function(config, seed = 123L, frac=.1, n_max=5e6, n_min_
   if (frac) {
     oob = tt$test
     oob = preproc_iid(oob)
-    oob = apply_cummean_variance_param(oob, mean = c("mmce", "f1", "auc", "logloss", "timepredict", "timetrain"),  sum = NULL, fidelity_param = "repl", ignore=NULL)
+    oob = apply_cummean_variance_param(oob, mean = c("mmce", "f1", "auc", "logloss", "timepredict", "timetrain"),  sum = NULL, fidelity_param = "repl", ignore = NULL)
     oob[, names(trafos) := pmap(list(.SD, trafos), function(x, t) {t$trafo(x)}), .SDcols = names(trafos)]
     ytest = as.matrix(oob[, config$target_variables, with = FALSE])
     oob = oob[, (config$target_variables) := NULL]
@@ -63,7 +63,7 @@ preproc_data_rbv2_ranger = function(config, seed = 123L, frac=.1, n_max=5e6, n_m
   train = tt$train
   train = sample_max(train, n_max)
   train = preproc_iid(train)
-  oob = apply_cummean_variance_param(oob, mean = c("mmce", "f1", "auc", "logloss", "timepredict", "timetrain"),  sum = NULL, fidelity_param = "repl", ignore=NULL)
+  train = apply_cummean_variance_param(train, mean = c("mmce", "f1", "auc", "logloss", "timepredict", "timetrain"),  sum = NULL, fidelity_param = "repl", ignore = NULL)
   trafos = c(
     map(train[, c("mmce", "f1", "auc"), with = FALSE], scale_base_0_1, p = .01, base = 1),
     map(train[, c("logloss"), with = FALSE], scale_neg_exp),
@@ -78,7 +78,7 @@ preproc_data_rbv2_ranger = function(config, seed = 123L, frac=.1, n_max=5e6, n_m
   if (frac) {
     oob = tt$test
     oob = preproc_iid(oob)
-    oob = apply_cummean_variance_param(oob, mean = c("mmce", "f1", "auc", "logloss", "timepredict", "timetrain"),  sum = NULL, fidelity_param = "repl", ignore=NULL)
+    oob = apply_cummean_variance_param(oob, mean = c("mmce", "f1", "auc", "logloss", "timepredict", "timetrain"),  sum = NULL, fidelity_param = "repl", ignore = NULL)
     oob[, names(trafos) := pmap(list(.SD, trafos), function(x, t) {t$trafo(x)}), .SDcols = names(trafos)]
     ytest = as.matrix(oob[, config$target_variables, with = FALSE])
     oob = oob[, (config$target_variables) := NULL]
@@ -111,7 +111,7 @@ preproc_data_rbv2_glmnet = function(config, seed = 123L, frac=.1, n_max=5e6, n_m
   train = tt$train
   train = sample_max(train, n_max)
   train = preproc_iid(train)
-  oob = apply_cummean_variance_param(oob, mean = c("mmce", "f1", "auc", "logloss", "timepredict", "timetrain"),  sum = NULL, fidelity_param = "repl", ignore=NULL)
+  train = apply_cummean_variance_param(train, mean = c("mmce", "f1", "auc", "logloss", "timepredict", "timetrain"),  sum = NULL, fidelity_param = "repl", ignore = NULL)
   trafos = c(
     map(train[, c("mmce", "f1", "auc"), with = FALSE], scale_base_0_1, p = .01, base = 1),
     map(train[, c("logloss"), with = FALSE], scale_neg_exp),
@@ -126,7 +126,7 @@ preproc_data_rbv2_glmnet = function(config, seed = 123L, frac=.1, n_max=5e6, n_m
   if (frac) {
     oob = tt$test
     oob = preproc_iid(oob)
-    oob = apply_cummean_variance_param(oob, mean = c("mmce", "f1", "auc", "logloss", "timepredict", "timetrain"),  sum = NULL, fidelity_param = "repl", ignore=NULL)
+    oob = apply_cummean_variance_param(oob, mean = c("mmce", "f1", "auc", "logloss", "timepredict", "timetrain"),  sum = NULL, fidelity_param = "repl", ignore = NULL)
     oob[, names(trafos) := pmap(list(.SD, trafos), function(x, t) {t$trafo(x)}), .SDcols = names(trafos)]
     ytest = as.matrix(oob[, config$target_variables, with = FALSE])
     oob = oob[, (config$target_variables) := NULL]
@@ -160,7 +160,7 @@ preproc_data_rbv2_xgboost = function(config, seed = 123L, frac=.1, n_max=5e6, n_
   train = tt$train
   train = sample_max(train, n_max)
   train = preproc_iid(train)
-  oob = apply_cummean_variance_param(oob, mean = c("mmce", "f1", "auc", "logloss", "timepredict", "timetrain"),  sum = NULL, fidelity_param = "repl", ignore=NULL)
+  train = apply_cummean_variance_param(train, mean = c("mmce", "f1", "auc", "logloss", "timepredict", "timetrain"),  sum = NULL, fidelity_param = "repl", ignore = NULL)
   trafos = c(
     map(train[, c("mmce", "f1", "auc"), with = FALSE], scale_base_0_1, p = .01, base = 1),
     map(train[, c("logloss"), with = FALSE], scale_neg_exp),
@@ -176,7 +176,7 @@ preproc_data_rbv2_xgboost = function(config, seed = 123L, frac=.1, n_max=5e6, n_
   if (frac) {
     oob = tt$test
     oob = preproc_iid(oob)
-    oob = apply_cummean_variance_param(oob, mean = c("mmce", "f1", "auc", "logloss", "timepredict", "timetrain"),  sum = NULL, fidelity_param = "repl", ignore=NULL)
+    oob = apply_cummean_variance_param(oob, mean = c("mmce", "f1", "auc", "logloss", "timepredict", "timetrain"),  sum = NULL, fidelity_param = "repl", ignore = NULL)
     oob[, names(trafos) := pmap(list(.SD, trafos), function(x, t) {t$trafo(x)}), .SDcols = names(trafos)]
     ytest = as.matrix(oob[, config$target_variables, with = FALSE])
     oob = oob[, (config$target_variables) := NULL]
@@ -209,7 +209,7 @@ preproc_data_rbv2_rpart = function(config, seed = 123L, frac=.1, n_max=5e6, n_mi
   train = tt$train
   train = sample_max(train, n_max)
   train = preproc_iid(train)
-  oob = apply_cummean_variance_param(oob, mean = c("mmce", "f1", "auc", "logloss", "timepredict", "timetrain"),  sum = NULL, fidelity_param = "repl", ignore=NULL)
+  train = apply_cummean_variance_param(train, mean = c("mmce", "f1", "auc", "logloss", "timepredict", "timetrain"),  sum = NULL, fidelity_param = "repl", ignore = NULL)
   trafos = c(
     map(train[, c("mmce", "f1", "auc"), with = FALSE], scale_base_0_1, p = .01, base = 1),
     map(train[, c("logloss"), with = FALSE], scale_neg_exp),
@@ -225,7 +225,7 @@ preproc_data_rbv2_rpart = function(config, seed = 123L, frac=.1, n_max=5e6, n_mi
   if (frac) {
     oob = tt$test
     oob = preproc_iid(oob)
-    oob = apply_cummean_variance_param(oob, mean = c("mmce", "f1", "auc", "logloss", "timepredict", "timetrain"),  sum = NULL, fidelity_param = "repl", ignore=NULL)
+    oob = apply_cummean_variance_param(oob, mean = c("mmce", "f1", "auc", "logloss", "timepredict", "timetrain"),  sum = NULL, fidelity_param = "repl", ignore = NULL)
     oob[, names(trafos) := pmap(list(.SD, trafos), function(x, t) {t$trafo(x)}), .SDcols = names(trafos)]
     ytest = as.matrix(oob[, config$target_variables, with = FALSE])
     oob = oob[, (config$target_variables) := NULL]
@@ -256,9 +256,8 @@ preproc_data_rbv2_aknn = function(config, seed = 123L, frac=.1, n_max=5e6, n_min
 
   train = tt$train
   train = sample_max(train, n_max)
-
   train = preproc_iid(train)
-    oob = apply_cummean_variance_param(oob, mean = c("mmce", "f1", "auc", "logloss", "timepredict", "timetrain"),  sum = NULL, fidelity_param = "repl", ignore=NULL)
+  train = apply_cummean_variance_param(train, mean = c("mmce", "f1", "auc", "logloss", "timepredict", "timetrain"),  sum = NULL, fidelity_param = "repl", ignore = NULL)
   trafos = c(
     map(train[, c("mmce", "f1", "auc"), with = FALSE], scale_base_0_1, p = .01, base = 1),
     map(train[, c("logloss"), with = FALSE], scale_neg_exp),
@@ -274,7 +273,7 @@ preproc_data_rbv2_aknn = function(config, seed = 123L, frac=.1, n_max=5e6, n_min
   if (frac) {
     oob = tt$test
     oob = preproc_iid(oob)
-    oob = apply_cummean_variance_param(oob, mean = c("mmce", "f1", "auc", "logloss", "timepredict", "timetrain"),  sum = NULL, fidelity_param = "repl", ignore=NULL)
+    oob = apply_cummean_variance_param(oob, mean = c("mmce", "f1", "auc", "logloss", "timepredict", "timetrain"),  sum = NULL, fidelity_param = "repl", ignore = NULL)
     oob[, names(trafos) := pmap(list(.SD, trafos), function(x, t) {t$trafo(x)}), .SDcols = names(trafos)]
     ytest = as.matrix(oob[, config$target_variables, with = FALSE])
     oob = oob[, (config$target_variables) := NULL]
@@ -310,8 +309,7 @@ preproc_data_rbv2_super = function(config, seed = 123L, frac=.1, n_max=5e6) {
   train = tt$train
   train = sample_max(train, n_max)
   train = preproc_iid(train)
-  train = apply_cummean_variance_param(train, mean = c("mmce", "f1", "auc", "logloss", "timepredict", "timetrain"),  sum = NULL, fidelity_param = "repl", ignore=NULL)
-
+  train = apply_cummean_variance_param(train, mean = c("mmce", "f1", "auc", "logloss", "timepredict", "timetrain"),  sum = NULL, fidelity_param = "repl", ignore = NULL)
   trafos = c(
     map(train[, c("mmce", "f1", "auc"), with = FALSE], scale_base_0_1, p = .01, base = 1),
     map(train[, c("logloss"), with = FALSE], scale_neg_exp),
@@ -334,7 +332,7 @@ preproc_data_rbv2_super = function(config, seed = 123L, frac=.1, n_max=5e6) {
   if (frac) {
     oob = tt$test
     oob = preproc_iid(oob)
-    oob = apply_cummean_variance_param(oob, mean = c("mmce", "f1", "auc", "logloss", "timepredict", "timetrain"),  sum = NULL, fidelity_param = "repl", ignore=NULL)
+    oob = apply_cummean_variance_param(oob, mean = c("mmce", "f1", "auc", "logloss", "timepredict", "timetrain"),  sum = NULL, fidelity_param = "repl", ignore = NULL)
     oob[, names(trafos) := pmap(list(.SD, trafos), function(x, t) {t$trafo(x)}), .SDcols = names(trafos)]
     ytest = as.matrix(oob[, config$target_variables, with = FALSE])
     oob = oob[, (config$target_variables) := NULL]

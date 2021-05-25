@@ -77,7 +77,9 @@ ObjectiveONNX = R6Class("ObjectiveONNX",
           )
           xdt[, to_add[i] := NA_storage_type]
         }
-        # Re-order columns in case the order changed through trafos.
+        # Re-order columns in case the order changed through trafos
+        # FIXME: not 100% sure this always works
+        # essentially we would need the column order given during surrogate training
         xdt = xdt[, (c(param_ids, self$constants$ids())), with = FALSE]
 
         li = c(
@@ -94,9 +96,9 @@ ObjectiveONNX = R6Class("ObjectiveONNX",
         }
         dt = session$run(NULL, li)[[1L]]
         if (retrafo) {
-          dt = data.table(retrafo_predictions(dt, full_codomain_names, self$trafo_dict))
+          dt = data.table(retrafo_predictions(dt, target_names = full_codomain_names, trafo_dict = self$trafo_dict))
         } else {
-          dt = setNames(data.table(dt, full_codomain_names))
+          dt = setNames(data.table(dt), nm = full_codomain_names)
         }
         return(dt)
       }

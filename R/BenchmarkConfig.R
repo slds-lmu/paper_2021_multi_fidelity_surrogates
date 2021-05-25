@@ -87,10 +87,16 @@ BenchmarkConfig = R6Class("BenchmarkConfig",
     },
     save_trafo_dict = function() {
         trafos = c(
-          map(keep(self$data$xtrain, is.factor), function(x) {
-            dt = data.table(level = levels(x), int = as.integer(factor(levels(x))) - 1L, key = "level")
-            dt
-          }),
+          {
+            # mimick mlr3keras::reshape_data_embedding
+            types = map_chr(self$data$xtrain, function(x) class(x)[[1L]])
+            embed_vars = names(types)[types %in% c("ordered", "factor")]
+            map(as.list(self$data$xtrain[, embed_vars, with = FALSE]), function(x) {
+             level = levels(x)
+             int = seq_along(level) - 1L
+             data.table(level = level, int = int, key = "level")
+            })
+          },
           self$data$trafos
         )
         trafos = map(trafos, mlr3misc::crate)
