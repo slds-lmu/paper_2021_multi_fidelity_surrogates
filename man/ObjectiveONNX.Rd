@@ -35,6 +35,7 @@ Creates a new instance of this [R6][R6::R6Class] class.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{ObjectiveONNX$new(
   model_path,
+  data_order,
   trafo_dict,
   domain,
   full_codomain_names,
@@ -55,12 +56,24 @@ Creates a new instance of this [R6][R6::R6Class] class.
 \item{\code{model_path}}{(`character`)\cr
 Path to the onnx Model.}
 
-\item{\code{trafo_dict}}{(`character`)\cr
+\item{\code{data_order}}{(`character`)\cr
+Order of columns in data.}
+
+\item{\code{trafo_dict}}{(`list`)\cr
 Dictionary containing feature transformations before beeing fed to the NN.}
+
+\item{\code{full_codomain_names}}{(`character`)\cr
+Names of all elements of the codomain.}
+
+\item{\code{task}}{(`character(1)`)\cr
+Name of a task to be fixed.}
 
 \item{\code{id}}{(`character(1)`).}
 
-\item{\code{retrafo}}{(`character`)\cr
+\item{\code{active_session}}{(`logical(1)`)\cr
+Whether an active session should be used.}
+
+\item{\code{retrafo}}{(`logical(1)`)\cr
 Should params be trafoed back to their original range before return?}
 
 \item{\code{properties}}{(`character()`).}
