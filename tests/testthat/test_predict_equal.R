@@ -1,6 +1,7 @@
 get_test = function(cfg) {
   data = cfg$data
-  data$xtest[sample(NROW(data$xtest), size = 10^5, replace = FALSE), ]
+  #data$xtest[sample(NROW(data$xtest), size = 10^5, replace = FALSE), ]
+  data$xtest
 }
 
 get_trafos = function(cfg) {
@@ -40,7 +41,19 @@ predictions_equal = function(cfg) {
   xdt = xdt[, mlr3misc::shuffle(names(xdt)), with = FALSE]
 
   p2 = predict_objective(xdt, objective = objective, trafos = trafos)
+  names(p2) = cfg$target_variables
   all(abs(p1 - p2 ) <= 1e-4)
+
+  truth = cfg$data$ytest
+  p1 = as.matrix(p1)
+  p2 = as.matrix(p2)
+  colnames(truth) = colnames(p1) = colnames(p2) = cfg$target_variables
+
+
+  metrics1 = compute_metrics(truth, p1)
+  metrics2 = compute_metrics(truth, p2)
+
+  all(c(all(abs(p1 - p2 ) <= 1e-4), all(abs(metrics1[, -c(1, 2, 5)] - metrics2[, -c(1, 2, 5)]) <= 1e-4)))
 }
 
 test_that("predict equal", {
