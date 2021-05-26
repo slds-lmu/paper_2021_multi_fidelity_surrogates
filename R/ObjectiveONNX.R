@@ -110,8 +110,12 @@ ObjectiveONNX = R6Class("ObjectiveONNX",
           session = self$session
         }
         dt = session$run(NULL, li)[[1L]]
+        dt = pmin(pmax(dt, 0 + .Machine$double.eps), 1 - .Machine$double.neg.eps)  # surrogate outputs MUST be in [0, 1] due to sigmoid
         if (self$retrafo) {
           dt = data.table(retrafo_predictions(dt, target_names = full_codomain_names, trafo_dict = self$trafo_dict))
+          dt[, (full_codomain_names) := imap(.SD, .f = function(x, nm) {  # enforce bounds as defined in the codomain
+            pmin(pmax(x, self$codomain$lower[[nm]]), self$codomain$upper[[nm]])
+          }), .SDcols = full_codomain_names]
         } else {
           dt = setNames(data.table(dt), nm = full_codomain_names)
         }
