@@ -311,6 +311,7 @@ benchmark_configs$add("zdt6", BenchmarkConfigZDT6)
 
 
 
+#' @export
 BenchmarkConfigRBv2SVM = R6Class("BenchmarkConfigRBv2SVM",
   inherit = BenchmarkConfig,
   public = list(
@@ -381,6 +382,7 @@ benchmark_configs$add("rbv2_svm", BenchmarkConfigRBv2SVM)
 
 
 
+#' @export
 BenchmarkConfigRBv2ranger = R6Class("BenchmarkConfigRBv2ranger",
   inherit = BenchmarkConfig,
   public = list(
@@ -458,6 +460,7 @@ benchmark_configs$add("rbv2_ranger", BenchmarkConfigRBv2ranger)
 
 
 
+#' @export
 BenchmarkConfigRBv2glmnet = R6Class("BenchmarkConfigRBv2glmnet",
   inherit = BenchmarkConfig,
   public = list(
@@ -525,7 +528,7 @@ BenchmarkConfigRBv2glmnet = R6Class("BenchmarkConfigRBv2glmnet",
 benchmark_configs$add("rbv2_glmnet", BenchmarkConfigRBv2glmnet)
 
 
-
+#' @export
 BenchmarkConfigRBv2xgboost = R6Class("BenchmarkConfigRBv2xgboost",
   inherit = BenchmarkConfig,
   public = list(
@@ -607,6 +610,7 @@ benchmark_configs$add("rbv2_xgboost", BenchmarkConfigRBv2xgboost)
 
 
 
+#' @export
 BenchmarkConfigRBv2rpart = R6Class("BenchmarkConfigRBv2rpart",
   inherit = BenchmarkConfig,
   public = list(
@@ -678,6 +682,7 @@ benchmark_configs$add("rbv2_rpart", BenchmarkConfigRBv2rpart)
 
 
 
+#' @export
 BenchmarkConfigRBv2aknn = R6Class("BenchmarkConfigRBv2aknn",
   inherit = BenchmarkConfig,
   public = list(
@@ -749,6 +754,7 @@ benchmark_configs$add("rbv2_aknn", BenchmarkConfigRBv2aknn)
 
 
 
+#' @export
 BenchmarkConfigSuperRBv2 = R6Class("BenchmarkConfigSuperRBv2",
   inherit = BenchmarkConfig,
   public = list(
@@ -864,6 +870,7 @@ benchmark_configs$add("rbv2_super", BenchmarkConfigSuperRBv2)
 
 
 
+#' @export
 BenchmarkConfigFCNet = R6Class("BenchmarkConfigFCNet",
   inherit = BenchmarkConfig,
   public = list(
@@ -982,7 +989,7 @@ BenchmarkConfigTaskSet = R6Class("BenchmarkConfigTaskSet",
   )
 )
 #' @include BenchmarkConfig.R
-benchmark_configs$add("task_set", BenchmarkConfigTaskSet)
+#benchmark_configs$add("task_set", BenchmarkConfigTaskSet)
 
 
 # Not sure whether to include kerasff
