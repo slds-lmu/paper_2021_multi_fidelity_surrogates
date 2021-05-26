@@ -59,7 +59,7 @@ predictions_equal = function(cfg) {
 test_that("predict equal", {
   skip_if_not(check_directory_exists(workdir))
   # FIXME: fcnet and task_set not stable yet
-  cfgs = setdiff(benchmark_configs$keys(), c("branin", "shekel", "zdt6", "fcnet", "task_set"))
+  cfgs = setdiff(benchmark_configs$keys(), c("branin", "shekel", "zdt6", "task_set"))
   for (cfg in cfgs) {
     config = benchmark_configs$get(cfg, workdir = workdir)
     expect_true(predictions_equal(config))
