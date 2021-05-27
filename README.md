@@ -13,7 +13,7 @@ algorithms across several tasks.
 |:----|:--------------|:--------|--------:|:-----------------|:-----------|------------:|:-------|:----------|:-----------|
 | 1   | nb301         | Cat+Dep |      34 | 2:perf(1)+rt     | epoch      |           1 | ready  | 0.6-0.99  | 0.91-0.99  |
 | 2   | lcbench       | Mix     |       7 | 6:perf(5)+rt     | epoch      |          35 | ready  | 0.95-1    | 0.94-1     |
-| 10  | fcnet         | Mix     |      11 | 4:perf(2)+rt+ ms | epoch+repl |           4 | ready  | 0.87-1    | 0.93-1     |
+| 10  | fcnet         | Mix     |      11 | 4:perf(2)+rt+ ms | epoch+repl |           4 | \-     | 0.87-1    | 0.93-1     |
 | 9   | rbv2\_super   | Mix+Dep |      34 | 6:perf(4)+rt+pt  | frac+repl  |          89 | ready  | 0.86-0.99 | 0.93-0.99  |
 | 3   | rbv2\_ranger  | Mix+Dep |       6 | 6:perf(4)+rt+pt  | frac+repl  |          96 | ready  | 0.4-0.98  | 0.64-0.99  |
 | 4   | rbv2\_rpart   | Mix     |       5 | 6:perf(4)+rt+pt  | frac+repl  |         101 | ready  | 0-0.99    | 0.02-1     |
@@ -298,24 +298,6 @@ We first load the config:
 
 ``` r
 cfg = cfgs("rbv2_super", workdir = workdir)
-```
-
-this config contains our `objective` which we can use to optimize.
-
-``` r
-ins = OptimInstanceMultiCrit$new(
-  objective = cfg$get_objective(),
-  terminator = trm("evals", n_evals = 10L)
-)
-opt("random_search")$optimize(ins)
-```
-
-## FCNet
-
-We first load the config:
-
-``` r
-cfg = cfgs("fcnet", workdir = workdir)
 ```
 
 this config contains our `objective` which we can use to optimize.
