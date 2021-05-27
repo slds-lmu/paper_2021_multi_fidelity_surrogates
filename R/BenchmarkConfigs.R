@@ -528,6 +528,7 @@ BenchmarkConfigRBv2glmnet = R6Class("BenchmarkConfigRBv2glmnet",
 benchmark_configs$add("rbv2_glmnet", BenchmarkConfigRBv2glmnet)
 
 
+
 #' @export
 BenchmarkConfigRBv2xgboost = R6Class("BenchmarkConfigRBv2xgboost",
   inherit = BenchmarkConfig,
@@ -870,7 +871,6 @@ benchmark_configs$add("rbv2_super", BenchmarkConfigSuperRBv2)
 
 
 
-#' @export
 BenchmarkConfigFCNet = R6Class("BenchmarkConfigFCNet",
   inherit = BenchmarkConfig,
   public = list(

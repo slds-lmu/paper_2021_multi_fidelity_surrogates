@@ -13,14 +13,11 @@ knitr::opts_chunk$set(
 )
 ```
 
-
 # Surrogates for Multi-Fidelity Problems
 
 This package contains several surrogates that approximate the hyperparameter response surface for several interesting machine learing algorithms across several tasks.
 
-
 ## Overview
-
 
 ```{r, eval = FALSE, echo=FALSE}
 library(mlr3misc)
@@ -56,7 +53,7 @@ knitr::kable(dt)
 |:--|:------------|:-------|------:|:----------------|:----------|----------:|:------|:---------|:----------|
 |1  |nb301        |Cat+Dep |     34|2:perf(1)+rt     |epoch      |          1|ready  |0.6-0.99  |0.91-0.99  |
 |2  |lcbench      |Mix     |      7|6:perf(5)+rt     |epoch      |         35|ready  |0.95-1    |0.94-1     |
-|10 |fcnet        |Mix     |     11|4:perf(2)+rt+ ms |epoch+repl |          4|ready  |0.87-1    |0.93-1     |
+|10 |fcnet        |Mix     |     11|4:perf(2)+rt+ ms |epoch+repl |          4|-      |0.87-1    |0.93-1     |
 |9  |rbv2_super   |Mix+Dep |     34|6:perf(4)+rt+pt  |frac+repl  |         89|ready  |0.86-0.99 |0.93-0.99  |
 |3  |rbv2_ranger  |Mix+Dep |      6|6:perf(4)+rt+pt  |frac+repl  |         96|ready  |0.4-0.98  |0.64-0.99  |
 |4  |rbv2_rpart   |Mix     |      5|6:perf(4)+rt+pt  |frac+repl  |        101|ready  |0-0.99    |0.02-1     |
@@ -90,7 +87,6 @@ dt = data.frame(
 )
 knitr::kable(dt)
 ```
-
 
 ## NASBench-301
 
@@ -199,7 +195,6 @@ ins = OptimInstanceSingleCrit$new(
 opt("random_search")$optimize(ins)
 ```
 
-
 ## ZDT6
 
 We first load the config:
@@ -218,10 +213,7 @@ ins = OptimInstanceMultiCrit$new(
 opt("random_search")$optimize(ins)
 ```
 
-
-
 ## RandomBotv2
-
 
 ## RandomBotv2 - svm
 
@@ -350,24 +342,6 @@ We first load the config:
 
 ```{r,eval=FALSE}
 cfg = cfgs("rbv2_super", workdir = workdir)
-```
-
-this config contains our `objective` which we can use to optimize.
-
-```{r,eval=FALSE}
-ins = OptimInstanceMultiCrit$new(
-  objective = cfg$get_objective(),
-  terminator = trm("evals", n_evals = 10L)
-)
-opt("random_search")$optimize(ins)
-```
-
-## FCNet
-
-We first load the config:
-
-```{r,eval=FALSE}
-cfg = cfgs("fcnet", workdir = workdir)
 ```
 
 this config contains our `objective` which we can use to optimize.

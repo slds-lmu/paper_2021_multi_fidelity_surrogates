@@ -42,13 +42,11 @@ predictions_equal = function(cfg) {
 
   p2 = predict_objective(xdt, objective = objective, trafos = trafos)
   names(p2) = cfg$target_variables
-  all(abs(p1 - p2 ) <= 1e-4)
 
   truth = cfg$data$ytest
   p1 = as.matrix(p1)
   p2 = as.matrix(p2)
   colnames(truth) = colnames(p1) = colnames(p2) = cfg$target_variables
-
 
   metrics1 = compute_metrics(truth, p1)
   metrics2 = compute_metrics(truth, p2)
@@ -59,7 +57,7 @@ predictions_equal = function(cfg) {
 test_that("predict equal", {
   skip_if_not(check_directory_exists(workdir))
   # FIXME: fcnet and task_set not stable yet
-  cfgs = setdiff(benchmark_configs$keys(), c("branin", "shekel", "zdt6", "task_set"))
+  cfgs = setdiff(benchmark_configs$keys(), c("branin", "shekel", "zdt6", "fcnet", "task_set"))
   for (cfg in cfgs) {
     config = benchmark_configs$get(cfg, workdir = workdir)
     expect_true(predictions_equal(config))
