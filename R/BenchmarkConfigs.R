@@ -53,7 +53,7 @@ BenchmarkConfigLCBench = R6Class("BenchmarkConfigLCBench",
        onnx_model_file = "model.onnx",
        target_variables = c("val_accuracy", "val_cross_entropy", "val_balanced_accuracy", "test_cross_entropy", "test_balanced_accuracy", "time"),
        codomain = ps(
-         val_accuracy = p_dbl(lower = 0, upper = 1, tags = "maximize"),
+         val_accuracy = p_dbl(lower = 0, upper = 100, tags = "maximize"),
          val_cross_entropy = p_dbl(lower = 0, upper = Inf, tags = "minimize"),
          val_balanced_accuracy = p_dbl(lower = 0, upper = 1, tags = "maximize"),
          test_cross_entropy = p_dbl(lower = 0, upper = Inf, tags = "minimize"),

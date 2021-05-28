@@ -15,7 +15,7 @@ ObjectiveONNX = R6Class("ObjectiveONNX",
     model_path = NULL,
     data_order = NULL,
     trafo_dict = NULL,
-    full_codomain_names = NULL,
+    full_codomain = NULL,
     session = NULL,
     active_session = NULL,
     retrafo = FALSE,
@@ -29,8 +29,8 @@ ObjectiveONNX = R6Class("ObjectiveONNX",
     #'   Order of columns in data.
     #' @param trafo_dict (`list`)\cr
     #'   Dictionary containing feature transformations before beeing fed to the NN.
-    #' @param full_codomain_names (`character`)\cr
-    #'   Names of all elements of the codomain.
+    #' @param full_codomain ([paradox::ParamSet])\cr
+    #'   Full codomain.
     #' @param task (`character(1)`)\cr
     #'   Name of a task to be fixed.
     #' @param id (`character(1)`).
@@ -39,11 +39,8 @@ ObjectiveONNX = R6Class("ObjectiveONNX",
     #' @param retrafo (`logical(1)`)\cr
     #'  Should params be trafoed back to their original range before return?
     #' @param properties (`character()`).
-    initialize = function(model_path, data_order, trafo_dict, domain, full_codomain_names, codomain = NULL, task = NULL, id = "ONNX", active_session = TRUE, retrafo = FALSE,
+    initialize = function(model_path, data_order, trafo_dict, domain, full_codomain, codomain, task = NULL, id = "ONNX", active_session = TRUE, retrafo = FALSE,
       properties = character(), constants = NULL, check_values = FALSE) {
-      if (is.null(codomain)) {
-        codomain = ParamSet$new(list(ParamDbl$new("y", tags = "minimize")))
-      }
       if (!is.null(task)) {
         task_id = domain$params[[domain$ids(tags = "task_id")]]
         task_id$default = task
@@ -70,7 +67,7 @@ ObjectiveONNX = R6Class("ObjectiveONNX",
       # FIXME: assertions
       self$model_path = model_path
       self$data_order = data_order
-      self$full_codomain_names = full_codomain_names
+      self$full_codomain = full_codomain
       self$retrafo = retrafo
 
       fun = function(xdt) {
@@ -110,8 +107,13 @@ ObjectiveONNX = R6Class("ObjectiveONNX",
           session = self$session
         }
         dt = session$run(NULL, li)[[1L]]
+        dt = pmin(pmax(dt, 0 + .Machine$double.eps), 1 - .Machine$double.neg.eps)  # surrogate outputs MUST be in [0, 1] due to sigmoid
+        full_codomain_names = self$full_codomain$ids()
         if (self$retrafo) {
           dt = data.table(retrafo_predictions(dt, target_names = full_codomain_names, trafo_dict = self$trafo_dict))
+          dt[, (full_codomain_names) := imap(.SD, .f = function(x, nm) {  # enforce bounds as defined in the codomain
+            pmin(pmax(x, self$full_codomain$lower[[nm]]), self$full_codomain$upper[[nm]])
+          }), .SDcols = full_codomain_names]
         } else {
           dt = setNames(data.table(dt), nm = full_codomain_names)
         }

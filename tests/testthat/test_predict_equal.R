@@ -12,7 +12,7 @@ get_trafos = function(cfg) {
 predict_like_fitting = function(test, model_path) {
   # uses keras model
   # as done during fit_surrogate
-  model = keras::load_model_hdf5(model_path)
+  model = keras::load_model_hdf5(model_path, compile = FALSE)
   rs2 = mlr3keras::reshape_data_embedding(test)
   ptest = as.data.table(predict(model, rs2$data))
 }

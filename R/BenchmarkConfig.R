@@ -85,7 +85,7 @@ BenchmarkConfig = R6Class("BenchmarkConfig",
         data_order = readRDS(self$data_order_path),
         trafo_dict = readRDS(self$dicts_path),
         domain = self$opt_param_set,
-        full_codomain_names = self$codomain$ids(),  # needed to set the names
+        full_codomain = self$codomain$clone(deep = TRUE),  # needed to set the names
         codomain = codomain,
         task = task,
         retrafo = retrafo
