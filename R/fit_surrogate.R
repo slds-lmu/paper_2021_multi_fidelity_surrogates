@@ -2,10 +2,6 @@ fit_surrogate = function(problem_config, model_config = default_model_config(), 
   require_namespaces(c("keras", "mlr3keras"))
   data = problem_config$data
 
-  # Re-order columns to make sure column order matches
-  x_ids = problem_config$param_set$ids()
-  y_ids = problem_config$codomain$ids()
-
   data$xtrain = data$xtrain[, x_ids, with = FALSE]
   data$xtest = data$xtest[, x_ids, with = FALSE]
   data$ytrain = data$ytrain[, y_ids, drop = FALSE]
