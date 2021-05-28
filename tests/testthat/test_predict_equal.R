@@ -33,7 +33,7 @@ predictions_equal = function(cfg) {
   p1 = predict_like_fitting(test, model_path = paste0(cfg$subdir, cfg$keras_model_file))
   names(p1) = cfg$target_variables
 
-  objective = cfg$get_objective(retrafo = TRUE)
+  objective = cfg$get_objective(retrafo = FALSE)
   trafos = get_trafos(cfg)
   trafos = trafos[names(trafos) %in% names(test)]  # applicable trafos
 
