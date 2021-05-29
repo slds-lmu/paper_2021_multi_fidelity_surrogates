@@ -59,8 +59,8 @@ cfg
 this config contains our `objective` which we can use to optimize.
 
 ``` r
-library("bbotk")
-library("data.table")
+library(bbotk)
+library(data.table)
 ins = OptimInstanceMultiCrit$new(
   objective = cfg$get_objective(),
   terminator = trm("evals", n_evals = 2L)
