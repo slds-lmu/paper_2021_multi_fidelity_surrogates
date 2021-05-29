@@ -12,7 +12,7 @@ BenchmarkConfig = R6Class("BenchmarkConfig",
     data_order_file = NULL,
     keras_model_file = NULL,
     onnx_model_file = NULL,
-    target_variables = NULL,  # FIXME: make ab to codomain$ids()
+    target_variables = NULL,  # FIXME: make ab to codomain$ids() ordered by data_order
     codomain = NULL,
     packages = NULL,
     # FIXME: think about easier an way

@@ -2,7 +2,6 @@
 
 export(BenchmarkConfig)
 export(BenchmarkConfigBranin)
-export(BenchmarkConfigFCNet)
 export(BenchmarkConfigLCBench)
 export(BenchmarkConfigNB301)
 export(BenchmarkConfigRBv2SVM)

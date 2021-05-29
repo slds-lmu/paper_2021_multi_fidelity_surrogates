@@ -38,8 +38,8 @@ Creates a new instance of this [R6][R6::R6Class] class.
   data_order,
   trafo_dict,
   domain,
-  full_codomain_names,
-  codomain = NULL,
+  full_codomain,
+  codomain,
   task = NULL,
   id = "ONNX",
   active_session = TRUE,
@@ -62,8 +62,8 @@ Order of columns in data.}
 \item{\code{trafo_dict}}{(`list`)\cr
 Dictionary containing feature transformations before beeing fed to the NN.}
 
-\item{\code{full_codomain_names}}{(`character`)\cr
-Names of all elements of the codomain.}
+\item{\code{full_codomain}}{([paradox::ParamSet])\cr
+Full codomain.}
 
 \item{\code{task}}{(`character(1)`)\cr
 Name of a task to be fixed.}

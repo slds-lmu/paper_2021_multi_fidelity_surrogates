@@ -12,7 +12,7 @@ algorithms across several tasks.
 |     | instance      | space   | n\_dims | n\_targets       | fidelity   | n\_problems | status | Rsq       | Rho        |
 |:----|:--------------|:--------|--------:|:-----------------|:-----------|------------:|:-------|:----------|:-----------|
 | 1   | nb301         | Cat+Dep |      34 | 2:perf(1)+rt     | epoch      |           1 | ready  | 0.6-0.99  | 0.91-0.99  |
-| 2   | lcbench       | Mix     |       7 | 6:perf(5)+rt     | epoch      |          35 | ready  | 0.95-1    | 0.94-1     |
+| 2   | lcbench       | Mix     |       7 | 6:perf(5)+rt     | epoch      |          35 | ready  | 0.78-0.99 | 0.88-0.99  |
 | 10  | fcnet         | Mix     |      11 | 4:perf(2)+rt+ ms | epoch+repl |           4 | \-     | 0.87-1    | 0.93-1     |
 | 9   | rbv2\_super   | Mix+Dep |      34 | 6:perf(4)+rt+pt  | frac+repl  |          89 | ready  | 0.86-0.99 | 0.93-0.99  |
 | 3   | rbv2\_ranger  | Mix+Dep |       6 | 6:perf(4)+rt+pt  | frac+repl  |          96 | ready  | 0.4-0.98  | 0.64-0.99  |
@@ -203,6 +203,7 @@ We first load the config:
 
 ``` r
 cfg = cfgs("rbv2_rpart", workdir = workdir)
+cfg$setup()
 ```
 
 this config contains our `objective` which we can use to optimize.
@@ -221,6 +222,7 @@ We first load the config:
 
 ``` r
 cfg = cfgs("rbv2_aknn", workdir = workdir)
+cfg$setup()
 ```
 
 this config contains our `objective` which we can use to optimize.
@@ -239,6 +241,7 @@ We first load the config:
 
 ``` r
 cfg = cfgs("rbv2_glmnet", workdir = workdir)
+cfg$setup()
 ```
 
 this config contains our `objective` which we can use to optimize.
@@ -257,6 +260,7 @@ We first load the config:
 
 ``` r
 cfg = cfgs("rbv2_ranger", workdir = workdir)
+cfg$setup()
 ```
 
 this config contains our `objective` which we can use to optimize.
@@ -275,6 +279,7 @@ We first load the config:
 
 ``` r
 cfg = cfgs("rbv2_xgboost", workdir = workdir)
+cfg$setup()
 ```
 
 this config contains our `objective` which we can use to optimize.
@@ -298,6 +303,7 @@ We first load the config:
 
 ``` r
 cfg = cfgs("rbv2_super", workdir = workdir)
+cfg$setup()
 ```
 
 this config contains our `objective` which we can use to optimize.

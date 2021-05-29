@@ -128,12 +128,15 @@ cummean = function(x) {
 
 
 #' @export
-retrafo_predictions = function(dt, target_names, trafo_dict) {
+retrafo_predictions = function(dt, target_names, codomain, trafo_dict) {
   if (is.list(target_names)) 
     target_names = unlist(target_names)
   dt = setNames(data.table(dt), target_names)
   to_transform = intersect(names(trafo_dict), target_names)
   dt[, (to_transform) := pmap_dtc(list(.SD, trafo_dict[to_transform]), function(x, tfs) tfs$retrafo(x)), .SDcols = to_transform]
+  dt[, (to_transform) := imap(.SD, .f = function(x, nm) {  # enforce bounds as defined in the codomain
+    pmin(pmax(x, codomain$lower[[nm]]), codomain$upper[[nm]])
+  }), .SDcols = to_transform]
   return(data.frame(dt))
 }
 
