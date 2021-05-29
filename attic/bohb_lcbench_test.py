@@ -38,7 +38,7 @@ class lcbench(Worker):
                 'info' (dict)
         """
 
-        # FIXME: if we want to set the OpenML_task_id constant we could add this here (using the correct cs below)
+        # FIXME: if we want to set the task constant we could add this here (using the correct cs below)
         #        we could then proceed to add a task_id to the constuctor
         config.update({"OpenML_task_id": "3945"})  # FIXME:
         config.update({"epoch": int(budget)})  # FIXME: budget trafo to match epoch range and int
@@ -50,6 +50,7 @@ class lcbench(Worker):
         li["continuous"] = np.atleast_2d(li["continuous"]).astype("float32")
         res = self.session.run(None, li)[0]
         # FIXME: for retrafo see nb301 example
+        # FIXME: make sure that predicted values after retrafo are actually in range of boundaries
 
         time.sleep(self.sleep_interval)
 

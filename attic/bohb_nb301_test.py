@@ -21,6 +21,7 @@ class nb301(Worker):
         self.mfsurrogates = importr("mfsurrogates")
         self.session = onnxruntime.InferenceSession("multifidelity_data/nb301/model.onnx")
         self.param_set = base.readRDS("multifidelity_data/nb301/param_set.rds")
+        self.codomain = base.readRDS("multifidelity_data/nb301/codomain.rds")  # FIXME: download manually from lrz or create from cfg
         self.data_order = base.readRDS("multifidelity_data/nb301/data_order.rds")
         self.trafo_dict = base.readRDS("multifidelity_data/nb301/dicts.rds")
         self.target_names = ["val_accuracy", "runtime"]
@@ -47,8 +48,10 @@ class nb301(Worker):
         li = { key : li_.rx2(key) for key in li_.names }
         li["continuous"] = np.atleast_2d(li["continuous"]).astype("float32")
         res_ = self.session.run(None, li)[0]
-        res_ = self.mfsurrogates.retrafo_predictions(res_, target_names = self.target_names, trafo_dict = self.trafo_dict)
+        res_ = self.mfsurrogates.retrafo_predictions(res_, target_names = self.target_names, codomain = self.codomain, trafo_dict = self.trafo_dict)
         res = res_.to_dict()
+        # FIXME: make sure that predicted values after retrafo are actually in range of boundaries
+
         time.sleep(self.sleep_interval)
 
         return({
