@@ -109,7 +109,7 @@ compute_metrics = function(response, prediction, stratify = factor("_full_")) {
         grp = as.character(grp),
         #rsq = mlr3measures::rsq(x,y),
         rsq = rsq_(x,y),
-        roh = mlr3measures::srho(x,y),
+        rho = mlr3measures::srho(x,y),
         ktau = mlr3measures::ktau(x[smp],y[smp]), # on sample since this is slow.
         mae = mlr3measures::mae(x,y)
       )

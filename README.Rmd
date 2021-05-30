@@ -38,7 +38,7 @@ dt = data.frame(
 metrics = data.table(do.call("rbind",
   map(dt$instance, function(x) {
   x = fread(paste0(cfgs(x, workdir=workdir)$subdir, "surrogate_test_metrics.csv"))
-  x = t(apply(keep(x, is.numeric), 2, range))[c("rsq", "roh"),]
+  x = t(apply(keep(x, is.numeric), 2, range))[c("rsq", "rho"),]
   paste0(round(x[,1], 2), "-", round(x[,2],2))
   })
 ))
