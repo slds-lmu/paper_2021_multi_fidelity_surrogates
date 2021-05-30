@@ -38,7 +38,7 @@ predictions_equal = function(cfg) {
   trafos = trafos[names(trafos) %in% names(test)]  # applicable trafos
 
   xdt = copy(test)
-  xdt = xdt[, mlr3misc::shuffle(names(xdt)), with = FALSE]
+  xdt = xdt[, mlr3misc::shuffle(names(xdt)), with = FALSE]  # shuffling has no effect
 
   p2 = predict_objective(xdt, objective = objective, trafos = trafos)
   names(p2) = cfg$target_variables

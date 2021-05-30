@@ -11,7 +11,7 @@ res = map(tasks[cfg == "lcbench" & test == TRUE][["level"]], .f = function(task)
     objective = cfg$get_objective(task = task, target_variables = "val_cross_entropy"),
     terminator = trm("evals", n_evals = 100000L)
   )
-  opt("random_search", batch_size = 10L)$optimize(ins)
+  opt("random_search", batch_size = 10000L)$optimize(ins)
   ins
 })
 

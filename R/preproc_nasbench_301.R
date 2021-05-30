@@ -17,7 +17,7 @@ preproc_data_nb301 = function(config, seed = 123L, n_max = Inf, frac = 0.1) {
     return(x)
   })
   train[, val_accuracy := val_accuracy / 100]
-  trafos = map(train[, "runtime"], preproc_nasbench_301.R, base = 1, p = 0)
+  trafos = map(train[, "runtime"], scale_base_0_1, base = 1, p = 0)
   train[, names(trafos) := pmap(list(.SD, trafos), function(x, t) {t$trafo(x)}), .SDcols = names(trafos)]
   y = as.matrix(train[, c("val_accuracy", "runtime"), with = FALSE])
   train[, method := NULL]
