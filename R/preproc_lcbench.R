@@ -10,8 +10,9 @@ preproc_data_lcbench = function(config, seed = 123L, n_max = 2*10^6, frac=.1) {
   train = preproc_iid(train)
   train = sample_max(train, n_max)
   trafos = c(
-    map(train[, config$target_variables, with = FALSE], scale_sigmoid),
-    map(train[, c("batch_size", "max_units"), with = FALSE], scale_sigmoid, p = 0)
+    map(train[, c("val_accuracy", "val_balanced_accuracy", "test_balanced_accuracy"), with = FALSE], scale_base_0_1, base = 1, p = 0),
+    map(train[, c("val_cross_entropy", "test_cross_entropy", "time"), with = FALSE], scale_base_0_1, p = 0),
+    map(train[, c("batch_size", "max_units"), with = FALSE], scale_base_0_1, base = 1, p = 0)
   )
   train[, names(trafos) := pmap(list(.SD, trafos), function(x, t) {t$trafo(x)}), .SDcols = names(trafos)]
   y = as.matrix(train[, config$target_variables, with = FALSE])

@@ -10,7 +10,9 @@ scale_sigmoid = function(x, p = 0.03) {
       x[is.na(x)] = rt_min
       (x - rt_min) / rt_range + p
     },
-    retrafo = function(x) {(x-p) * rt_range + rt_min}
+    retrafo = function(x) {
+      (x-p) * rt_range + rt_min
+    }
   )
 }
 
@@ -21,7 +23,9 @@ scale_standard = function(x) {
   rm(x) # Should not be saved
   list(
     trafo = function(x) {x = ifelse(x == 0 | is.na(x), 1, x); (x - mu) / sigma},
-    retrafo = function(x) {(x * sigma) + mu}
+    retrafo = function(x) {
+      (x * sigma) + mu
+    }
   )
 }
 
@@ -34,7 +38,9 @@ scale_log_left_standard = function(x, constant = 1) {
   rm(list = list(x, x_trafoed)) # Should not be saved
   list(
     trafo = function(x) {x = ifelse(x == 0 | is.na(x), 1, x); (log(constant - x) - mu) / sigma},
-    retrafo = function(x) {constant - exp(x * sigma + mu)}
+    retrafo = function(x) {
+      constant - exp(x * sigma + mu)
+    }
   )
 }
 

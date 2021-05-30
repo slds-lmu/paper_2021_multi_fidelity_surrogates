@@ -16,11 +16,11 @@ preproc_data_nb301 = function(config, seed = 123L, n_max = Inf, frac = 0.1) {
     if (length(unique(x)) == 1) x = NULL
     return(x)
   })
-  train[, val_accuracy := val_accuracy/100]
-  trafos = map(train[, "runtime"], scale_sigmoid)
+  train[, val_accuracy := val_accuracy / 100]
+  trafos = map(train[, "runtime"], preproc_nasbench_301.R, base = 1, p = 0)
   train[, names(trafos) := pmap(list(.SD, trafos), function(x, t) {t$trafo(x)}), .SDcols = names(trafos)]
   y = as.matrix(train[, c("val_accuracy", "runtime"), with = FALSE])
-  train[, method :=NULL]
+  train[, method := NULL]
   train[, runtime := NULL]
   train[, val_accuracy := NULL]
 
@@ -34,7 +34,7 @@ preproc_data_nb301 = function(config, seed = 123L, n_max = Inf, frac = 0.1) {
       if (length(unique(x)) == 1) x = NULL
       return(x)
     })
-    oob[, val_accuracy := val_accuracy/100]
+    oob[, val_accuracy := val_accuracy / 100]
     oob[, names(trafos) := pmap(list(.SD, trafos), function(x, t) {t$trafo(x)}), .SDcols = names(trafos)]
     ytest = as.matrix(oob[, c("val_accuracy", "runtime")])
     if ("method" %in% colnames(oob)) oob[, method := NULL]

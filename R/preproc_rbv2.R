@@ -17,9 +17,9 @@ preproc_data_rbv2_svm = function(config, seed = 123L, frac = .1, n_max = 5e6, n_
   train = preproc_iid(train)
   train = apply_cummean_variance_param(train, mean = c("mmce", "f1", "auc", "logloss", "timepredict", "timetrain"), sum = NULL, fidelity_param = "repl", ignore = NULL)
   trafos = c(
-    map(train[, c("mmce", "f1", "auc"), with = FALSE], scale_base_0_1, p = .01, base = 1),
+    map(train[, c("mmce", "f1", "auc"), with = FALSE], scale_base_0_1, p = 0, base = 1),
     map(train[, c("logloss"), with = FALSE], scale_neg_exp),
-    map(train[, c("timetrain", "timepredict"), with = FALSE], scale_base_0_1, p = .01, base = 10),
+    map(train[, c("timetrain", "timepredict"), with = FALSE], scale_base_0_1, p = 0, base = 10),
     map(train[, c("cost", "gamma"), with = FALSE], scale_base)
   )
   train[, names(trafos) := pmap(list(.SD, trafos), function(x, t) {t$trafo(x)}), .SDcols = names(trafos)]
@@ -65,10 +65,10 @@ preproc_data_rbv2_ranger = function(config, seed = 123L, frac = .1, n_max = 5e6,
   train = preproc_iid(train)
   train = apply_cummean_variance_param(train, mean = c("mmce", "f1", "auc", "logloss", "timepredict", "timetrain"), sum = NULL, fidelity_param = "repl", ignore = NULL)
   trafos = c(
-    map(train[, c("mmce", "f1", "auc"), with = FALSE], scale_base_0_1, p = .01, base = 1),
+    map(train[, c("mmce", "f1", "auc"), with = FALSE], scale_base_0_1, p = 0, base = 1),
     map(train[, c("logloss"), with = FALSE], scale_neg_exp),
-    map(train[, c("timetrain", "timepredict"), with = FALSE], scale_base_0_1, p = .01, base = 10),
-    map(train[, c("num.trees", "min.node.size", 'num.random.splits'), with = FALSE], scale_base, base = 2L)
+    map(train[, c("timetrain", "timepredict"), with = FALSE], scale_base_0_1, p = 0, base = 10),
+    map(train[, c("num.trees", "min.node.size", 'num.random.splits'), with = FALSE], scale_base, base = 2)
   )
   train[, names(trafos) := pmap(list(.SD, trafos), function(x, t) {t$trafo(x)}), .SDcols = names(trafos)]
   y = as.matrix(train[, config$target_variables, with = FALSE])
@@ -113,10 +113,10 @@ preproc_data_rbv2_glmnet = function(config, seed = 123L, frac = .1, n_max = 5e6,
   train = preproc_iid(train)
   train = apply_cummean_variance_param(train, mean = c("mmce", "f1", "auc", "logloss", "timepredict", "timetrain"), sum = NULL, fidelity_param = "repl", ignore = NULL)
   trafos = c(
-    map(train[, c("mmce", "f1", "auc"), with = FALSE], scale_base_0_1, p = .01, base = 1),
+    map(train[, c("mmce", "f1", "auc"), with = FALSE], scale_base_0_1, p = 0, base = 1),
     map(train[, c("logloss"), with = FALSE], scale_neg_exp),
-    map(train[, c("timetrain", "timepredict"), with = FALSE], scale_base_0_1, p = .01, base = 10),
-    map(train[, c("s"), with = FALSE], scale_base, base = 2L)
+    map(train[, c("timetrain", "timepredict"), with = FALSE], scale_base_0_1, p = 0, base = 10),
+    map(train[, c("s"), with = FALSE], scale_base, base = 2)
   )
   train[, names(trafos) := pmap(list(.SD, trafos), function(x, t) {t$trafo(x)}), .SDcols = names(trafos)]
   y = as.matrix(train[, config$target_variables, with = FALSE])
@@ -162,11 +162,11 @@ preproc_data_rbv2_xgboost = function(config, seed = 123L, frac = .1, n_max = 5e6
   train = preproc_iid(train)
   train = apply_cummean_variance_param(train, mean = c("mmce", "f1", "auc", "logloss", "timepredict", "timetrain"), sum = NULL, fidelity_param = "repl", ignore = NULL)
   trafos = c(
-    map(train[, c("mmce", "f1", "auc"), with = FALSE], scale_base_0_1, p = .01, base = 1),
+    map(train[, c("mmce", "f1", "auc"), with = FALSE], scale_base_0_1, p = 0, base = 1),
     map(train[, c("logloss"), with = FALSE], scale_neg_exp),
-    map(train[, c("timetrain", "timepredict"), with = FALSE], scale_base_0_1, p = .01, base = 10),
-    map(train[, c("nrounds", "eta", "gamma", "lambda", "alpha", "min_child_weight"), with = FALSE], scale_base, base = 2L),
-    map(train[, "max_depth", with = FALSE], scale_sigmoid, p=0)
+    map(train[, c("timetrain", "timepredict"), with = FALSE], scale_base_0_1, p = 0, base = 10),
+    map(train[, c("nrounds", "eta", "gamma", "lambda", "alpha", "min_child_weight"), with = FALSE], scale_base, base = 2),
+    map(train[, "max_depth", with = FALSE], scale_base_0_1, base = 1, p = 0)
   )
   train[, names(trafos) := pmap(list(.SD, trafos), function(x, t) {t$trafo(x)}), .SDcols = names(trafos)]
   y = as.matrix(train[, config$target_variables, with = FALSE])
@@ -211,11 +211,11 @@ preproc_data_rbv2_rpart = function(config, seed = 123L, frac = .1, n_max = 5e6, 
   train = preproc_iid(train)
   train = apply_cummean_variance_param(train, mean = c("mmce", "f1", "auc", "logloss", "timepredict", "timetrain"), sum = NULL, fidelity_param = "repl", ignore = NULL)
   trafos = c(
-    map(train[, c("mmce", "f1", "auc"), with = FALSE], scale_base_0_1, p = .01, base = 1),
+    map(train[, c("mmce", "f1", "auc"), with = FALSE], scale_base_0_1, p = 0, base = 1),
     map(train[, c("logloss"), with = FALSE], scale_neg_exp),
-    map(train[, c("timetrain", "timepredict"), with = FALSE], scale_base_0_1, p = .01, base = 10),
-    map(train[, "cp", with = FALSE], scale_base, base = 2L),
-    map(train[, c("maxdepth", "minsplit", "minbucket"), with = FALSE], scale_sigmoid, p = 0)
+    map(train[, c("timetrain", "timepredict"), with = FALSE], scale_base_0_1, p = 0, base = 10),
+    map(train[, "cp", with = FALSE], scale_base, base = 2),
+    map(train[, c("maxdepth", "minsplit", "minbucket"), with = FALSE], scale_base_0_1, p = 0, base = 1)
   )
   train[, names(trafos) := pmap(list(.SD, trafos), function(x, t) {t$trafo(x)}), .SDcols = names(trafos)]
   y = as.matrix(train[, config$target_variables, with = FALSE])
@@ -259,10 +259,10 @@ preproc_data_rbv2_aknn = function(config, seed = 123L, frac = .1, n_max = 5e6, n
   train = preproc_iid(train)
   train = apply_cummean_variance_param(train, mean = c("mmce", "f1", "auc", "logloss", "timepredict", "timetrain"), sum = NULL, fidelity_param = "repl", ignore = NULL)
   trafos = c(
-    map(train[, c("mmce", "f1", "auc"), with = FALSE], scale_base_0_1, p = .01, base = 1),
+    map(train[, c("mmce", "f1", "auc"), with = FALSE], scale_base_0_1, p = 0, base = 1),
     map(train[, c("logloss"), with = FALSE], scale_neg_exp),
-    map(train[, c("timetrain", "timepredict"), with = FALSE], scale_base_0_1, p = .01, base = 10),
-    map(train[, c("k", "M"), with = FALSE], scale_sigmoid, p = 0),
+    map(train[, c("timetrain", "timepredict"), with = FALSE], scale_base_0_1, p = 0, base = 10),
+    map(train[, c("k", "M"), with = FALSE], scale_base_0_1, p = 0, base = 1),
     map(train[, c("ef", "ef_construction"), with = FALSE], scale_base)
   )
   train[, names(trafos) := pmap(list(.SD, trafos), function(x, t) {t$trafo(x)}), .SDcols = names(trafos)]
@@ -291,7 +291,6 @@ preproc_data_rbv2_aknn = function(config, seed = 123L, frac = .1, n_max = 5e6, n
   )
 }
 
-
 preproc_data_rbv2_super = function(config, seed = 123L, frac = .1, n_max = 5e6) {
   set.seed(seed)
   dt = data.table(readRDS(config$data_path))
@@ -311,17 +310,17 @@ preproc_data_rbv2_super = function(config, seed = 123L, frac = .1, n_max = 5e6) 
   train = preproc_iid(train)
   train = apply_cummean_variance_param(train, mean = c("mmce", "f1", "auc", "logloss", "timepredict", "timetrain"), sum = NULL, fidelity_param = "repl", ignore = NULL)
   trafos = c(
-    map(train[, c("mmce", "f1", "auc"), with = FALSE], scale_base_0_1, p = .01, base = 1),
+    map(train[, c("mmce", "f1", "auc"), with = FALSE], scale_base_0_1, p = 0, base = 1),
     map(train[, c("logloss"), with = FALSE], scale_neg_exp),
-    map(train[, c("timetrain", "timepredict"), with = FALSE], scale_base_0_1, p = .01, base = 10),
-    map(train[, c("glmnet.s"), with = FALSE], scale_base, base = 2L),
-    map(train[, c("aknn.k", "aknn.M"), with = FALSE], scale_sigmoid, p = 0),
+    map(train[, c("timetrain", "timepredict"), with = FALSE], scale_base_0_1, p = 0, base = 10),
+    map(train[, c("glmnet.s"), with = FALSE], scale_base, base = 2),
+    map(train[, c("aknn.k", "aknn.M"), with = FALSE], scale_base_0_1, p = 0, base = 1),
     map(train[, c("aknn.ef", "aknn.ef_construction"), with = FALSE], scale_base),
-    map(train[, "rpart.cp", with = FALSE], scale_base, base = 2L),
-    map(train[, c("rpart.maxdepth", "rpart.minsplit", "rpart.minbucket"), with = FALSE], scale_sigmoid, p = 0),
-    map(train[, paste0("xgboost.", c("nrounds", "eta", "gamma", "lambda", "alpha", "min_child_weight")), with = FALSE], scale_base, base = 2L),
-    map(train[, "xgboost.max_depth", with = FALSE], scale_sigmoid, p=0),
-    map(train[, c("ranger.num.trees", "ranger.min.node.size", 'ranger.num.random.splits'), with = FALSE], scale_base, base = 2L),
+    map(train[, "rpart.cp", with = FALSE], scale_base, base = 2),
+    map(train[, c("rpart.maxdepth", "rpart.minsplit", "rpart.minbucket"), with = FALSE], scale_base_0_1, p = 0, base = 1),
+    map(train[, paste0("xgboost.", c("nrounds", "eta", "gamma", "lambda", "alpha", "min_child_weight")), with = FALSE], scale_base, base = 2),
+    map(train[, "xgboost.max_depth", with = FALSE], scale_base_0_1, p = 0, base = 1),
+    map(train[, c("ranger.num.trees", "ranger.min.node.size", 'ranger.num.random.splits'), with = FALSE], scale_base, base = 2),
     map(train[, c("svm.cost", "svm.gamma"), with = FALSE], scale_base)
   )
   train[, names(trafos) := pmap(list(.SD, trafos), function(x, t) {t$trafo(x)}), .SDcols = names(trafos)]
