@@ -9,19 +9,18 @@ algorithms across several tasks.
 
 ## Overview
 
-|     | instance      | space   | n\_dims | n\_targets       | fidelity   | n\_problems | status | Rsq       | Rho        |
-|:----|:--------------|:--------|--------:|:-----------------|:-----------|------------:|:-------|:----------|:-----------|
-| 1   | nb301         | Cat+Dep |      34 | 2:perf(1)+rt     | epoch      |           1 | ready  | 0.6-0.99  | 0.91-0.99  |
-| 2   | lcbench       | Mix     |       7 | 6:perf(5)+rt     | epoch      |          35 | ready  | 0.98-1.00 | 0.99-1     |
-| 10  | fcnet         | Mix     |      11 | 4:perf(2)+rt+ ms | epoch+repl |           4 | \-     | 0.87-1    | 0.93-1     |
-| 9   | rbv2\_super   | Mix+Dep |      34 | 6:perf(4)+rt+pt  | frac+repl  |          89 | ready  | 0.86-0.99 | 0.93-0.99  |
-| 3   | rbv2\_ranger  | Mix+Dep |       6 | 6:perf(4)+rt+pt  | frac+repl  |          96 | ready  | 0.4-0.98  | 0.64-0.99  |
-| 4   | rbv2\_rpart   | Mix     |       5 | 6:perf(4)+rt+pt  | frac+repl  |         101 | ready  | 0-0.99    | 0.02-1     |
-| 5   | rbv2\_aknn    | Mix     |       6 | 6:perf(4)+rt+pt  | frac+repl  |          99 | ready  | 0.4-0.97  | 0.63-0.98  |
-| 6   | rbv2\_glmnet  | Mix     |       3 | 6:perf(4)+rt+pt  | frac+repl  |          98 | ready  | 0.02-0.98 | -0.15-0.99 |
-| 7   | rbv2\_ranger  | Mix+Dep |       8 | 6:perf(4)+rt+pt  | frac+repl  |         114 | ready  | 0.4-0.98  | 0.64-0.99  |
-| 8   | rbv2\_xgboost | Mix+Dep |      14 | 6:perf(4)+rt+pt  | frac+repl  |         109 | ready  | 0.53-0.98 | 0.72-0.99  |
-| 11  | task\_set     | Num     |       9 | 4:perf(4)        | epoch+repl |          20 | \-     | 0.12-0.15 | 0.35-0.39  |
+|     | instance      | space   | n\_dims | n\_targets       | fidelity       | n\_problems | status | Rsq       | Rho       |
+|:----|:--------------|:--------|--------:|:-----------------|:---------------|------------:|:-------|:----------|:----------|
+| 1   | nb301         | Cat+Dep |      34 | 2:perf(1)+rt     | epoch          |           1 | ready  | 0.83-0.98 | 0.91-0.99 |
+| 2   | lcbench       | Mix     |       7 | 6:perf(5)+rt     | epoch          |          35 | ready  | 0.98-1    | 0.99-1    |
+| 10  | fcnet         | Mix     |      11 | 4:perf(2)+rt+ ms | epoch+repl     |           4 | ready  | 0.96-1    | 0.98-1    |
+| 9   | rbv2\_super   | Mix+Dep |      34 | 6:perf(4)+rt+pt  | trainsize+repl |          89 | ready  | 0.86-0.99 | 0.93-0.99 |
+| 3   | rbv2\_svm     | Mix+Dep |       6 | 6:perf(4)+rt+pt  | trainsize+repl |          96 | ready  | 0.83-0.99 | 0.91-1    |
+| 4   | rbv2\_rpart   | Mix     |       5 | 6:perf(4)+rt+pt  | trainsize+repl |         101 | ready  | 0.79-0.99 | 0.89-1    |
+| 5   | rbv2\_aknn    | Mix     |       6 | 6:perf(4)+rt+pt  | trainsize+repl |          99 | ready  | 0.74-0.99 | 0.86-1    |
+| 6   | rbv2\_glmnet  | Mix     |       3 | 6:perf(4)+rt+pt  | trainsize+repl |          98 | ready  | 0.91-1    | 0.96-1    |
+| 7   | rbv2\_ranger  | Mix+Dep |       8 | 6:perf(4)+rt+pt  | trainsize+repl |         114 | ready  | 0.85-1    | 0.92-1    |
+| 8   | rbv2\_xgboost | Mix+Dep |      14 | 6:perf(4)+rt+pt  | trainsize+repl |         109 | ready  | 0.87-0.98 | 0.93-0.99 |
 
 where for **n\_targets** (\#number):
 

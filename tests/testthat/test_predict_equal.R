@@ -27,7 +27,7 @@ predict_objective = function(xdt, objective, trafos) {
 }
 
 predictions_equal = function(cfg) {
-  set.seed(1234)
+  set.seed(123L)
   test = get_test(cfg)
   
   p1 = predict_like_fitting(test, model_path = paste0(cfg$subdir, cfg$keras_model_file))
@@ -51,13 +51,15 @@ predictions_equal = function(cfg) {
   metrics1 = compute_metrics(truth, p1)
   metrics2 = compute_metrics(truth, p2)
 
-  all(c(all(abs(p1 - p2 ) <= 1e-4), all(abs(metrics1[, -c(1, 2, 5)] - metrics2[, -c(1, 2, 5)]) <= 1e-4)))
+  metrics_ref = fread(paste0(cfg$subdir, "surrogate_test_metrics.csv"))
+
+  all(c(all(abs(p1 - p2 ) <= 1e-4), all(abs(metrics1[, -c(1, 2, 5)] - metrics2[, -c(1, 2, 5)]) <= 1e-4),  all(abs(metrics1[, -c(1, 2, 5)] - metrics_ref[, -c(1, 2, 5)]) <= 1e-2)))
 }
 
 test_that("predict equal", {
   skip_if_not(check_directory_exists(workdir))
-  # FIXME: fcnet and task_set not stable yet
-  cfgs = setdiff(benchmark_configs$keys(), c("branin", "shekel", "zdt6", "fcnet", "task_set"))
+  # FIXME: task_set not stable yet
+  cfgs = setdiff(benchmark_configs$keys(), c("branin", "shekel", "zdt6", "task_set"))
   for (cfg in cfgs) {
     config = benchmark_configs$get(cfg, workdir = workdir)
     expect_true(predictions_equal(config))

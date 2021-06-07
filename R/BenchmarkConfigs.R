@@ -870,7 +870,7 @@ BenchmarkConfigSuperRBv2 = R6Class("BenchmarkConfigSuperRBv2",
 benchmark_configs$add("rbv2_super", BenchmarkConfigSuperRBv2)
 
 
-
+#' @export
 BenchmarkConfigFCNet = R6Class("BenchmarkConfigFCNet",
   inherit = BenchmarkConfig,
   public = list(
