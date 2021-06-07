@@ -53,7 +53,7 @@ predictions_equal = function(cfg) {
 
   metrics_ref = fread(paste0(cfg$subdir, "surrogate_test_metrics.csv"))
 
-  all(c(all(abs(p1 - p2 ) <= 1e-4), all(abs(metrics1[, -c(1, 2, 5)] - metrics2[, -c(1, 2, 5)]) <= 1e-4),  all(abs(metrics1[, -c(1, 2, 5)] - metrics_ref[, -c(1, 2, 5)]) <= 1e-2)))
+  all(c(all(abs(p1 - p2 ) <= 1e-4), all(abs(metrics1[, -c(1, 2, 5)] - metrics2[, -c(1, 2, 5)]) <= 5e-2),  all(abs(metrics1[, -c(1, 2, 5)] - metrics_ref[, -c(1, 2, 5)]) <= 5e-2)))
 }
 
 test_that("predict equal", {
