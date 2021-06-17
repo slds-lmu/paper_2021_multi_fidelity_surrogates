@@ -40,30 +40,13 @@ weights_from_target = function(y, minimize = TRUE, j = 1L, wts_pow = 0L) {
   }
 }
 
-# get the parameters of a config (only search space without `task_id`, `budget`)
-get_pars = function(config) {
-  ps = config$param_set
-  ids = ps$ids()
-  setdiff(ids, c(ps$ids(tags = "task_id"), ps$ids(tags = "budget")))
-}
-
-# split data into train and test stratified by column `by`
-# if `pars` is not null, additionally blocking is performed with respect to `pars` and `by`,
-# e.g, a specific config for a specific task will always belong either to train or test with all its budget
-# only meaningful if a single budget parameter is present (e.g., epoch)
-split_by_col = function(dt, by = "task_id", pars = NULL, frac = 0.1) {
-  if (!is.null(pars)) {
-    dt[, id  := .GRP, keyby = c(by, pars)]
-    uids = unique(dt$id)
-    test_idx = dt[id %in% sample(uids, size = ceiling(length(uids) * frac))]
-  } else {
-    dt[, id := seq_len(nrow(dt))]
-    test_idx = dt[, .(id = sample(id, ceiling(.N * frac))), keyby = by]
-  }
-  dt[, "id" := NULL]
+split_by_col = function(dt, by = 'task_id', frac = 0.1) {
+  dt[, rn := seq_len(nrow(dt))]
+  test_idx = dt[, .(rn = sample(rn, ceiling(.N * frac))), keyby = by]
+  dt[, "rn" := NULL]
   list(
-    test = dt[test_idx$id, ],
-    train = dt[!test_idx$id, ]
+    test = dt[test_idx$rn,],
+    train = dt[!test_idx$rn,]
   )
 }
 
@@ -126,7 +109,7 @@ compute_metrics = function(response, prediction, stratify = factor("_full_")) {
         grp = as.character(grp),
         #rsq = mlr3measures::rsq(x,y),
         rsq = rsq_(x,y),
-        roh = mlr3measures::srho(x,y),
+        rho = mlr3measures::srho(x,y),
         ktau = mlr3measures::ktau(x[smp],y[smp]), # on sample since this is slow.
         mae = mlr3measures::mae(x,y)
       )
@@ -145,9 +128,21 @@ cummean = function(x) {
 
 
 #' @export
-retrafo_predictions = function(dt, target_names, trafo_dict) {
+retrafo_predictions = function(dt, target_names, codomain, trafo_dict) {
+  if (is.list(target_names)) 
+    target_names = unlist(target_names)
   dt = setNames(data.table(dt), target_names)
   to_transform = intersect(names(trafo_dict), target_names)
   dt[, (to_transform) := pmap_dtc(list(.SD, trafo_dict[to_transform]), function(x, tfs) tfs$retrafo(x)), .SDcols = to_transform]
+  dt[, (to_transform) := imap(.SD, .f = function(x, nm) {  # enforce bounds as defined in the codomain
+    pmin(pmax(x, codomain$lower[[nm]]), codomain$upper[[nm]])
+  }), .SDcols = to_transform]
   return(data.frame(dt))
+}
+
+get_data_order = function(cfg) {
+  data = cfg$data
+  nms = names(data$xtrain)
+  stopifnot(nms == names(data$xtest))
+  nms
 }

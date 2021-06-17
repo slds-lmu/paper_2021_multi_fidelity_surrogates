@@ -11,7 +11,7 @@ from hpbandster.core.worker import Worker
 import hpbandster.core.nameserver as hpns
 from hpbandster.optimizers import BOHB as BOHB
 
-class lcbench(Worker):
+class rbv2_super(Worker):
 
     def __init__(self, *args, sleep_interval=0, **kwargs):
         super().__init__(*args, **kwargs)
@@ -19,10 +19,10 @@ class lcbench(Worker):
         self.sleep_interval = sleep_interval
         base = importr("base")
         self.mfsurrogates = importr("mfsurrogates")
-        self.session = onnxruntime.InferenceSession("multifidelity_data/lcbench/model.onnx")
-        self.param_set = base.readRDS("multifidelity_data/lcbench/param_set.rds")
-        self.data_order = base.readRDS("multifidelity_data/lcbench/data_order.rds")
-        self.trafo_dict = base.readRDS("multifidelity_data/lcbench/dicts.rds")
+        self.session = onnxruntime.InferenceSession("multifidelity_data/rbv2_super/model.onnx")
+        self.param_set = base.readRDS("multifidelity_data/rbv2_super/param_set.rds")  # FIXME: download manually from lrz
+        self.data_order = base.readRDS("multifidelity_data/rbv2_super/data_order.rds")
+        self.trafo_dict = base.readRDS("multifidelity_data/rbv2_super/dicts.rds")
 
         pandas2ri.activate()
 
@@ -40,8 +40,9 @@ class lcbench(Worker):
 
         # FIXME: if we want to set the task constant we could add this here (using the correct cs below)
         #        we could then proceed to add a task_id to the constuctor
-        config.update({"OpenML_task_id": "3945"})  # FIXME:
-        config.update({"epoch": int(budget)})  # FIXME: budget trafo to match epoch range and int
+        config.update({"task_id": "1040"})
+        config.update({"trainsize": budget})  # FIXME: budget trafo to match trainsize range
+        config.update({"repl": 10})  # FIXME: can either use trainsize or repl
         xdt = pd.DataFrame.from_dict([config])
         xdt = pandas2ri.py2rpy(xdt)
 
@@ -61,7 +62,7 @@ class lcbench(Worker):
     
     @staticmethod
     def get_configspace():
-        with open('paper_2021_multi_fidelity_surrogates/src/configspaces/configspace_lcbench_drop_OpenML_task_id_epoch.json', 'r') as f:
+        with open('paper_2021_multi_fidelity_surrogates/src/configspaces/configspace_rbv2_super_drop_trainsize_repl_task_id.json', 'r') as f:
             json_string = f.read()
             cs = json.read(json_string)
         return(cs)
@@ -71,12 +72,12 @@ class lcbench(Worker):
 NS = hpns.NameServer(run_id='example1', host='127.0.0.1', port=None)
 NS.start()
 
-w = lcbench(sleep_interval=0, nameserver='127.0.0.1',run_id='example1')
+w = rbv2_super(sleep_interval=0, nameserver='127.0.0.1',run_id='example1')
 w.run(background=True)
 
 bohb = BOHB(configspace=w.get_configspace(),
             run_id='example1', nameserver='127.0.0.1',
-            min_budget=1, max_budget=52)
+            min_budget=0.05, max_budget=1)
 
 res = bohb.run(n_iterations=1)
 

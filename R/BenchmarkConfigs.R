@@ -9,6 +9,7 @@ BenchmarkConfigNB301 = R6Class("BenchmarkConfigNB301",
         model_name = "nb301",
         param_set_file = "param_set.rds",
         data_file = "data.rds",
+        data_order_file = "data_order.rds",
         dicts_file = "dicts.rds",
         keras_model_file = "model.hdf5",
         onnx_model_file = "model.onnx",
@@ -46,12 +47,13 @@ BenchmarkConfigLCBench = R6Class("BenchmarkConfigLCBench",
        model_name = "lcbench",
        param_set_file = "param_set.rds",
        data_file = "data.rds",
+       data_order_file = "data_order.rds",
        dicts_file = "dicts.rds",
        keras_model_file = "model.hdf5",
        onnx_model_file = "model.onnx",
        target_variables = c("val_accuracy", "val_cross_entropy", "val_balanced_accuracy", "test_cross_entropy", "test_balanced_accuracy", "time"),
        codomain = ps(
-         val_accuracy = p_dbl(lower = 0, upper = 1, tags = "maximize"),
+         val_accuracy = p_dbl(lower = 0, upper = 100, tags = "maximize"),
          val_cross_entropy = p_dbl(lower = 0, upper = Inf, tags = "minimize"),
          val_balanced_accuracy = p_dbl(lower = 0, upper = 1, tags = "maximize"),
          test_cross_entropy = p_dbl(lower = 0, upper = Inf, tags = "minimize"),
@@ -94,6 +96,7 @@ BenchmarkConfigBranin = R6Class("BenchmarkConfigBranin",
         model_name = "branin",
         param_set_file = NULL,
         data_file = NULL,
+        data_order_file = "NULL",
         dicts_file = NULL,
         keras_model_file = NULL,
         onnx_model_file = NULL,
@@ -177,6 +180,7 @@ BenchmarkConfigShekel = R6Class("BenchmarkConfigShekel",
         model_name = "shekel",
         param_set_file = NULL,
         data_file = NULL,
+        data_order_file = "NULL",
         dicts_file = NULL,
         keras_model_file = NULL,
         onnx_model_file = NULL,
@@ -255,6 +259,7 @@ BenchmarkConfigZDT6 = R6Class("BenchmarkConfigZDT6",
         model_name = "zdt1",
         param_set_file = NULL,
         data_file = NULL,
+        data_order_file = "NULL",
         dicts_file = NULL,
         keras_model_file = NULL,
         onnx_model_file = NULL,
@@ -306,6 +311,7 @@ benchmark_configs$add("zdt6", BenchmarkConfigZDT6)
 
 
 
+#' @export
 BenchmarkConfigRBv2SVM = R6Class("BenchmarkConfigRBv2SVM",
   inherit = BenchmarkConfig,
   public = list(
@@ -316,6 +322,7 @@ BenchmarkConfigRBv2SVM = R6Class("BenchmarkConfigRBv2SVM",
         model_name = "rbv2_svm",
         param_set_file = NULL,
         data_file = "data.rds",
+        data_order_file = "data_order.rds",
         dicts_file = "dicts.rds",
         keras_model_file = "model.hdf5",
         onnx_model_file = "model.onnx",
@@ -325,8 +332,8 @@ BenchmarkConfigRBv2SVM = R6Class("BenchmarkConfigRBv2SVM",
           f1 = p_dbl(lower = 0, upper = 1, tags = "maximize"),
           auc = p_dbl(lower = 0, upper = 1, tags = "maximize"),
           logloss = p_dbl(lower = 0, upper = Inf, tags = "minimize"),
-          timetrain = p_dbl(lower = 0, upper = 1, tags = "minimize"),
-          timepredict = p_dbl(lower = 0, upper = 1, tags = "minimize")
+          timetrain = p_dbl(lower = 0, upper = Inf, tags = "minimize"),
+          timepredict = p_dbl(lower = 0, upper = Inf, tags = "minimize")
         ),
         packages = NULL
       )
@@ -336,12 +343,11 @@ BenchmarkConfigRBv2SVM = R6Class("BenchmarkConfigRBv2SVM",
     param_set = function() {
       ps(
         kernel = p_fct(levels = c("linear", "polynomial", "radial")),
-        cost =  p_dbl(lower = -12, upper = 12, trafo = function(x) 2^x),
-        gamma = p_dbl(lower = -12, upper = 12, trafo = function(x) 2^x, depends = kernel == "radial"),
-        tolerance = p_dbl(lower = -12, upper = -3, trafo = function(x) 2^x),
+        cost =  p_dbl(lower = -10, upper = 10, tags = "log", trafo = function(x) exp(x)),
+        gamma = p_dbl(lower = -10, upper = 10, tags = "log", trafo = function(x) exp(x), depends = kernel == "radial"),
+        tolerance = p_dbl(lower = -10, upper = log(2), tags = "log", trafo = function(x) exp(x)),
         degree = p_int(lower = 2, upper = 5, depends = kernel == "polynomial"),
-        # shrinking = p_lgl(),
-        trainsize = p_dbl(lower = 0, upper = 1, tag = "budget"),
+        trainsize = p_dbl(lower = 0.05, upper = 1, tag = "budget"),
         repl = p_int(lower = 1, upper = 10, tag = "budget"),
         num.impute.selected.cpo = p_fct(levels = c("impute.mean", "impute.median", "impute.hist")),
         task_id = p_fct(levels = c("1040", "1049", "1050", "1053", "1056", "1063", "1067", "1068",
@@ -362,6 +368,12 @@ BenchmarkConfigRBv2SVM = R6Class("BenchmarkConfigRBv2SVM",
     data = function() {
       if(is.null(private$.data)) private$.data = preproc_data_rbv2_svm(self)
       private$.data
+    },
+    opt_param_set = function() {
+      ps = self$param_set$clone()
+      ps$subset(setdiff(ps$ids(), "repl"))
+      ps$add(ParamInt$new("repl", lower = 10, upper = 10, default = 10, tags = "constant"))
+      return(ps)
     }
   )
 )
@@ -370,6 +382,7 @@ benchmark_configs$add("rbv2_svm", BenchmarkConfigRBv2SVM)
 
 
 
+#' @export
 BenchmarkConfigRBv2ranger = R6Class("BenchmarkConfigRBv2ranger",
   inherit = BenchmarkConfig,
   public = list(
@@ -380,6 +393,7 @@ BenchmarkConfigRBv2ranger = R6Class("BenchmarkConfigRBv2ranger",
         model_name = "rbv2_ranger",
         param_set_file = NULL,
         data_file = "data.rds",
+        data_order_file = "data_order.rds",
         dicts_file = "dicts.rds",
         keras_model_file = "model.hdf5",
         onnx_model_file = "model.onnx",
@@ -389,8 +403,8 @@ BenchmarkConfigRBv2ranger = R6Class("BenchmarkConfigRBv2ranger",
           f1 = p_dbl(lower = 0, upper = 1, tags = "maximize"),
           auc = p_dbl(lower = 0, upper = 1, tags = "maximize"),
           logloss = p_dbl(lower = 0, upper = Inf, tags = "minimize"),
-          timetrain = p_dbl(lower = 0, upper = 1, tags = "minimize"),
-          timepredict = p_dbl(lower = 0, upper = 1, tags = "minimize")
+          timetrain = p_dbl(lower = 0, upper = Inf, tags = "minimize"),
+          timepredict = p_dbl(lower = 0, upper = Inf, tags = "minimize")
         ),
         packages = NULL
       )
@@ -407,7 +421,7 @@ BenchmarkConfigRBv2ranger = R6Class("BenchmarkConfigRBv2ranger",
         min.node.size = p_int(lower = 1, upper = 100),
         splitrule = p_fct(levels = c("gini", "extratrees")),
         num.random.splits = p_int(lower = 1, upper = 100, default = 1L, depends = splitrule == "extratrees"),
-        trainsize = p_dbl(lower = 0, upper = 1, tag = "budget"),
+        trainsize = p_dbl(lower = 0.05, upper = 1, tag = "budget"),
         repl = p_int(lower = 1, upper = 10, tag = "budget"),
         num.impute.selected.cpo = p_fct(levels = c("impute.mean", "impute.median", "impute.hist")),
         task_id = p_fct(levels = c("1040", "1049", "1050", "1053", "1056", "1063", "1067", "1068",
@@ -432,6 +446,12 @@ BenchmarkConfigRBv2ranger = R6Class("BenchmarkConfigRBv2ranger",
     data = function() {
       if(is.null(private$.data)) private$.data = preproc_data_rbv2_ranger(self)
       private$.data
+    },
+    opt_param_set = function() {
+      ps = self$param_set$clone()
+      ps$subset(setdiff(ps$ids(), "repl"))
+      ps$add(ParamInt$new("repl", lower = 10, upper = 10, default = 10, tags = "constant"))
+      return(ps)
     }
   )
 )
@@ -440,6 +460,7 @@ benchmark_configs$add("rbv2_ranger", BenchmarkConfigRBv2ranger)
 
 
 
+#' @export
 BenchmarkConfigRBv2glmnet = R6Class("BenchmarkConfigRBv2glmnet",
   inherit = BenchmarkConfig,
   public = list(
@@ -450,6 +471,7 @@ BenchmarkConfigRBv2glmnet = R6Class("BenchmarkConfigRBv2glmnet",
         model_name = "rbv2_glmnet",
         param_set_file = NULL,
         data_file = "data.rds",
+        data_order_file = "data_order.rds",
         dicts_file = "dicts.rds",
         keras_model_file = "model.hdf5",
         onnx_model_file = "model.onnx",
@@ -459,8 +481,8 @@ BenchmarkConfigRBv2glmnet = R6Class("BenchmarkConfigRBv2glmnet",
           f1 = p_dbl(lower = 0, upper = 1, tags = "maximize"),
           auc = p_dbl(lower = 0, upper = 1, tags = "maximize"),
           logloss = p_dbl(lower = 0, upper = Inf, tags = "minimize"),
-          timetrain = p_dbl(lower = 0, upper = 1, tags = "minimize"),
-          timepredict = p_dbl(lower = 0, upper = 1, tags = "minimize")
+          timetrain = p_dbl(lower = 0, upper = Inf, tags = "minimize"),
+          timepredict = p_dbl(lower = 0, upper = Inf, tags = "minimize")
         ),
         packages = NULL
       )
@@ -469,9 +491,9 @@ BenchmarkConfigRBv2glmnet = R6Class("BenchmarkConfigRBv2glmnet",
   active = list(
     param_set = function() {
       ps(
-        alpha = p_dbl(lower = 0, upper = 1, default = 1, trafo = function(x) max(0, min(1, x))),
-        s = p_dbl(lower = -10, upper = 10, default = 0, trafo = function(x) 2^x),
-        trainsize = p_dbl(lower = 0, upper = 1, tag = "budget"),
+        alpha = p_dbl(lower = 0, upper = 1, default = 1),
+        s = p_dbl(lower = -7, upper = 7, default = 0, tags = "log", trafo = function(x) exp(x)),
+        trainsize = p_dbl(lower = 0.05, upper = 1, tag = "budget"),
         repl = p_int(lower = 1, upper = 10, tag = "budget"),
         num.impute.selected.cpo = p_fct(levels = c("impute.mean", "impute.median", "impute.hist")),
         task_id = p_fct(levels = c("1040", "1049", "1050", "1053", "1056", "1063", "1067", "1068",
@@ -493,6 +515,12 @@ BenchmarkConfigRBv2glmnet = R6Class("BenchmarkConfigRBv2glmnet",
     data = function() {
       if(is.null(private$.data)) private$.data = preproc_data_rbv2_glmnet(self)
       private$.data
+    },
+    opt_param_set = function() {
+      ps = self$param_set$clone()
+      ps$subset(setdiff(ps$ids(), "repl"))
+      ps$add(ParamInt$new("repl", lower = 10, upper = 10, default = 10, tags = "constant"))
+      return(ps)
     }
   )
 )
@@ -501,6 +529,7 @@ benchmark_configs$add("rbv2_glmnet", BenchmarkConfigRBv2glmnet)
 
 
 
+#' @export
 BenchmarkConfigRBv2xgboost = R6Class("BenchmarkConfigRBv2xgboost",
   inherit = BenchmarkConfig,
   public = list(
@@ -511,6 +540,7 @@ BenchmarkConfigRBv2xgboost = R6Class("BenchmarkConfigRBv2xgboost",
         model_name = "rbv2_xgboost",
         param_set_file = NULL,
         data_file = "data.rds",
+        data_order_file = "data_order.rds",
         dicts_file = "dicts.rds",
         keras_model_file = "model.hdf5",
         onnx_model_file = "model.onnx",
@@ -520,8 +550,8 @@ BenchmarkConfigRBv2xgboost = R6Class("BenchmarkConfigRBv2xgboost",
           f1 = p_dbl(lower = 0, upper = 1, tags = "maximize"),
           auc = p_dbl(lower = 0, upper = 1, tags = "maximize"),
           logloss = p_dbl(lower = 0, upper = Inf, tags = "minimize"),
-          timetrain = p_dbl(lower = 0, upper = 1, tags = "minimize"),
-          timepredict = p_dbl(lower = 0, upper = 1, tags = "minimize")
+          timetrain = p_dbl(lower = 0, upper = Inf, tags = "minimize"),
+          timepredict = p_dbl(lower = 0, upper = Inf, tags = "minimize")
         ),
         packages = NULL
       )
@@ -531,19 +561,19 @@ BenchmarkConfigRBv2xgboost = R6Class("BenchmarkConfigRBv2xgboost",
     param_set = function() {
       ps(
         booster = p_fct(levels = c("gblinear", "gbtree", "dart")),
-        nrounds = p_int(lower = 3, upper = 11, trafo = function(x) round(2^x)),
-        eta = p_dbl(lower = -10, upper = 0, trafo = function(x) 2^x, depends = booster %in% c("dart", "gbtree")),
-        gamma = p_dbl(lower = -15, upper = 3, trafo = function(x) 2^x, depends = booster %in% c("dart", "gbtree")),
-        lambda = p_dbl(lower = -10, upper = 10, trafo = function(x) 2^x),
-        alpha = p_dbl(lower = -10, upper = 10, trafo = function(x) 2^x),
+        nrounds = p_dbl(lower = 2, upper = 8, tags = c("int", "log"), trafo = function(x) as.integer(round(exp(x)))),
+        eta = p_dbl(lower = -7, upper = 0, tags = "log", trafo = function(x) exp(x), depends = booster %in% c("dart", "gbtree")),
+        gamma = p_dbl(lower = -10, upper = 2, tags = "log", trafo = function(x) exp(x), depends = booster %in% c("dart", "gbtree")),
+        lambda = p_dbl(lower = -7, upper = 7, tags = "log", trafo = function(x) exp(x)),
+        alpha = p_dbl(lower = -7, upper = 7, tags = "log", trafo = function(x) exp(x)),
         subsample = p_dbl(lower = 0.1, upper = 1),
         max_depth = p_int(lower = 1, upper = 15, depends = booster %in% c("dart", "gbtree")),
-        min_child_weight = p_dbl(lower = 0, upper = 7, trafo = function(x) 2^x, depends = booster %in% c("dart", "gbtree")),
+        min_child_weight = p_dbl(lower = 1, upper = 5, tags = "log", trafo = function(x) exp(x), depends = booster %in% c("dart", "gbtree")),
         colsample_bytree = p_dbl(lower = 0.01, upper = 1, depends = booster %in% c("dart", "gbtree")),
         colsample_bylevel = p_dbl(lower = 0.01, upper = 1, depends = booster %in% c("dart", "gbtree")),
         rate_drop = p_dbl(lower = 0, upper = 1, depends = booster == "dart"),
         skip_drop = p_dbl(lower =  0, upper = 1, depends = booster == "dart"),
-        trainsize = p_dbl(lower = 0, upper = 1, tag = "budget"),
+        trainsize = p_dbl(lower = 0.05, upper = 1, tag = "budget"),
         repl = p_int(lower = 1, upper = 10, tag = "budget"),
         num.impute.selected.cpo = p_fct(levels = c("impute.mean", "impute.median", "impute.hist")),
         task_id = p_fct(levels = c("1040", "1049", "1050", "1053", "1056", "1063", "1067", "1068",
@@ -567,6 +597,12 @@ BenchmarkConfigRBv2xgboost = R6Class("BenchmarkConfigRBv2xgboost",
     data = function() {
       if(is.null(private$.data)) private$.data = preproc_data_rbv2_xgboost(self)
       private$.data
+    },
+    opt_param_set = function() {
+      ps = self$param_set$clone()
+      ps$subset(setdiff(ps$ids(), "repl"))
+      ps$add(ParamInt$new("repl", lower = 10, upper = 10, default = 10, tags = "constant"))
+      return(ps)
     }
   )
 )
@@ -575,6 +611,7 @@ benchmark_configs$add("rbv2_xgboost", BenchmarkConfigRBv2xgboost)
 
 
 
+#' @export
 BenchmarkConfigRBv2rpart = R6Class("BenchmarkConfigRBv2rpart",
   inherit = BenchmarkConfig,
   public = list(
@@ -585,6 +622,7 @@ BenchmarkConfigRBv2rpart = R6Class("BenchmarkConfigRBv2rpart",
         model_name = "rbv2_rpart",
         param_set_file = NULL,
         data_file = "data.rds",
+        data_order_file = "data_order.rds",
         dicts_file = "dicts.rds",
         keras_model_file = "model.hdf5",
         onnx_model_file = "model.onnx",
@@ -594,8 +632,8 @@ BenchmarkConfigRBv2rpart = R6Class("BenchmarkConfigRBv2rpart",
           f1 = p_dbl(lower = 0, upper = 1, tags = "maximize"),
           auc = p_dbl(lower = 0, upper = 1, tags = "maximize"),
           logloss = p_dbl(lower = 0, upper = Inf, tags = "minimize"),
-          timetrain = p_dbl(lower = 0, upper = 1, tags = "minimize"),
-          timepredict = p_dbl(lower = 0, upper = 1, tags = "minimize")
+          timetrain = p_dbl(lower = 0, upper = Inf, tags = "minimize"),
+          timepredict = p_dbl(lower = 0, upper = Inf, tags = "minimize")
         ),
         packages = NULL
       )
@@ -604,11 +642,11 @@ BenchmarkConfigRBv2rpart = R6Class("BenchmarkConfigRBv2rpart",
   active = list(
     param_set = function() {
       ps = ps(
-        cp = p_dbl(lower = -10, upper = 0, default = log2(0.01), trafo = function(x) 2^x),
+        cp = p_dbl(lower = -7, upper = 0, default = log(0.01), tags = "log", trafo = function(x) exp(x)),
         maxdepth = p_int(lower = 1, upper = 30, default = 30),
         minbucket = p_int(lower = 1, upper = 100, default = 1),
         minsplit = p_int(lower = 1, upper = 100, default = 20),
-        trainsize = p_dbl(lower = 0, upper = 1, tag = "budget"),
+        trainsize = p_dbl(lower = 0.05, upper = 1, tag = "budget"),
         repl = p_int(lower = 1, upper = 10, tag = "budget"),
         num.impute.selected.cpo = p_fct(levels = c("impute.mean", "impute.median", "impute.hist")),
         task_id = p_fct(levels = c("1040", "1049", "1050", "1053", "1056", "1063", "1067", "1068",
@@ -631,6 +669,12 @@ BenchmarkConfigRBv2rpart = R6Class("BenchmarkConfigRBv2rpart",
     data = function() {
       if(is.null(private$.data)) private$.data = preproc_data_rbv2_rpart(self)
       private$.data
+    },
+    opt_param_set = function() {
+      ps = self$param_set$clone()
+      ps$subset(setdiff(ps$ids(), "repl"))
+      ps$add(ParamInt$new("repl", lower = 10, upper = 10, default = 10, tags = "constant"))
+      return(ps)
     }
   )
 )
@@ -639,6 +683,7 @@ benchmark_configs$add("rbv2_rpart", BenchmarkConfigRBv2rpart)
 
 
 
+#' @export
 BenchmarkConfigRBv2aknn = R6Class("BenchmarkConfigRBv2aknn",
   inherit = BenchmarkConfig,
   public = list(
@@ -649,6 +694,7 @@ BenchmarkConfigRBv2aknn = R6Class("BenchmarkConfigRBv2aknn",
         model_name = "rbv2_aknn",
         param_set_file = NULL,
         data_file = "data.rds",
+        data_order_file = "data_order.rds",
         dicts_file = "dicts.rds",
         keras_model_file = "model.hdf5",
         onnx_model_file = "model.onnx",
@@ -658,8 +704,8 @@ BenchmarkConfigRBv2aknn = R6Class("BenchmarkConfigRBv2aknn",
           f1 = p_dbl(lower = 0, upper = 1, tags = "maximize"),
           auc = p_dbl(lower = 0, upper = 1, tags = "maximize"),
           logloss = p_dbl(lower = 0, upper = Inf, tags = "minimize"),
-          timetrain = p_dbl(lower = 0, upper = 1, tags = "minimize"),
-          timepredict = p_dbl(lower = 0, upper = 1, tags = "minimize")
+          timetrain = p_dbl(lower = 0, upper = Inf, tags = "minimize"),
+          timepredict = p_dbl(lower = 0, upper = Inf, tags = "minimize")
         ),
         packages = NULL
       )
@@ -671,9 +717,9 @@ BenchmarkConfigRBv2aknn = R6Class("BenchmarkConfigRBv2aknn",
         k = p_int(lower = 1L, upper = 50L),
         distance = p_fct(levels = c("l2", "cosine", "ip"), default = "l2"),
         M = p_int(lower = 18L, upper = 50L),
-        ef = p_dbl(lower = 3, upper = 8, trafo = function(x) round(2^x)),
-        ef_construction = p_dbl(lower = 4, upper = 9, trafo = function(x) round(2^x)),
-        trainsize = p_dbl(lower = 0, upper = 1, tag = "budget"),
+        ef = p_dbl(lower = 2, upper = 6, tags = c("int", "log"), trafo = function(x) as.integer(round(exp(x)))),
+        ef_construction = p_dbl(lower = 2, upper = 7, tags = c("int", "log"), trafo = function(x) as.integer(round(exp(x)))),
+        trainsize = p_dbl(lower = 0.05, upper = 1, tag = "budget"),
         repl = p_int(lower = 1, upper = 10, tag = "budget"),
         num.impute.selected.cpo = p_fct(levels = c("impute.mean", "impute.median", "impute.hist")),
         task_id = p_fct(levels = c("1040", "1049", "1050", "1053", "1056", "1063", "1067", "1068",
@@ -695,6 +741,12 @@ BenchmarkConfigRBv2aknn = R6Class("BenchmarkConfigRBv2aknn",
     data = function() {
       if(is.null(private$.data)) private$.data = preproc_data_rbv2_aknn(self)
       private$.data
+    },
+    opt_param_set = function() {
+      ps = self$param_set$clone()
+      ps$subset(setdiff(ps$ids(), "repl"))
+      ps$add(ParamInt$new("repl", lower = 10, upper = 10, default = 10, tags = "constant"))
+      return(ps)
     }
   )
 )
@@ -703,6 +755,7 @@ benchmark_configs$add("rbv2_aknn", BenchmarkConfigRBv2aknn)
 
 
 
+#' @export
 BenchmarkConfigSuperRBv2 = R6Class("BenchmarkConfigSuperRBv2",
   inherit = BenchmarkConfig,
   public = list(
@@ -713,7 +766,8 @@ BenchmarkConfigSuperRBv2 = R6Class("BenchmarkConfigSuperRBv2",
         model_name = "rbv2_super",
         param_set_file = NULL,
         data_file = "data.rds",
-        dicts_file = "dicts_compressed.rds",
+        data_order_file = "data_order.rds",
+        dicts_file = "dicts.rds",
         keras_model_file = "model.hdf5",
         onnx_model_file = "model.onnx",
         target_variables = c("mmce", "f1", "auc", "logloss", "timetrain", "timepredict"),
@@ -721,7 +775,7 @@ BenchmarkConfigSuperRBv2 = R6Class("BenchmarkConfigSuperRBv2",
           mmce = p_dbl(lower = 0, upper = 1, tags = "minimize"),
           f1 = p_dbl(lower = 0, upper = 1, tags = "maximize"),
           auc = p_dbl(lower = 0, upper = 1, tags = "maximize"),
-          logloss = p_dbl(lower = 0, upper = Inf, tags = "minimize"), # has to be maximized for retrafo = FALSE, minimized for retrafo = TRUE
+          logloss = p_dbl(lower = 0, upper = Inf, tags = "minimize"),
           timetrain = p_dbl(lower = 0, upper = Inf, tags = "minimize"),
           timepredict = p_dbl(lower = 0, upper = Inf, tags = "minimize")
         ),
@@ -734,15 +788,15 @@ BenchmarkConfigSuperRBv2 = R6Class("BenchmarkConfigSuperRBv2",
       pc = ps(
           # svm
           svm.kernel = p_fct(levels = c("linear", "polynomial", "radial")),
-          svm.cost =  p_dbl(lower = -12, upper = 12, trafo = function(x) 2^x),
-          svm.gamma = p_dbl(lower = -12, upper = 12, trafo = function(x) 2^x, depends = svm.kernel == "radial"),
-          svm.tolerance = p_dbl(lower = -12, upper = -3, trafo = function(x) 2^x),
+          svm.cost = p_dbl(lower = -10, upper = 10, tags = "log", trafo = function(x) exp(x)),
+          svm.gamma =  p_dbl(lower = -10, upper = 10, tags = "log", trafo = function(x) exp(x), depends = svm.kernel == "radial"),
+          svm.tolerance = p_dbl(lower = -10, upper = log(2), tags = "log", trafo = function(x) exp(x)),
           svm.degree = p_int(lower = 2, upper = 5, depends = svm.kernel == "polynomial"),
           # glmnet
-          glmnet.alpha = p_dbl(lower = 0, upper = 1, default = 1, trafo = function(x) max(0, min(1, x))),
-          glmnet.s = p_dbl(lower = -10, upper = 10, default = 0, trafo = function(x) 2^x),
+          glmnet.alpha = p_dbl(lower = 0, upper = 1, default = 1),
+          glmnet.s = p_dbl(lower = -7, upper = 7, default = 0, tags = "log", trafo = function(x) exp(x)),
           # rpart
-          rpart.cp = p_dbl(lower = -10, upper = 0, default = log2(0.01), trafo = function(x) 2^x),
+          rpart.cp = p_dbl(lower = -7, upper = 0, default = log(0.01), tags = "log", trafo = function(x) exp(x)),
           rpart.maxdepth = p_int(lower = 1, upper = 30, default = 30),
           rpart.minbucket = p_int(lower = 1, upper = 100, default = 1),
           rpart.minsplit = p_int(lower = 1, upper = 100, default = 20),
@@ -758,24 +812,24 @@ BenchmarkConfigSuperRBv2 = R6Class("BenchmarkConfigSuperRBv2",
           aknn.k = p_int(lower = 1L, upper = 50L),
           aknn.distance = p_fct(levels = c("l2", "cosine", "ip"), default = "l2"),
           aknn.M = p_int(lower = 18L, upper = 50L),
-          aknn.ef = p_dbl(lower = 3, upper = 8, trafo = function(x) round(2^x)),
-          aknn.ef_construction = p_dbl(lower = 4, upper = 9, trafo = function(x) round(2^x)),
+          aknn.ef = p_dbl(lower = 2, upper = 6, tags = c("int", "log"), trafo = function(x) as.integer(round(exp(x)))),
+          aknn.ef_construction = p_dbl(lower = 2, upper = 7, tags = c("int", "log"), trafo = function(x) as.integer(round(exp(x)))),
           # xgboost
           xgboost.booster = p_fct(levels = c("gblinear", "gbtree", "dart")),
-          xgboost.nrounds = p_int(lower = 3, upper = 11, trafo = function(x) round(2^x)),
-          xgboost.eta = p_dbl(lower = -10, upper = 0, trafo = function(x) 2^x, depends = xgboost.booster %in% c("dart", "gbtree")),
-          xgboost.gamma = p_dbl(lower = -15, upper = 3, trafo = function(x) 2^x, depends = xgboost.booster %in% c("dart", "gbtree")),
-          xgboost.lambda = p_dbl(lower = -10, upper = 10, trafo = function(x) 2^x),
-          xgboost.alpha = p_dbl(lower = -10, upper = 10, trafo = function(x) 2^x),
+          xgboost.nrounds = p_dbl(lower = 2, upper = 8, tags = c("int", "log"), trafo = function(x) as.integer(round(exp(x)))),
+          xgboost.eta = p_dbl(lower = -7, upper = 0, tags = "log", trafo = function(x) exp(x), depends = xgboost.booster %in% c("dart", "gbtree")),
+          xgboost.gamma =  p_dbl(lower = -10, upper = 2, tags = "log", trafo = function(x) exp(x), depends = xgboost.booster %in% c("dart", "gbtree")),
+          xgboost.lambda = p_dbl(lower = -7, upper = 7, tags = "log", trafo = function(x) exp(x)),
+          xgboost.alpha = p_dbl(lower = -7, upper = 7, tags = "log", trafo = function(x) exp(x)),
           xgboost.subsample = p_dbl(lower = 0.1, upper = 1),
           xgboost.max_depth = p_int(lower = 1, upper = 15, depends = xgboost.booster %in% c("dart", "gbtree")),
-          xgboost.min_child_weight = p_dbl(lower = 0, upper = 7, trafo = function(x) 2^x, depends = xgboost.booster %in% c("dart", "gbtree")),
+          xgboost.min_child_weight = p_dbl(lower = 1, upper = 5, tags = "log", trafo = function(x) exp(x), depends = xgboost.booster %in% c("dart", "gbtree")),
           xgboost.colsample_bytree = p_dbl(lower = 0.01, upper = 1, depends = xgboost.booster %in% c("dart", "gbtree")),
           xgboost.colsample_bylevel = p_dbl(lower = 0.01, upper = 1, depends = xgboost.booster %in% c("dart", "gbtree")),
           xgboost.rate_drop = p_dbl(lower = 0, upper = 1, depends = xgboost.booster == "dart"),
           xgboost.skip_drop = p_dbl(lower =  0, upper = 1, depends = xgboost.booster == "dart"),
           # learner
-          trainsize = p_dbl(lower = 0, upper = 1, tag = "budget"),
+          trainsize = p_dbl(lower = 0.05, upper = 1, tag = "budget"),
           repl = p_int(lower = 1, upper = 10, tag = "budget"),
           num.impute.selected.cpo = p_fct(levels = c("impute.mean", "impute.median", "impute.hist")),
           learner = p_fct(levels = c("aknn", "glmnet", "ranger", "rpart", "svm", "xgboost")),
@@ -816,7 +870,7 @@ BenchmarkConfigSuperRBv2 = R6Class("BenchmarkConfigSuperRBv2",
 benchmark_configs$add("rbv2_super", BenchmarkConfigSuperRBv2)
 
 
-
+#' @export
 BenchmarkConfigFCNet = R6Class("BenchmarkConfigFCNet",
   inherit = BenchmarkConfig,
   public = list(
@@ -827,6 +881,7 @@ BenchmarkConfigFCNet = R6Class("BenchmarkConfigFCNet",
         model_name = "fcnet_tabular_benchmarks",
         param_set_file = NULL,
         data_file = "data.rds",
+        data_order_file = "data_order.rds",
         dicts_file = "dicts.rds",
         keras_model_file = "model.hdf5",
         onnx_model_file = "model.onnx",
@@ -849,11 +904,13 @@ BenchmarkConfigFCNet = R6Class("BenchmarkConfigFCNet",
         batch_size = p_int(lower = 8L, upper = 64L),
         dropout_1 = p_dbl(lower = 0, upper = 0.6),
         dropout_2 = p_dbl(lower = 0, upper = 0.6),
-        init_lr = p_dbl(lower = -3.31, upper = -1, trafo = function(x) 10^x),
+        init_lr = p_dbl(lower = -8, upper = -3, tags = "log", trafo = function(x) exp(x)),
         lr_schedule = p_fct(levels = c("const", "cosine")),
-        n_units_1 = p_int(lower = 4L, upper = 9L, trafo = function(x) 2^x),
-        n_units_2 = p_int(lower = 4L, upper = 9, trafo = function(x) 2^x),
+        n_units_1 = p_dbl(lower = 2, upper = 7, tags = c("int", "log"), trafo = function(x) as.integer(round(exp(x)))),
+        n_units_2 = p_dbl(lower = 2, upper = 7, tags = c("int", "log"), trafo = function(x) as.integer(round(exp(x)))),
+        replication = p_int(lower = 0L, upper = 4L, tags = "budget"),
         task = p_fct(levels = c("fcnet_protein_structure", "fcnet_parkinsons_telemonitoring", "fcnet_naval_propulsion", "fcnet_slice_localization"), tags = "task_id")
+
       )
     },
     data = function() {
@@ -862,7 +919,8 @@ BenchmarkConfigFCNet = R6Class("BenchmarkConfigFCNet",
     },
     opt_param_set = function() {
       ps = self$param_set$clone()
-      ps$add(ParamInt$new("replication", lower = 4, upper = 4))
+      ps$subset(setdiff(ps$ids(), "replication"))
+      ps$add(ParamInt$new("replication", lower = 4, upper = 4, default = 4L, tags = "constant"))
       return(ps)
     }
   )
@@ -882,6 +940,7 @@ BenchmarkConfigTaskSet = R6Class("BenchmarkConfigTaskSet",
         model_name = "task_set",
         param_set_file = NULL,
         data_file = "data.rds",
+        data_order_file = "data_order.rds",
         dicts_file = "dicts.rds",
         keras_model_file = "model.hdf5",
         onnx_model_file = "model.onnx",
@@ -900,14 +959,14 @@ BenchmarkConfigTaskSet = R6Class("BenchmarkConfigTaskSet",
     param_set = function() {
       ps(
         epoch = p_int(lower = 1L, upper = 10000L, tags = "budget"),
-        learning_rate = p_dbl(lower = -8, upper = 1, trafo = function(x) 10^x),
-        beta1 = p_dbl(lower = -4, upper = 0, trafo = function(x) 10^x),
-        beta2 = p_dbl(lower = -3, upper = 0, trafo = function(x) 10^x),
-        epsilon = p_dbl(lower = -10, upper = 3, trafo = function(x) 10^x),
-        l1 = p_dbl(lower = -8, upper = 1, trafo = function(x) 10^x),
-        l2 = p_dbl(lower = -8, upper = 1, trafo = function(x) 10^x),
-        linear_decay = p_dbl(lower = -7, upper = -4, trafo = function(x) 10^x),
-        exponential_decay = p_dbl(lower = -6, upper = -3, trafo = function(x) 10^x),
+        learning_rate = p_dbl(lower = -19, upper = 2, tags = "log", trafo = function(x) exp(x)),
+        beta1 = p_dbl(lower = -9, upper = 0, tags = "log", trafo = function(x) exp(x)),
+        beta2 = p_dbl(lower = -7, upper = 0, tags = "log", trafo = function(x) exp(x)),
+        epsilon = p_dbl(lower = -23, upper = 7, tags = "log", trafo = function(x) exp(x)),
+        l1 = p_dbl(lower = -19, upper = 2, tags = "log", trafo = function(x) exp(x)),
+        l2 = p_dbl(lower = -19, upper = 2, tags = "log", trafo = function(x) exp(x)),
+        linear_decay = p_dbl(lower = -16, upper = -9, tags = "log", trafo = function(x) exp(x)),
+        exponential_decay = p_dbl(lower = -14, upper = -7, tags = "log", trafo = function(x) exp(x)),
         task_name = p_fct(levels =
           c("Associative_GRU128_BS128_Pairs10_Tokens50", "Associative_GRU256_BS128_Pairs20_Tokens50",
             "Associative_LSTM128_BS128_Pairs10_Tokens50", "Associative_LSTM128_BS128_Pairs20_Tokens50",
@@ -930,10 +989,11 @@ BenchmarkConfigTaskSet = R6Class("BenchmarkConfigTaskSet",
   )
 )
 #' @include BenchmarkConfig.R
-benchmark_configs$add("task_set", BenchmarkConfigTaskSet)
+#benchmark_configs$add("task_set", BenchmarkConfigTaskSet)
 
 
 # Not sure whether to include kerasff
+# If we do, fix trafos to only log trafos
 # classif.kerasff = ps(
 #   p_dbl(id = "epochs", lower = 3, upper = 7, trafo = function(x) round(2^x)),
 #   p_fct(id = "optimizer", values = c("sgd", "rmsprop", "adam")),
