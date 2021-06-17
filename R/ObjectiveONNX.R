@@ -1,3 +1,8 @@
+sessiondict = new.env()
+
+
+
+
 #' @title Objective interface for ONNX Models.
 #'
 #' @description
@@ -53,8 +58,16 @@ ObjectiveONNX = R6Class("ObjectiveONNX",
       self$trafo_dict = assert_list(trafo_dict)
       if (self$active_session) {
         # Import runtime and start session
-        rt = reticulate::import("onnxruntime")
-        self$session = sess = rt$InferenceSession(model_path)
+        if (!is.null(sessiondict[[model_path]])) {
+          self$session = sess = sessiondict[[model_path]]
+        } else {
+          rt = reticulate::import("onnxruntime")
+          opts = rt$SessionOptions()
+          opts$inter_op_num_threads = 1L
+          opts$intra_op_num_threads = 1L
+          self$session = sess = rt$InferenceSession(model_path, sess_options = opts)
+          sessiondict[[model_path]] = sess
+        }
       }
       fun = function(xdt) {
         # Handle constants in-place
@@ -87,8 +100,16 @@ ObjectiveONNX = R6Class("ObjectiveONNX",
         )
 
         if (!self$active_session) {
-          rt = reticulate::import("onnxruntime")
-          session = rt$InferenceSession(model_path)
+          if (!is.null(sessiondict[[model_path]])) {
+            self$session = sess = sessiondict[[model_path]]
+          } else {
+            rt = reticulate::import("onnxruntime")
+            opts = rt$SessionOptions()
+            opts$inter_op_num_threads = 1L
+            opts$intra_op_num_threads = 1L
+            session = rt$InferenceSession(model_path, sess_options = opts)
+            sessiondict[[model_path]] = session
+          }
         } else {
           session = self$session
         }
