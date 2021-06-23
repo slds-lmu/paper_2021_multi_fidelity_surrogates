@@ -7,3 +7,5 @@ inst/doc
 attic/multifidelity_data
 reticulate.R
 attic/random_search
+*rds
+*png
