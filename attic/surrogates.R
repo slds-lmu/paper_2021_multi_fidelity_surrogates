@@ -1,6 +1,7 @@
 devtools::load_all()
 library(mlr3)
 library(mlr3learners)
+library(mlr3extralearners) #@cubist_mars
 library(mlr3pipelines)
 library(paradox)
 library(bbotk)
@@ -11,13 +12,22 @@ n_init = 100
 workdir = "../../multifidelity_data/"
 
 surrogate_measures = function(n_init, replicates = 10) {
-  ranger = GraphLearner$new(po("imputeoor") %>>% po("fixfactors") %>>% po("imputesample") %>>% lrn("regr.ranger"))
-  ranger$param_set$values$imputeoor.multiplier = 10
-
-  kknn = GraphLearner$new(po("imputeoor") %>>% po("fixfactors") %>>% po("imputesample") %>>% lrn("regr.kknn"))
-  kknn$param_set$values$imputeoor.multiplier = 10
-
-  surrogates = list(ranger = ranger, kknn = kknn)
+  imputepl = po("imputeoor", offset = 1, multiplier = 10) %>>% po("fixfactors") %>>% po("imputesample")
+  imputepl_cubist =  po("colapply", applicator = as.integer, affect_columns = selector_type("logical")) %>>% imputepl
+  imputepl_mars = po("colapply", applicator = as.integer, affect_columns = selector_type("logical")) %>>% po("encode") %>>% imputepl
+  
+  kknn = GraphLearner$new(imputepl %>>% mlr3::lrn("regr.kknn", fallback = mlr3::lrn("regr.featureless"), encapsulate = c(train = "evaluate", predict = "evaluate")))
+  kknn_local = kknn$clone(deep = TRUE)
+  kknn_local$param_set$values$regr.kknn.k = 1
+  kknn_local$id = paste0(kknn_local$id, ".1")
+  
+  surrogates = list(
+    ranger = GraphLearner$new(imputepl %>>% mlr3::lrn("regr.ranger", fallback = mlr3::lrn("regr.featureless"), encapsulate = c(train = "evaluate", predict = "evaluate"))),
+    knn = kknn,
+    kknn_local = kknn_local,
+    cubist = GraphLearner$new(imputepl_cubist %>>% mlr3::lrn("regr.cubist", fallback = mlr3::lrn("regr.featureless"), encapsulate = c(train = "evaluate", predict = "evaluate"))),
+    mars = GraphLearner$new(imputepl_mars %>>% mlr3::lrn("regr.mars", fallback = mlr3::lrn("regr.featureless"), encapsulate = c(train = "evaluate", predict = "evaluate")))
+  )
 
   inst = readRDS("../inst/instances.rds")[cfg %in% c("lcbench", "rbv2_super") & test == TRUE]
 
@@ -48,10 +58,11 @@ surrogate_measures = function(n_init, replicates = 10) {
       tmp = task_test$data(cols = c("..row_id", ins$archive$cols_y))
       setorderv(tmp, ins$archive$cols_y, order = 1L)  # val_cross_entropy / logloss is minimized
       task_test_10 = task_test$clone()$filter(tmp[1:100, ]$"..row_id")
-      
+     
       tmp = map_dtr(surrogates, function(surrogate) {
         surrogate$train(task_train)
         p = surrogate$predict(task_test)
+        surrogate$train(task_train)  # FIXME: cubist errors on rbv2_super if we don't retrain...
         p_10 = surrogate$predict(task_test_10)
         data.table(
           id = surrogate$id,
@@ -92,7 +103,7 @@ plots = map(variables, .f = function(variable) {
     geom_boxplot() +
     geom_jitter(shape = 16, position = position_jitter(0.2), aes(colour = cfg)) +
     facet_grid(~ n_init) +
-    scale_x_discrete(labels = c("kknn", "ranger")) +
+    scale_x_discrete(labels = c("mars", "cubist", "kknn (7)", "kknn (1)", "ranger")) +
     xlab("Surrogate Learner")
   p
 })
