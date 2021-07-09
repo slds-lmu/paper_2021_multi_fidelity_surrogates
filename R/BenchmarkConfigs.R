@@ -81,11 +81,9 @@ benchmark_configs$add("lcbench", BenchmarkConfigLCBench)
 
 
 #' @export
-# with fidelity = 0 3 global optima that vanish until fidelity 1 only a single global optimum; idea from
-# Forrester, A., Sobester, A., & Keane, A. (2008). Engineering design via surrogate modelling: a practical guide. Wiley.
-# fidelity 0: x*1 = (-pi, 12.275), x*2 = (pi, 2.275), x*3 = c(9.42478, 2.475) f(x) = 0.39789
-# fidelity 1: x*1 = (9.97247, 2.97574) f(x) = -48.05995
-# increasing fidelity gradually shifts x*3 to the global x*1
+# augmented Branin as described in Wu et al. 2019
+# https://arxiv.org/pdf/1903.04703.pdf
+# y_min = 0.398 at fidelity = 1
 BenchmarkConfigBranin = R6Class("BenchmarkConfigBranin",
   inherit = BenchmarkConfig,
   public = list(
@@ -115,13 +113,9 @@ BenchmarkConfigBranin = R6Class("BenchmarkConfigBranin",
     get_objective = function() {
       bbotk::ObjectiveRFunDt$new(
         fun = function(xdt) {
-          a = 1
-          b = 5.1 / (4 * (pi ^ 2))
-          c = 5 / pi
-          r = 6
-          s = 10
-          t = 1 / (8 * pi)
-          data.table(y = (a * ((xdt[["x2"]] - b * (xdt[["x1"]] ^ 2L) + c * xdt[["x1"]] - r) ^ 2) + ((s * (1 - t)) * cos(xdt[["x1"]])) + s - (5 * xdt[["fidelity"]] * xdt[["x1"]])))
+          y = (xdt[["x2"]] - ((5.1 / (4 * pi^2)) - 0.1 * (1 - xdt[["fidelity"]])) * xdt[["x1"]]^2 + (5 / pi) * xdt[["x1"]] - 6) ^ 2 +
+            10 * (1 - (1 / (8 * pi))) * cos(xdt[["x1"]]) + 10
+          data.table(y = y, cost = 0.01 + xdt[["fidelity"]])
         },
         domain = self$param_set,
         codomain = self$codomain
@@ -155,7 +149,7 @@ BenchmarkConfigBranin = R6Class("BenchmarkConfigBranin",
       ps(
         x1 = p_dbl(lower = -5, upper = 10),
         x2 = p_dbl(lower = 0, upper = 15),
-        fidelity = p_dbl(lower = 1e-8, upper = 1, tags = "budget")
+        fidelity = p_dbl(lower = 1e-3, upper = 1, tags = "budget")
       )
     }
   )
