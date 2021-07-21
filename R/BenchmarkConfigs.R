@@ -83,7 +83,8 @@ benchmark_configs$add("lcbench", BenchmarkConfigLCBench)
 #' @export
 # augmented Branin as described in Wu et al. 2019
 # https://arxiv.org/pdf/1903.04703.pdf
-# y_min = 0.398 at fidelity = 1
+# y_min = 0.3978874 at x1 = 3.141593, x2 = 2.275000, fidelity = 1
+# y_max = 485.3732 at x1 = 10, x2 = 15, fidelity = 1e-3
 BenchmarkConfigBranin = R6Class("BenchmarkConfigBranin",
   inherit = BenchmarkConfig,
   public = list(
