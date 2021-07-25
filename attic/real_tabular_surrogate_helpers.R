@@ -1,25 +1,25 @@
 devtools::load_all()
 library(bbotk)
 library(paradox)
-library(ggplot2)
-devtools::load_all("../../workshop/mlr3mbo")
+library(mlr3)
+library(mlr3learners)
+library(mlr3mbo)
 library(miesmuschel)
-
-data_tabular = readRDS("../../multifidelity_data/branin_surrogate/data.rds")
-
-cfg_branin_surrogate = cfgs("branin_surrogate", workdir = "../../multifidelity_data")
+library(ggplot2)
 
 # Branin
-#set.seed(123)
-#cfg_branin = cfgs("branin")
+
+set.seed(123)
+cfg_branin = cfgs("branin")
+data_tabular = readRDS("../../multifidelity_data/branin_surrogate/data.rds")
+cfg_branin_surrogate = cfgs("branin_surrogate", workdir = "../../multifidelity_data")
+
 #ins_real = OptimInstanceSingleCrit$new(
 #  objective = cfg_branin$get_objective(),
 #  terminator = trm("none")
 #)
 #opt("grid_search", param_resolutions = c(x1 = 100, x2 = 100, fidelity = 10), batch_size = 10000)$optimize(ins_real)
 #saveRDS(ins_real$archive$data[, c("x1", "x2", "fidelity", "y"), with = FALSE], "data.rds") # this is the data.rds in the BenchmarkConfig directory
-
-#cfg_branin_surrogate = cfgs("branin_surrogate", workdir = "../multifidelity_data")
 #cfg_branin_surrogate$fit_surrogate(overwrite = TRUE)
 
 OptimizerRandomTabular = R6Class("OptimizerRandomTabular",
@@ -142,12 +142,12 @@ get_ins = function(method = c("real", "tabular", "surrogate"), budget = 100) {
       y_col = "y",
       search_space = cfg_branin$param_set,
       direction = "minimize",
-      terminator = trm("budget", budget = 100)
+      terminator = trm("budget", budget = budget)
     ),
     "surrogate" =
     OptimInstanceSingleCrit$new(
       objective = cfg_branin_surrogate$get_objective(),
-      terminator = trm("budget", budget = 100)
+      terminator = trm("budget", budget = budget)
     )
   )
 }
