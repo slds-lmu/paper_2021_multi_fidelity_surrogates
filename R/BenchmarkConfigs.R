@@ -161,6 +161,43 @@ benchmark_configs$add("branin", BenchmarkConfigBranin)
 
 
 #' @export
+BenchmarkConfigBraninSurrogate = R6Class("BenchmarkConfigBraninSurrogate",
+  inherit = BenchmarkConfig,
+  public = list(
+   initialize = function(id = "BraninSurrogate", workdir) {
+     super$initialize(
+       id,
+       workdir = workdir,
+       model_name = "branin_surrogate",
+       param_set_file = "param_set.rds",
+       data_file = "data.rds",
+       data_order_file = "data_order.rds",
+       dicts_file = "dicts.rds",
+       keras_model_file = "model.hdf5",
+       onnx_model_file = "model.onnx",
+       target_variables = "y",
+       codomain = ps(
+         y = p_dbl(lower = -Inf, upper = Inf, tags = "minimize")
+       ),
+       packages = NULL
+     )
+   }
+  ),
+  active = list(
+    data = function() {
+      if (is.null(private$.data)) private$.data = preproc_branin_surrogate(self)
+      private$.data
+    },
+    param_set = function() readRDS(self$param_set_path)
+  )
+)
+#' @include BenchmarkConfig.R
+benchmark_configs$add("branin_surrogate", BenchmarkConfigBraninSurrogate)
+
+
+
+
+#' @export
 # https://www.sfu.ca/~ssurjano/shekel.html
 # 4d function with m (default = 10) local minima
 # fidelity parameter replaces x4 (scaled from [0, 1] to [0, 4[)
