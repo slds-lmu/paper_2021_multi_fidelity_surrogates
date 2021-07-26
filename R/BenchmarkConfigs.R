@@ -196,6 +196,84 @@ benchmark_configs$add("branin_surrogate", BenchmarkConfigBraninSurrogate)
 
 
 
+#' @export
+# augmented Hartmann as described in Kandasamy et al. 2017
+# p = 1, d = 6
+# https://arxiv.org/abs/1703.06240
+# y_min = -3.322368 at x1 = 0.2016896, x2 = 0.1500236, x3 = 0.4768785, x4 = 0.2753365, x5 = 0.3116548, x6 = 0.6573037, fidelity = 1
+# y_max?
+BenchmarkConfigHartmann = R6Class("BenchmarkConfigHartmann",
+  inherit = BenchmarkConfig,
+  public = list(
+    initialize = function(id = "Branin") {
+      super$initialize(
+        id,
+        workdir = NULL,
+        model_name = "hartmann",
+        param_set_file = NULL,
+        data_file = NULL,
+        data_order_file = "NULL",
+        dicts_file = NULL,
+        keras_model_file = NULL,
+        onnx_model_file = NULL,
+        target_variables = "y",
+        codomain = ps(
+          y = p_dbl(lower = -Inf, upper = Inf, tags = "minimize")
+        ),
+        packages = NULL
+      )
+    },
+
+    setup = function() {
+      message("no setup necessary.")
+    },
+
+    get_objective = function() {
+      bbotk::ObjectiveRFunDt$new(
+        fun = function(xdt) {
+          x = xdt[, - "fidelity"]
+          alpha = c(1, 1.2, 3, 3.2)
+          A = matrix(c(10, 3, 17, 3.5, 1.7, 8,
+                       0.05, 10, 17, 0.1, 8, 14,
+                       3, 3.5, 1.7, 10, 17, 8,
+                       17, 8, 0.05, 10, 0.1, 14), nrow = 4, ncol = 6, byrow = TRUE)
+          P = 10^(-4) * matrix(c(1312, 1696, 5569, 124, 8283, 5886,
+                                 2329, 4135, 8307, 3736, 1004, 9991,
+                                 2348, 1451, 3522, 2883, 3047, 6650,
+                                 4047, 8828, 8732, 5743, 1091, 381), nrow = 4, ncol = 6, byrow = TRUE)
+          map_dtr(seq_len(NROW(xdt)), function(row_id) {
+            y = 0
+            for (i in 1:4) {
+              ai = if (i == 1) 0.1 * (1 - xdt[row_id, ][["fidelity"]]) else 0
+              y = y + ((alpha[i] - ai) * exp(- sum(A[i, ] * ((x[row_id, ] - P[i, ]) ^ 2))))
+            }
+            data.table(y = -y, cost = 0.01 + xdt[["fidelity"]])
+          })
+        },
+        domain = self$param_set,
+        codomain = self$codomain
+      )
+    }
+  ),
+  active = list(
+    param_set = function() {
+      ps(
+        x1 = p_dbl(lower = 0, upper = 1),
+        x2 = p_dbl(lower = 0, upper = 1),
+        x3 = p_dbl(lower = 0, upper = 1),
+        x4 = p_dbl(lower = 0, upper = 1),
+        x5 = p_dbl(lower = 0, upper = 1),
+        x6 = p_dbl(lower = 0, upper = 1),
+        fidelity = p_dbl(lower = 1e-3, upper = 1, tags = "budget")
+      )
+    }
+  )
+)
+#' @include BenchmarkConfig.R
+benchmark_configs$add("hartmann", BenchmarkConfigHartmann)
+
+
+
 
 #' @export
 # https://www.sfu.ca/~ssurjano/shekel.html

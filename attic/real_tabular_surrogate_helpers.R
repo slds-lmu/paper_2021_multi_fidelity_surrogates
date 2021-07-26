@@ -18,9 +18,44 @@ cfg_branin_surrogate = cfgs("branin_surrogate", workdir = "../../multifidelity_d
 #  objective = cfg_branin$get_objective(),
 #  terminator = trm("none")
 #)
-#opt("grid_search", param_resolutions = c(x1 = 100, x2 = 100, fidelity = 10), batch_size = 10000)$optimize(ins_real)
-#saveRDS(ins_real$archive$data[, c("x1", "x2", "fidelity", "y"), with = FALSE], "data.rds") # this is the data.rds in the BenchmarkConfig directory
+#design = setDT(expand.grid(x1 = seq(from = -5, to = 10, length.out = 100), x2 = seq(from = 0, to = 15, length.out = 100), fidelity = 1 / (2 ^ (0:9))))  # due to hyperband eta = 2
+#ins_real$eval_batch(design)
+#saveRDS(ins_real$archive$data[, c("x1", "x2", "fidelity", "y"), with = FALSE], "../../multifidelity_data/branin_surrogate/data.rds") # this is the data.rds in the BenchmarkConfig directory
 #cfg_branin_surrogate$fit_surrogate(overwrite = TRUE)
+
+SamplerRandomTabular = R6Class("SamplerRandomTabular",
+  inherit = Sampler,
+  public = list(
+    #' @field table [data.table::data.table].
+    table = NULL,
+
+    #' @description
+    #' Creates a new instance of this [R6][R6::R6Class] class.
+    #'
+    #' @param table ([data.table::data.table]).
+    #' @param x_cols (`character()`).
+    #' @param y_cols (`character(1)`).
+    initialize = function(table, param_set) {
+      self$table = assert_data_table(table)
+
+      super$initialize(
+        param_set = param_set
+      )
+    },
+
+    #' @description
+    #' Sample `n` values from the distribution.
+    #'
+    #' @param n (`integer(1)`).
+    #' @return [Design].
+    sample = function(n) {
+      assert_count(n) # we do argcheck on toplevel
+      ids = sample(seq_len(NROW(self$table)), size = min(n, NROW(self$table)), replace = FALSE)
+      list(data = self$table[ids, ])
+    }
+  )
+)
+
 
 OptimizerRandomTabular = R6Class("OptimizerRandomTabular",
   inherit = Optimizer,
