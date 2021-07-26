@@ -65,3 +65,20 @@ dt
    We likely to rescale to get comparable varianes?
 
 
+
+```{r}
+cfg = cfgs("rbv2_super", workdir=workdir)
+obj = cfg$get_objective()
+idx = 1:1000
+ptest = obj$eval_dt(cfg$data$xtest[idx])
+compute_metrics(
+  response = cfg$data$ytest[idx,],
+  prediction = as.matrix(ptest),
+  stratify = cfg$data$xtest[idx, cfg$task_col]
+)
+```
+
+```{r}
+list.files(workdir)
+
+```
