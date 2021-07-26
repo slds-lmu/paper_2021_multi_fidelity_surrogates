@@ -229,3 +229,76 @@ p = ggplot(dt, aes(x = evals, y = objective_bbotk, color = level)) +
   theme_bw()
 ggsave(paste0("attic/random_search/", cfg, "_random_search.pdf"), p)
 ```
+
+### Original Scale
+
+
+```{r}
+cfg = cfgs("lcbench", workdir = workdir)
+
+x_ids = cfg$param_set$ids()
+y_ids = cfg$codomain$ids()
+
+xdt = cfg$data$xtest[, ..x_ids, drop = FALSE]
+li = c(
+  mlr3misc::imap(mlr3misc::keep(xdt, function(x) is.character(x) || is.factor(x)), char_to_int, readRDS(cfg$dicts_path)),
+  continuous = list(reticulate::r_to_py(as.matrix(keep(xdt, is.numeric)))$astype("float32"))
+)
+
+rt = reticulate::import("onnxruntime")
+session = rt$InferenceSession(cfg$onnx_model_path)
+dt = session$run(NULL, li)[[1L]]
+colnames(dt) = colnames(cfg$data$ytest)
+
+
+compute_metrics(
+  as.matrix(cfg$data$ytest[, y_ids]),
+  as.matrix(dt)
+)
+
+model = keras::load_model_hdf5(cfg$keras_model_path)
+
+ll = predict(model, li)
+
+
+head(ll)
+head(dt)
+
+yy = cfg$data$ytest[, y_ids]
+
+
+compute_metrics(
+  as.matrix(),
+  as.matrix(setNames(data.frame(ll), colnames(dt)))
+)
+
+```
+
+
+```r
+library("ggplot2")
+df = oo[[2]]
+library("data.table")
+data.table(df) -> df
+df[, grp := NULL]
+df = df[, lapply(.SD, mean), by = .(variable, cfg, level)]
+df[, xx := as.integer(as.factor(level))]
+max_x =  ceiling(sqrt(max(df$xx)))
+df[, x := xx %% max_x]
+df[, y := ceiling(xx / max_x)]
+
+ggplot(
+  df[variable == "logloss",],
+  aes(x = x, y = y, fill = rsq)
+) +
+geom_tile(color = "black", size = .1) +
+theme_minimal() +
+scale_fill_gradient(low="yellow",  high="red") +
+geom_text(aes(x = x, y = y, label = paste(level, "\n", round(rsq, 2)))) +
+theme(
+  axis.text = element_blank(),
+  axis.ticks = element_blank(),
+  axis.title = element_blank()
+) +
+ggtitle("RSq for Logloss")
+```
