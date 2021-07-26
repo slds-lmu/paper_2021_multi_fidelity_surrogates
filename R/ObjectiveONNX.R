@@ -12,27 +12,35 @@
 ObjectiveONNX = R6Class("ObjectiveONNX",
   inherit = bbotk::ObjectiveRFunDt,
   public = list(
-    trafo_dict = list(),
-    session = list(),
-    active_session = FALSE,
+    model_path = NULL,
+    data_order = NULL,
+    trafo_dict = NULL,
+    full_codomain = NULL,
+    session = NULL,
+    active_session = NULL,
+    retrafo = FALSE,
 
     #' @description
     #' Creates a new instance of this [R6][R6::R6Class] class.
     #'
     #' @param model_path (`character`)\cr
     #'   Path to the onnx Model.
-    #' @param trafo_dict (`character`)\cr
+    #' @param data_order (`character`)\cr
+    #'   Order of columns in data.
+    #' @param trafo_dict (`list`)\cr
     #'   Dictionary containing feature transformations before beeing fed to the NN.
+    #' @param full_codomain ([paradox::ParamSet])\cr
+    #'   Full codomain.
+    #' @param task (`character(1)`)\cr
+    #'   Name of a task to be fixed.
     #' @param id (`character(1)`).
-    #' @param properties (`character()`).
-    #' @param retrafo (`character`)\cr
+    #' @param active_session (`logical(1)`)\cr
+    #'   Whether an active session should be used.
+    #' @param retrafo (`logical(1)`)\cr
     #'  Should params be trafoed back to their original range before return?
-    initialize = function(model_path, trafo_dict, domain, full_codomain_names, codomain = NULL, task = NULL, id = "ONNX", active_session = TRUE, retrafo = FALSE,
+    #' @param properties (`character()`).
+    initialize = function(model_path, data_order, trafo_dict, domain, full_codomain, codomain, task = NULL, id = "ONNX", active_session = TRUE, retrafo = FALSE,
       properties = character(), constants = NULL, check_values = FALSE) {
-      self$check_values = check_values
-      if (is.null(codomain)) {
-        codomain = ParamSet$new(list(ParamDbl$new("y", tags = "minimize")))
-      }
       if (!is.null(task)) {
         task_id = domain$params[[domain$ids(tags = "task_id")]]
         task_id$default = task
@@ -56,6 +64,12 @@ ObjectiveONNX = R6Class("ObjectiveONNX",
         rt = reticulate::import("onnxruntime")
         self$session = sess = rt$InferenceSession(model_path)
       }
+      # FIXME: assertions
+      self$model_path = model_path
+      self$data_order = data_order
+      self$full_codomain = full_codomain
+      self$retrafo = retrafo
+
       fun = function(xdt) {
         # Handle constants in-place
         if (!self$constants$is_empty) {
@@ -77,8 +91,8 @@ ObjectiveONNX = R6Class("ObjectiveONNX",
           )
           xdt[, to_add[i] := NA_storage_type]
         }
-        # Re-order columns in case the order changed through trafos.
-        xdt = xdt[, (c(param_ids, self$constants$ids())), with = FALSE]
+        # re-order columns in case the order changed through trafos
+        xdt = xdt[, self$data_order, with = FALSE]
 
         li = c(
           mlr3misc::imap(mlr3misc::keep(xdt, function(x) is.character(x) || is.factor(x)), char_to_int, self$trafo_dict),
@@ -93,10 +107,12 @@ ObjectiveONNX = R6Class("ObjectiveONNX",
           session = self$session
         }
         dt = session$run(NULL, li)[[1L]]
-        if (retrafo) {
-          dt = data.table(retrafo_predictions(dt, full_codomain_names, self$trafo_dict))
+        dt = pmin(pmax(dt, 0 + .Machine$double.eps), 1 - .Machine$double.neg.eps)  # surrogate outputs MUST be in [0, 1] due to sigmoid
+        full_codomain_names = self$full_codomain$ids()
+        if (self$retrafo) {
+          dt = data.table(retrafo_predictions(dt, target_names = full_codomain_names, codomain = self$full_codomain, trafo_dict = self$trafo_dict))
         } else {
-          dt = setNames(data.table(dt, full_codomain_names))
+          dt = setNames(data.table(dt), nm = full_codomain_names)
         }
         return(dt)
       }
@@ -107,16 +123,14 @@ ObjectiveONNX = R6Class("ObjectiveONNX",
 )
 
 #' @export
-convert_for_onnx = function(xdt, param_set, trafo_dict) {
+convert_for_onnx = function(xdt, data_order, param_set, trafo_dict) {
   setDT(xdt)
-  param_ids = param_set$ids()
-  constant_ids = NULL
-  ids = c(param_ids, constant_ids)  # FIXME: why would we treat constants differently (also above)?
+  ids = param_set$ids()
   missing = ids[mlr3misc::`%nin%`(ids, names(xdt))]
   if (length(missing)) {
     xdt[, (missing) := NA]
   }
-  xdt = xdt[, (c(param_ids, constant_ids)), with = FALSE]
+  xdt = xdt[, data_order, with = FALSE]
   xdt = convert_storage_type(xdt, param_set = param_set)
 
   li = c(

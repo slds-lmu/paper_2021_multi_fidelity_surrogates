@@ -9,6 +9,7 @@ BenchmarkConfigNB301 = R6Class("BenchmarkConfigNB301",
         model_name = "nb301",
         param_set_file = "param_set.rds",
         data_file = "data.rds",
+        data_order_file = "data_order.rds",
         dicts_file = "dicts.rds",
         keras_model_file = "model.hdf5",
         onnx_model_file = "model.onnx",
@@ -46,12 +47,13 @@ BenchmarkConfigLCBench = R6Class("BenchmarkConfigLCBench",
        model_name = "lcbench",
        param_set_file = "param_set.rds",
        data_file = "data.rds",
+       data_order_file = "data_order.rds",
        dicts_file = "dicts.rds",
        keras_model_file = "model.hdf5",
        onnx_model_file = "model.onnx",
        target_variables = c("val_accuracy", "val_cross_entropy", "val_balanced_accuracy", "test_cross_entropy", "test_balanced_accuracy", "time"),
        codomain = ps(
-         val_accuracy = p_dbl(lower = 0, upper = 1, tags = "maximize"),
+         val_accuracy = p_dbl(lower = 0, upper = 100, tags = "maximize"),
          val_cross_entropy = p_dbl(lower = 0, upper = Inf, tags = "minimize"),
          val_balanced_accuracy = p_dbl(lower = 0, upper = 1, tags = "maximize"),
          test_cross_entropy = p_dbl(lower = 0, upper = Inf, tags = "minimize"),
@@ -79,11 +81,10 @@ benchmark_configs$add("lcbench", BenchmarkConfigLCBench)
 
 
 #' @export
-# with fidelity = 0 3 global optima that vanish until fidelity 1 only a single global optimum; idea from
-# Forrester, A., Sobester, A., & Keane, A. (2008). Engineering design via surrogate modelling: a practical guide. Wiley.
-# fidelity 0: x*1 = (-pi, 12.275), x*2 = (pi, 2.275), x*3 = c(9.42478, 2.475) f(x) = 0.39789
-# fidelity 1: x*1 = (9.97247, 2.97574) f(x) = -48.05995
-# increasing fidelity gradually shifts x*3 to the global x*1
+# augmented Branin as described in Wu et al. 2019
+# https://arxiv.org/pdf/1903.04703.pdf
+# y_min = 0.3978874 at x1 = 3.141593, x2 = 2.275000, fidelity = 1
+# y_max = 485.3732 at x1 = 10, x2 = 15, fidelity = 1e-3
 BenchmarkConfigBranin = R6Class("BenchmarkConfigBranin",
   inherit = BenchmarkConfig,
   public = list(
@@ -94,6 +95,7 @@ BenchmarkConfigBranin = R6Class("BenchmarkConfigBranin",
         model_name = "branin",
         param_set_file = NULL,
         data_file = NULL,
+        data_order_file = "NULL",
         dicts_file = NULL,
         keras_model_file = NULL,
         onnx_model_file = NULL,
@@ -112,13 +114,9 @@ BenchmarkConfigBranin = R6Class("BenchmarkConfigBranin",
     get_objective = function() {
       bbotk::ObjectiveRFunDt$new(
         fun = function(xdt) {
-          a = 1
-          b = 5.1 / (4 * (pi ^ 2))
-          c = 5 / pi
-          r = 6
-          s = 10
-          t = 1 / (8 * pi)
-          data.table(y = (a * ((xdt[["x2"]] - b * (xdt[["x1"]] ^ 2L) + c * xdt[["x1"]] - r) ^ 2) + ((s * (1 - t)) * cos(xdt[["x1"]])) + s - (5 * xdt[["fidelity"]] * xdt[["x1"]])))
+          y = (xdt[["x2"]] - ((5.1 / (4 * pi^2)) - 0.1 * (1 - xdt[["fidelity"]])) * xdt[["x1"]]^2 + (5 / pi) * xdt[["x1"]] - 6) ^ 2 +
+            10 * (1 - (1 / (8 * pi))) * cos(xdt[["x1"]]) + 10
+          data.table(y = y, cost = 0.01 + xdt[["fidelity"]])
         },
         domain = self$param_set,
         codomain = self$codomain
@@ -152,13 +150,50 @@ BenchmarkConfigBranin = R6Class("BenchmarkConfigBranin",
       ps(
         x1 = p_dbl(lower = -5, upper = 10),
         x2 = p_dbl(lower = 0, upper = 15),
-        fidelity = p_dbl(lower = 1e-8, upper = 1, tags = "budget")
+        fidelity = p_dbl(lower = 1e-3, upper = 1, tags = "budget")
       )
     }
   )
 )
 #' @include BenchmarkConfig.R
 benchmark_configs$add("branin", BenchmarkConfigBranin)
+
+
+
+#' @export
+BenchmarkConfigBraninSurrogate = R6Class("BenchmarkConfigBraninSurrogate",
+  inherit = BenchmarkConfig,
+  public = list(
+   initialize = function(id = "BraninSurrogate", workdir) {
+     super$initialize(
+       id,
+       workdir = workdir,
+       model_name = "branin_surrogate",
+       param_set_file = "param_set.rds",
+       data_file = "data.rds",
+       data_order_file = "data_order.rds",
+       dicts_file = "dicts.rds",
+       keras_model_file = "model.hdf5",
+       onnx_model_file = "model.onnx",
+       target_variables = "y",
+       codomain = ps(
+         y = p_dbl(lower = -Inf, upper = Inf, tags = "minimize")
+       ),
+       packages = NULL
+     )
+   }
+  ),
+  active = list(
+    data = function() {
+      if (is.null(private$.data)) private$.data = preproc_branin_surrogate(self)
+      private$.data
+    },
+    param_set = function() readRDS(self$param_set_path)
+  )
+)
+#' @include BenchmarkConfig.R
+benchmark_configs$add("branin_surrogate", BenchmarkConfigBraninSurrogate)
+
 
 
 
@@ -177,6 +212,7 @@ BenchmarkConfigShekel = R6Class("BenchmarkConfigShekel",
         model_name = "shekel",
         param_set_file = NULL,
         data_file = NULL,
+        data_order_file = "NULL",
         dicts_file = NULL,
         keras_model_file = NULL,
         onnx_model_file = NULL,
@@ -255,6 +291,7 @@ BenchmarkConfigZDT6 = R6Class("BenchmarkConfigZDT6",
         model_name = "zdt1",
         param_set_file = NULL,
         data_file = NULL,
+        data_order_file = "NULL",
         dicts_file = NULL,
         keras_model_file = NULL,
         onnx_model_file = NULL,
@@ -306,6 +343,7 @@ benchmark_configs$add("zdt6", BenchmarkConfigZDT6)
 
 
 
+#' @export
 BenchmarkConfigRBv2SVM = R6Class("BenchmarkConfigRBv2SVM",
   inherit = BenchmarkConfig,
   public = list(
@@ -316,6 +354,7 @@ BenchmarkConfigRBv2SVM = R6Class("BenchmarkConfigRBv2SVM",
         model_name = "rbv2_svm",
         param_set_file = NULL,
         data_file = "data.rds",
+        data_order_file = "data_order.rds",
         dicts_file = "dicts.rds",
         keras_model_file = "model.hdf5",
         onnx_model_file = "model.onnx",
@@ -325,8 +364,8 @@ BenchmarkConfigRBv2SVM = R6Class("BenchmarkConfigRBv2SVM",
           f1 = p_dbl(lower = 0, upper = 1, tags = "maximize"),
           auc = p_dbl(lower = 0, upper = 1, tags = "maximize"),
           logloss = p_dbl(lower = 0, upper = Inf, tags = "minimize"),
-          timetrain = p_dbl(lower = 0, upper = 1, tags = "minimize"),
-          timepredict = p_dbl(lower = 0, upper = 1, tags = "minimize")
+          timetrain = p_dbl(lower = 0, upper = Inf, tags = "minimize"),
+          timepredict = p_dbl(lower = 0, upper = Inf, tags = "minimize")
         ),
         packages = NULL
       )
@@ -340,7 +379,6 @@ BenchmarkConfigRBv2SVM = R6Class("BenchmarkConfigRBv2SVM",
         gamma = p_dbl(lower = -10, upper = 10, tags = "log", trafo = function(x) exp(x), depends = kernel == "radial"),
         tolerance = p_dbl(lower = -10, upper = log(2), tags = "log", trafo = function(x) exp(x)),
         degree = p_int(lower = 2, upper = 5, depends = kernel == "polynomial"),
-        # shrinking = p_lgl(),
         trainsize = p_dbl(lower = 0.05, upper = 1, tag = "budget"),
         repl = p_int(lower = 1, upper = 10, tag = "budget"),
         num.impute.selected.cpo = p_fct(levels = c("impute.mean", "impute.median", "impute.hist")),
@@ -362,6 +400,12 @@ BenchmarkConfigRBv2SVM = R6Class("BenchmarkConfigRBv2SVM",
     data = function() {
       if(is.null(private$.data)) private$.data = preproc_data_rbv2_svm(self)
       private$.data
+    },
+    opt_param_set = function() {
+      ps = self$param_set$clone()
+      ps$subset(setdiff(ps$ids(), "repl"))
+      ps$add(ParamInt$new("repl", lower = 10, upper = 10, default = 10, tags = "constant"))
+      return(ps)
     }
   )
 )
@@ -370,6 +414,7 @@ benchmark_configs$add("rbv2_svm", BenchmarkConfigRBv2SVM)
 
 
 
+#' @export
 BenchmarkConfigRBv2ranger = R6Class("BenchmarkConfigRBv2ranger",
   inherit = BenchmarkConfig,
   public = list(
@@ -380,6 +425,7 @@ BenchmarkConfigRBv2ranger = R6Class("BenchmarkConfigRBv2ranger",
         model_name = "rbv2_ranger",
         param_set_file = NULL,
         data_file = "data.rds",
+        data_order_file = "data_order.rds",
         dicts_file = "dicts.rds",
         keras_model_file = "model.hdf5",
         onnx_model_file = "model.onnx",
@@ -389,8 +435,8 @@ BenchmarkConfigRBv2ranger = R6Class("BenchmarkConfigRBv2ranger",
           f1 = p_dbl(lower = 0, upper = 1, tags = "maximize"),
           auc = p_dbl(lower = 0, upper = 1, tags = "maximize"),
           logloss = p_dbl(lower = 0, upper = Inf, tags = "minimize"),
-          timetrain = p_dbl(lower = 0, upper = 1, tags = "minimize"),
-          timepredict = p_dbl(lower = 0, upper = 1, tags = "minimize")
+          timetrain = p_dbl(lower = 0, upper = Inf, tags = "minimize"),
+          timepredict = p_dbl(lower = 0, upper = Inf, tags = "minimize")
         ),
         packages = NULL
       )
@@ -432,6 +478,12 @@ BenchmarkConfigRBv2ranger = R6Class("BenchmarkConfigRBv2ranger",
     data = function() {
       if(is.null(private$.data)) private$.data = preproc_data_rbv2_ranger(self)
       private$.data
+    },
+    opt_param_set = function() {
+      ps = self$param_set$clone()
+      ps$subset(setdiff(ps$ids(), "repl"))
+      ps$add(ParamInt$new("repl", lower = 10, upper = 10, default = 10, tags = "constant"))
+      return(ps)
     }
   )
 )
@@ -440,6 +492,7 @@ benchmark_configs$add("rbv2_ranger", BenchmarkConfigRBv2ranger)
 
 
 
+#' @export
 BenchmarkConfigRBv2glmnet = R6Class("BenchmarkConfigRBv2glmnet",
   inherit = BenchmarkConfig,
   public = list(
@@ -450,6 +503,7 @@ BenchmarkConfigRBv2glmnet = R6Class("BenchmarkConfigRBv2glmnet",
         model_name = "rbv2_glmnet",
         param_set_file = NULL,
         data_file = "data.rds",
+        data_order_file = "data_order.rds",
         dicts_file = "dicts.rds",
         keras_model_file = "model.hdf5",
         onnx_model_file = "model.onnx",
@@ -459,8 +513,8 @@ BenchmarkConfigRBv2glmnet = R6Class("BenchmarkConfigRBv2glmnet",
           f1 = p_dbl(lower = 0, upper = 1, tags = "maximize"),
           auc = p_dbl(lower = 0, upper = 1, tags = "maximize"),
           logloss = p_dbl(lower = 0, upper = Inf, tags = "minimize"),
-          timetrain = p_dbl(lower = 0, upper = 1, tags = "minimize"),
-          timepredict = p_dbl(lower = 0, upper = 1, tags = "minimize")
+          timetrain = p_dbl(lower = 0, upper = Inf, tags = "minimize"),
+          timepredict = p_dbl(lower = 0, upper = Inf, tags = "minimize")
         ),
         packages = NULL
       )
@@ -493,6 +547,12 @@ BenchmarkConfigRBv2glmnet = R6Class("BenchmarkConfigRBv2glmnet",
     data = function() {
       if(is.null(private$.data)) private$.data = preproc_data_rbv2_glmnet(self)
       private$.data
+    },
+    opt_param_set = function() {
+      ps = self$param_set$clone()
+      ps$subset(setdiff(ps$ids(), "repl"))
+      ps$add(ParamInt$new("repl", lower = 10, upper = 10, default = 10, tags = "constant"))
+      return(ps)
     }
   )
 )
@@ -501,6 +561,7 @@ benchmark_configs$add("rbv2_glmnet", BenchmarkConfigRBv2glmnet)
 
 
 
+#' @export
 BenchmarkConfigRBv2xgboost = R6Class("BenchmarkConfigRBv2xgboost",
   inherit = BenchmarkConfig,
   public = list(
@@ -511,6 +572,7 @@ BenchmarkConfigRBv2xgboost = R6Class("BenchmarkConfigRBv2xgboost",
         model_name = "rbv2_xgboost",
         param_set_file = NULL,
         data_file = "data.rds",
+        data_order_file = "data_order.rds",
         dicts_file = "dicts.rds",
         keras_model_file = "model.hdf5",
         onnx_model_file = "model.onnx",
@@ -520,8 +582,8 @@ BenchmarkConfigRBv2xgboost = R6Class("BenchmarkConfigRBv2xgboost",
           f1 = p_dbl(lower = 0, upper = 1, tags = "maximize"),
           auc = p_dbl(lower = 0, upper = 1, tags = "maximize"),
           logloss = p_dbl(lower = 0, upper = Inf, tags = "minimize"),
-          timetrain = p_dbl(lower = 0, upper = 1, tags = "minimize"),
-          timepredict = p_dbl(lower = 0, upper = 1, tags = "minimize")
+          timetrain = p_dbl(lower = 0, upper = Inf, tags = "minimize"),
+          timepredict = p_dbl(lower = 0, upper = Inf, tags = "minimize")
         ),
         packages = NULL
       )
@@ -567,6 +629,12 @@ BenchmarkConfigRBv2xgboost = R6Class("BenchmarkConfigRBv2xgboost",
     data = function() {
       if(is.null(private$.data)) private$.data = preproc_data_rbv2_xgboost(self)
       private$.data
+    },
+    opt_param_set = function() {
+      ps = self$param_set$clone()
+      ps$subset(setdiff(ps$ids(), "repl"))
+      ps$add(ParamInt$new("repl", lower = 10, upper = 10, default = 10, tags = "constant"))
+      return(ps)
     }
   )
 )
@@ -575,6 +643,7 @@ benchmark_configs$add("rbv2_xgboost", BenchmarkConfigRBv2xgboost)
 
 
 
+#' @export
 BenchmarkConfigRBv2rpart = R6Class("BenchmarkConfigRBv2rpart",
   inherit = BenchmarkConfig,
   public = list(
@@ -585,6 +654,7 @@ BenchmarkConfigRBv2rpart = R6Class("BenchmarkConfigRBv2rpart",
         model_name = "rbv2_rpart",
         param_set_file = NULL,
         data_file = "data.rds",
+        data_order_file = "data_order.rds",
         dicts_file = "dicts.rds",
         keras_model_file = "model.hdf5",
         onnx_model_file = "model.onnx",
@@ -594,8 +664,8 @@ BenchmarkConfigRBv2rpart = R6Class("BenchmarkConfigRBv2rpart",
           f1 = p_dbl(lower = 0, upper = 1, tags = "maximize"),
           auc = p_dbl(lower = 0, upper = 1, tags = "maximize"),
           logloss = p_dbl(lower = 0, upper = Inf, tags = "minimize"),
-          timetrain = p_dbl(lower = 0, upper = 1, tags = "minimize"),
-          timepredict = p_dbl(lower = 0, upper = 1, tags = "minimize")
+          timetrain = p_dbl(lower = 0, upper = Inf, tags = "minimize"),
+          timepredict = p_dbl(lower = 0, upper = Inf, tags = "minimize")
         ),
         packages = NULL
       )
@@ -631,6 +701,12 @@ BenchmarkConfigRBv2rpart = R6Class("BenchmarkConfigRBv2rpart",
     data = function() {
       if(is.null(private$.data)) private$.data = preproc_data_rbv2_rpart(self)
       private$.data
+    },
+    opt_param_set = function() {
+      ps = self$param_set$clone()
+      ps$subset(setdiff(ps$ids(), "repl"))
+      ps$add(ParamInt$new("repl", lower = 10, upper = 10, default = 10, tags = "constant"))
+      return(ps)
     }
   )
 )
@@ -639,6 +715,7 @@ benchmark_configs$add("rbv2_rpart", BenchmarkConfigRBv2rpart)
 
 
 
+#' @export
 BenchmarkConfigRBv2aknn = R6Class("BenchmarkConfigRBv2aknn",
   inherit = BenchmarkConfig,
   public = list(
@@ -649,6 +726,7 @@ BenchmarkConfigRBv2aknn = R6Class("BenchmarkConfigRBv2aknn",
         model_name = "rbv2_aknn",
         param_set_file = NULL,
         data_file = "data.rds",
+        data_order_file = "data_order.rds",
         dicts_file = "dicts.rds",
         keras_model_file = "model.hdf5",
         onnx_model_file = "model.onnx",
@@ -658,8 +736,8 @@ BenchmarkConfigRBv2aknn = R6Class("BenchmarkConfigRBv2aknn",
           f1 = p_dbl(lower = 0, upper = 1, tags = "maximize"),
           auc = p_dbl(lower = 0, upper = 1, tags = "maximize"),
           logloss = p_dbl(lower = 0, upper = Inf, tags = "minimize"),
-          timetrain = p_dbl(lower = 0, upper = 1, tags = "minimize"),
-          timepredict = p_dbl(lower = 0, upper = 1, tags = "minimize")
+          timetrain = p_dbl(lower = 0, upper = Inf, tags = "minimize"),
+          timepredict = p_dbl(lower = 0, upper = Inf, tags = "minimize")
         ),
         packages = NULL
       )
@@ -695,6 +773,12 @@ BenchmarkConfigRBv2aknn = R6Class("BenchmarkConfigRBv2aknn",
     data = function() {
       if(is.null(private$.data)) private$.data = preproc_data_rbv2_aknn(self)
       private$.data
+    },
+    opt_param_set = function() {
+      ps = self$param_set$clone()
+      ps$subset(setdiff(ps$ids(), "repl"))
+      ps$add(ParamInt$new("repl", lower = 10, upper = 10, default = 10, tags = "constant"))
+      return(ps)
     }
   )
 )
@@ -703,6 +787,7 @@ benchmark_configs$add("rbv2_aknn", BenchmarkConfigRBv2aknn)
 
 
 
+#' @export
 BenchmarkConfigSuperRBv2 = R6Class("BenchmarkConfigSuperRBv2",
   inherit = BenchmarkConfig,
   public = list(
@@ -713,6 +798,7 @@ BenchmarkConfigSuperRBv2 = R6Class("BenchmarkConfigSuperRBv2",
         model_name = "rbv2_super",
         param_set_file = NULL,
         data_file = "data.rds",
+        data_order_file = "data_order.rds",
         dicts_file = "dicts.rds",
         keras_model_file = "model.hdf5",
         onnx_model_file = "model.onnx",
@@ -721,7 +807,7 @@ BenchmarkConfigSuperRBv2 = R6Class("BenchmarkConfigSuperRBv2",
           mmce = p_dbl(lower = 0, upper = 1, tags = "minimize"),
           f1 = p_dbl(lower = 0, upper = 1, tags = "maximize"),
           auc = p_dbl(lower = 0, upper = 1, tags = "maximize"),
-          logloss = p_dbl(lower = 0, upper = Inf, tags = "minimize"), # has to be maximized for retrafo = FALSE, minimized for retrafo = TRUE
+          logloss = p_dbl(lower = 0, upper = Inf, tags = "minimize"),
           timetrain = p_dbl(lower = 0, upper = Inf, tags = "minimize"),
           timepredict = p_dbl(lower = 0, upper = Inf, tags = "minimize")
         ),
@@ -816,7 +902,7 @@ BenchmarkConfigSuperRBv2 = R6Class("BenchmarkConfigSuperRBv2",
 benchmark_configs$add("rbv2_super", BenchmarkConfigSuperRBv2)
 
 
-
+#' @export
 BenchmarkConfigFCNet = R6Class("BenchmarkConfigFCNet",
   inherit = BenchmarkConfig,
   public = list(
@@ -827,6 +913,7 @@ BenchmarkConfigFCNet = R6Class("BenchmarkConfigFCNet",
         model_name = "fcnet_tabular_benchmarks",
         param_set_file = NULL,
         data_file = "data.rds",
+        data_order_file = "data_order.rds",
         dicts_file = "dicts.rds",
         keras_model_file = "model.hdf5",
         onnx_model_file = "model.onnx",
@@ -885,6 +972,7 @@ BenchmarkConfigTaskSet = R6Class("BenchmarkConfigTaskSet",
         model_name = "task_set",
         param_set_file = NULL,
         data_file = "data.rds",
+        data_order_file = "data_order.rds",
         dicts_file = "dicts.rds",
         keras_model_file = "model.hdf5",
         onnx_model_file = "model.onnx",
@@ -933,7 +1021,7 @@ BenchmarkConfigTaskSet = R6Class("BenchmarkConfigTaskSet",
   )
 )
 #' @include BenchmarkConfig.R
-benchmark_configs$add("task_set", BenchmarkConfigTaskSet)
+#benchmark_configs$add("task_set", BenchmarkConfigTaskSet)
 
 
 # Not sure whether to include kerasff

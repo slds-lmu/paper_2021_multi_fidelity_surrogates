@@ -1,17 +1,9 @@
 fit_surrogate = function(problem_config, model_config = default_model_config(), overwrite = FALSE, plot = TRUE) {
   require_namespaces(c("keras", "mlr3keras"))
   data = problem_config$data
+  y_ids = problem_config$target_variables
 
-  # Re-order columns to make sure column order matches
-  x_ids = problem_config$param_set$ids()
-  y_ids = problem_config$codomain$ids()
-
-  data$xtrain = data$xtrain[, x_ids, with = FALSE]
-  data$xtest = data$xtest[, x_ids, with = FALSE]
-  data$ytrain = data$ytrain[, y_ids, drop = FALSE]
-  data$ytest = data$ytest[, y_ids, drop = FALSE]
-
-  data = munge_data(data, target_vars = problem_config$target_variables, munge_n = model_config$munge_n)
+  data = munge_data(data, target_vars = y_ids, munge_n = model_config$munge_n)
   rs = mlr3keras::reshape_data_embedding(data$xtrain)
   embd = make_embedding_dt(data$xtrain, emb_multiplier = model_config$emb_multiplier)
 

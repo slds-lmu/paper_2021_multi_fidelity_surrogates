@@ -2,7 +2,6 @@ preproc_data_task_set = function(config) {
   path = config$data_path
   dt = readRDS(path)
   dt[, optimizer := NULL]
-  # replication 0 as train, 1 as test
   tt = list(test = dt[replication == 1L], train = dt[replication == 0L])
   tt$test[, replication := NULL]
   tt$train[, replication := NULL]

@@ -1,0 +1,14 @@
+budgets levels: LCBench 1:52 epochs
+                RBv2_super 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 1.0 trainsize
+
+*_retrafo indicates that computations were performed after retransforming the target variables to their original scales
+
+measures:
+measures_heat heatmaps of the performance measures (rsq, rho, ktau) for each target variable aggregated over all budget levels, cells are task levels
+measures_ LOESS plots of the performance measures for each target variable over the budget levels
+
+lags:
+pearson correlation of fixed configs over budget; color indicates surrogate prediction (p, red) or ground truth (y, turquoise)
+py_lags_ LOESS, point plots of the pearson correlation for a lag of 1, e.g., LCBench: 2-1, 3-2, ..., RBv2_super 0.3-0.2, 0.4-0.3, ...
+py_lags_mmm_ same as above but for lags: LCBench 26-1, 52-1, 52-26, RBv2_super: 0.5-0.2, 1.0-0.2, 1.0-0.5
+

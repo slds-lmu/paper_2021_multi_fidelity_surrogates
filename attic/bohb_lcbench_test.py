@@ -19,9 +19,10 @@ class lcbench(Worker):
         self.sleep_interval = sleep_interval
         base = importr("base")
         self.mfsurrogates = importr("mfsurrogates")
-        self.session = onnxruntime.InferenceSession("attic/multifidelity_data/lcbench/model.onnx")
-        self.param_set = base.readRDS("attic/multifidelity_data/lcbench/param_set.rds")
-        self.trafo_dict = base.readRDS("attic/multifidelity_data/lcbench/dicts.rds")
+        self.session = onnxruntime.InferenceSession("multifidelity_data/lcbench/model.onnx")
+        self.param_set = base.readRDS("multifidelity_data/lcbench/param_set.rds")
+        self.data_order = base.readRDS("multifidelity_data/lcbench/data_order.rds")
+        self.trafo_dict = base.readRDS("multifidelity_data/lcbench/dicts.rds")
 
         pandas2ri.activate()
 
@@ -37,17 +38,19 @@ class lcbench(Worker):
                 'info' (dict)
         """
 
-        # FIXME: if we want to set the OpenML_task_id constant we could add this here (using the correct cs below)
+        # FIXME: if we want to set the task constant we could add this here (using the correct cs below)
         #        we could then proceed to add a task_id to the constuctor
         config.update({"OpenML_task_id": "3945"})  # FIXME:
         config.update({"epoch": int(budget)})  # FIXME: budget trafo to match epoch range and int
         xdt = pd.DataFrame.from_dict([config])
         xdt = pandas2ri.py2rpy(xdt)
 
-        li_ = self.mfsurrogates.convert_for_onnx(xdt, param_set = self.param_set, trafo_dict = self.trafo_dict)
+        li_ = self.mfsurrogates.convert_for_onnx(xdt, data_order = self.data_order, param_set = self.param_set, trafo_dict = self.trafo_dict)
         li = { key : li_.rx2(key) for key in li_.names }
         li["continuous"] = np.atleast_2d(li["continuous"]).astype("float32")
         res = self.session.run(None, li)[0]
+        # FIXME: for retrafo see nb301 example
+        # FIXME: make sure that predicted values after retrafo are actually in range of boundaries
 
         time.sleep(self.sleep_interval)
 
@@ -58,7 +61,7 @@ class lcbench(Worker):
     
     @staticmethod
     def get_configspace():
-        with open('src/configspaces/configspace_lcbench_drop_OpenML_task_id_epoch.json', 'r') as f:
+        with open('paper_2021_multi_fidelity_surrogates/src/configspaces/configspace_lcbench_drop_OpenML_task_id_epoch.json', 'r') as f:
             json_string = f.read()
             cs = json.read(json_string)
         return(cs)
