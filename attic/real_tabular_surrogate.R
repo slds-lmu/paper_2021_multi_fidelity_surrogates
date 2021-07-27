@@ -5,12 +5,12 @@ source("real_tabular_surrogate_helpers.R")
 
 # Branin
 
-repls = 5
+repls = 100
 results = map_dtr(seq_len(repls), function(repl) {
 
-  ins_real = get_ins("real", budget = 32)
-  ins_tabular = get_ins("tabular", budget = 32)
-  ins_surrogate = get_ins("surrogate", budget = 32)
+  ins_real = get_ins("real", budget = 100)
+  ins_tabular = get_ins("tabular", budget = 100)
+  ins_surrogate = get_ins("surrogate", budget = 100)
 
   opt("random_search", batch_size = 1)$optimize(ins_real)
   real_rs = get_trace(ins_real$archive, "real", "rs")

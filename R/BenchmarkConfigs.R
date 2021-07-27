@@ -205,7 +205,7 @@ benchmark_configs$add("branin_surrogate", BenchmarkConfigBraninSurrogate)
 BenchmarkConfigHartmann = R6Class("BenchmarkConfigHartmann",
   inherit = BenchmarkConfig,
   public = list(
-    initialize = function(id = "Branin") {
+    initialize = function(id = "Hartmann") {
       super$initialize(
         id,
         workdir = NULL,
@@ -247,7 +247,7 @@ BenchmarkConfigHartmann = R6Class("BenchmarkConfigHartmann",
               ai = if (i == 1) 0.1 * (1 - xdt[row_id, ][["fidelity"]]) else 0
               y = y + ((alpha[i] - ai) * exp(- sum(A[i, ] * ((x[row_id, ] - P[i, ]) ^ 2))))
             }
-            data.table(y = -y, cost = 0.01 + xdt[["fidelity"]])
+            data.table(y = -y, cost = 0.01 + xdt[row_id, ][["fidelity"]])
           })
         },
         domain = self$param_set,
@@ -272,6 +272,41 @@ BenchmarkConfigHartmann = R6Class("BenchmarkConfigHartmann",
 #' @include BenchmarkConfig.R
 benchmark_configs$add("hartmann", BenchmarkConfigHartmann)
 
+
+
+#' @export
+BenchmarkConfigHartmannSurrogate = R6Class("BenchmarkConfigHartmannSurrogate",
+  inherit = BenchmarkConfig,
+  public = list(
+   initialize = function(id = "HartmannSurrogate", workdir) {
+     super$initialize(
+       id,
+       workdir = workdir,
+       model_name = "hartmann_surrogate",
+       param_set_file = "param_set.rds",
+       data_file = "data.rds",
+       data_order_file = "data_order.rds",
+       dicts_file = "dicts.rds",
+       keras_model_file = "model.hdf5",
+       onnx_model_file = "model.onnx",
+       target_variables = "y",
+       codomain = ps(
+         y = p_dbl(lower = -Inf, upper = Inf, tags = "minimize")
+       ),
+       packages = NULL
+     )
+   }
+  ),
+  active = list(
+    data = function() {
+      if (is.null(private$.data)) private$.data = preproc_hartmann_surrogate(self)
+      private$.data
+    },
+    param_set = function() readRDS(self$param_set_path)
+  )
+)
+#' @include BenchmarkConfig.R
+benchmark_configs$add("hartmann_surrogate", BenchmarkConfigHartmannSurrogate)
 
 
 

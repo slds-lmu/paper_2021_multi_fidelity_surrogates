@@ -5,6 +5,7 @@ library(mlr3)
 library(mlr3learners)
 library(mlr3mbo)
 library(miesmuschel)
+library(mlr3hyperband)
 library(ggplot2)
 
 # Branin
@@ -22,6 +23,23 @@ cfg_branin_surrogate = cfgs("branin_surrogate", workdir = "../../multifidelity_d
 #ins_real$eval_batch(design)
 #saveRDS(ins_real$archive$data[, c("x1", "x2", "fidelity", "y"), with = FALSE], "../../multifidelity_data/branin_surrogate/data.rds") # this is the data.rds in the BenchmarkConfig directory
 #cfg_branin_surrogate$fit_surrogate(overwrite = TRUE)
+
+# Hartmann
+
+set.seed(123)
+cfg_hartmann = cfgs("hartmann")
+data_tabular = readRDS("../../multifidelity_data/hartmann_surrogate/data.rds")
+cfg_hartmann_surrogate = cfgs("hartmann_surrogate", workdir = "../../multifidelity_data")
+
+#ins_real = OptimInstanceSingleCrit$new(
+#  objective = cfg_hartmann$get_objective(),
+#  terminator = trm("none")
+#)
+#x = seq(from = 0, to = 1, length.out = 5)
+#design = setDT(expand.grid(x1 = x, x2 = x, x3 = x, x4 = x, x5 = x, x6 = x, fidelity = 1 / (2 ^ (0:9))))  # due to hyperband eta = 2
+#ins_real$eval_batch(design)
+#saveRDS(ins_real$archive$data[, c(paste0("x", 1:6), "fidelity", "y"), with = FALSE], "../../multifidelity_data/hartmann_surrogate/data.rds") # this is the data.rds in the BenchmarkConfig directory
+#cfg_hartmann_surrogate$fit_surrogate(overwrite = TRUE)
 
 SamplerRandomTabular = R6Class("SamplerRandomTabular",
   inherit = Sampler,
