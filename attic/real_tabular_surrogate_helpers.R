@@ -6,13 +6,14 @@ library(mlr3learners)
 library(mlr3mbo)
 library(miesmuschel)
 library(mlr3hyperband)
+library(stringdist)
 library(ggplot2)
 
 # Branin
 
 set.seed(123)
 cfg_branin = cfgs("branin")
-data_tabular = readRDS("../../multifidelity_data/branin_surrogate/data.rds")
+data_tabular_branin = readRDS("../../multifidelity_data/branin_surrogate/data.rds")
 cfg_branin_surrogate = cfgs("branin_surrogate", workdir = "../../multifidelity_data")
 
 #ins_real = OptimInstanceSingleCrit$new(
@@ -21,14 +22,14 @@ cfg_branin_surrogate = cfgs("branin_surrogate", workdir = "../../multifidelity_d
 #)
 #design = setDT(expand.grid(x1 = seq(from = -5, to = 10, length.out = 100), x2 = seq(from = 0, to = 15, length.out = 100), fidelity = 1 / (2 ^ (0:9))))  # due to hyperband eta = 2
 #ins_real$eval_batch(design)
-#saveRDS(ins_real$archive$data[, c("x1", "x2", "fidelity", "y"), with = FALSE], "../../multifidelity_data/branin_surrogate/data.rds") # this is the data.rds in the BenchmarkConfig directory
+#saveRDS(ins_real$archive$data[, c("x1", "x2", "fidelity", "y"), with = FALSE], "../../multifidelity_data/branin_surrogate/data.rds")
 #cfg_branin_surrogate$fit_surrogate(overwrite = TRUE)
 
 # Hartmann
 
 set.seed(123)
 cfg_hartmann = cfgs("hartmann")
-data_tabular = readRDS("../../multifidelity_data/hartmann_surrogate/data.rds")
+data_tabular_hartmann = readRDS("../../multifidelity_data/hartmann_surrogate/data.rds")
 cfg_hartmann_surrogate = cfgs("hartmann_surrogate", workdir = "../../multifidelity_data")
 
 #ins_real = OptimInstanceSingleCrit$new(
@@ -38,7 +39,7 @@ cfg_hartmann_surrogate = cfgs("hartmann_surrogate", workdir = "../../multifideli
 #x = seq(from = 0, to = 1, length.out = 5)
 #design = setDT(expand.grid(x1 = x, x2 = x, x3 = x, x4 = x, x5 = x, x6 = x, fidelity = 1 / (2 ^ (0:9))))  # due to hyperband eta = 2
 #ins_real$eval_batch(design)
-#saveRDS(ins_real$archive$data[, c(paste0("x", 1:6), "fidelity", "y"), with = FALSE], "../../multifidelity_data/hartmann_surrogate/data.rds") # this is the data.rds in the BenchmarkConfig directory
+#saveRDS(ins_real$archive$data[, c(paste0("x", 1:6), "fidelity", "y"), with = FALSE], "../../multifidelity_data/hartmann_surrogate/data.rds")
 #cfg_hartmann_surrogate$fit_surrogate(overwrite = TRUE)
 
 SamplerRandomTabular = R6Class("SamplerRandomTabular",
@@ -74,7 +75,6 @@ SamplerRandomTabular = R6Class("SamplerRandomTabular",
   )
 )
 
-
 OptimizerRandomTabular = R6Class("OptimizerRandomTabular",
   inherit = Optimizer,
   public = list(
@@ -104,6 +104,13 @@ OptimizerRandomTabular = R6Class("OptimizerRandomTabular",
     .optimize = function(inst) {
       batch_size = self$param_set$values$batch_size
       table = copy(self$table)
+      # Full budget search is implemented below
+      if (length(inst$search_space$values)) {
+        if (names(inst$search_space$values) != "fidelity") {
+          stop("Not implemented.")
+        }
+        table = table[fidelity == inst$search_space$values$fidelity]
+      }
       x_cols = inst$search_space$ids()
       # FIXME: assert column names
       if (batch_size > NROW(table)) batch_size = NROW(table)
@@ -112,7 +119,7 @@ OptimizerRandomTabular = R6Class("OptimizerRandomTabular",
         ids = sample(seq_len(NROW(table)), size = min(batch_size, NROW(table)), replace = FALSE)
         design = table[ids, ]
         table = table[-ids, ]
-        inst$eval_batch(design)
+        inst$eval_batch(design[, x_cols, with = FALSE])
       }
     }
   )
@@ -181,28 +188,72 @@ OptimInstanceSingleCritTabular = R6Class("OptimInstanceSingleCritTabular",
   )
 )
 
-get_ins = function(method = c("real", "tabular", "surrogate"), budget = 100) {
-  switch(method,
-    "real" =
-    OptimInstanceSingleCrit$new(
-      objective = cfg_branin$get_objective(),
-      terminator = trm("budget", budget = budget)
-    ),
-    "tabular" =
-    OptimInstanceSingleCritTabular$new(
-      table = data_tabular,
-      x_cols = c("x1", "x2", "fidelity"),
-      y_col = "y",
-      search_space = cfg_branin$param_set,
-      direction = "minimize",
-      terminator = trm("budget", budget = budget)
-    ),
-    "surrogate" =
-    OptimInstanceSingleCrit$new(
-      objective = cfg_branin_surrogate$get_objective(),
-      terminator = trm("budget", budget = budget)
+get_ins = function(instance = c("branin", "hartmann"), method = c("real", "tabular", "surrogate"), full_budget = FALSE, budget = 100) {
+  if (instance == "branin") {
+    search_space = if (full_budget) {
+      ss = cfg_branin$param_set
+      ss$values$fidelity = 1
+      ss
+    } else {
+      ss = cfg_branin$param_set
+      ss
+    }
+    switch(method,
+      "real" =
+      OptimInstanceSingleCrit$new(
+        objective = cfg_branin$get_objective(),
+        search_space = search_space,
+        terminator = trm("budget", budget = budget)
+      ),
+      "tabular" =
+      OptimInstanceSingleCritTabular$new(
+        table = data_tabular_branin,
+        x_cols = c(paste0("x", 1:2), "fidelity"),
+        y_col = "y",
+        search_space = search_space,
+        direction = "minimize",
+        terminator = trm("budget", budget = budget)
+      ),
+      "surrogate" =
+      OptimInstanceSingleCrit$new(
+        objective = cfg_branin_surrogate$get_objective(),
+        search_space = search_space,
+        terminator = trm("budget", budget = budget)
+      )
     )
-  )
+  } else if (instance == "hartmann") {
+    search_space = if (full_budget) {
+      ss = cfg_hartmann$param_set
+      ss$values$fidelity = 1
+      ss
+    } else {
+      ss = cfg_hartmann$param_set
+      ss
+    }
+    switch(method,
+      "real" =
+      OptimInstanceSingleCrit$new(
+        objective = cfg_hartmann$get_objective(),
+        search_space = search_space,
+        terminator = trm("budget", budget = budget)
+      ),
+      "tabular" =
+      OptimInstanceSingleCritTabular$new(
+        table = data_tabular_hartmann,
+        x_cols = c(paste0("x", 1:6), "fidelity"),
+        y_col = "y",
+        search_space = search_space,
+        direction = "minimize",
+        terminator = trm("budget", budget = budget)
+      ),
+      "surrogate" =
+      OptimInstanceSingleCrit$new(
+        objective = cfg_hartmann_surrogate$get_objective(),
+        search_space = search_space,
+        terminator = trm("budget", budget = budget)
+      )
+    )
+  }
 }
 
 get_trace = function(archive, m, o) {
