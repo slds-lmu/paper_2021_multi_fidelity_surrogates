@@ -1,9 +1,13 @@
 source("real_tabular_surrogate_helpers.R")
 
 # FIXME: add eggholder or schwefel (more local minima)
-# FIXME: debug why tabular BO proposes low fidelity in infill opt
+# FIXME: HPOlib
 
-repls = 1000
+repls = 30
+
+#learner = GraphLearner$new(ppl("robustify") %>>% lrn("regr.km", covtype = "matern3_2", optim.method = "gen", nugget.stability = 10^-8))
+learner = lrn("regr.km", covtype = "matern3_2", optim.method = "gen", nugget.stability = 10^-8)
+surrogate = SurrogateSingleCritLearner$new(learner)
 
 # Branin
 results_branin = map_dtr(seq_len(repls), function(repl) {
@@ -14,91 +18,48 @@ results_branin = map_dtr(seq_len(repls), function(repl) {
   ins_surrogate = get_ins("branin", method = "surrogate", full_budget = TRUE, budget = 100)
 
   opt("random_search", batch_size = 1)$optimize(ins_real)
-  real_rs_full = get_trace(ins_real$archive, "real", "rs_full")
+  real_rs_full = get_trace(ins_real$archive, "real", "rs_full", full_budget = TRUE)
   
   opt("random_tabular", table = ins_tabular$table, batch_size = 1)$optimize(ins_tabular)
-  tabular_rs_full = get_trace(ins_tabular$archive, "tabular", "rs_full")
+  tabular_rs_full = get_trace(ins_tabular$archive, "tabular", "rs_full", full_budget = TRUE)
   
   opt("random_search", batch_size = 1)$optimize(ins_surrogate)
-  surrogate_rs_full = get_trace(ins_surrogate$archive, "surrogate", "rs_full")
+  surrogate_rs_full = get_trace(ins_surrogate$archive, "surrogate", "rs_full", full_budget = TRUE)
 
   ### BO full budget
-  ins_real$clear()
-  ins_tabular$clear()
-  ins_surrogate$clear()
+  ins_real = get_ins("branin", method = "real", full_budget = TRUE, budget = 100)
+  ins_tabular = get_ins("branin", method = "tabular", full_budget = TRUE, budget = 100)
+  ins_surrogate = get_ins("branin", method = "surrogate", full_budget = TRUE, budget = 100)
   
   bayesopt_soo(
-    instance  = ins_real,
-    acq_function = AcqFunctionEI$new(SurrogateSingleCritLearner$new(lrn("regr.ranger"))),
-    acq_optimizer = AcqOptimizer$new(opt("random_search", batch_size = 1000), trm("evals", n_evals = 1000)),
-    n_design = 4
+    instance = ins_real,
+    acq_function = AcqFunctionEI$new(surrogate),
+    acq_optimizer = AcqOptimizer$new(opt("nloptr", algorithm = "NLOPT_LN_NELDERMEAD"), trm("none")),
+    n_design = 10
   )
-  real_bo_full = get_trace(ins_real$archive, "real", "bo_full")
+  real_bo_full = get_trace(ins_real$archive, "real", "bo_full", full_budget = TRUE)
   
   tabular_init = ins_tabular$table[fidelity == 1]
-  ins_tabular$eval_batch(tabular_init[sample(seq_len(NROW(tabular_init)), size = 4, replace = FALSE), ins_tabular$x_cols, with = FALSE])
+  ins_tabular$eval_batch(tabular_init[sample(seq_len(NROW(tabular_init)), size = 10, replace = FALSE), ins_tabular$x_cols, with = FALSE])
   bayesopt_soo(
-    instance  = ins_tabular,
-    acq_function = AcqFunctionEI$new(SurrogateSingleCritLearner$new(lrn("regr.ranger"))),
-    acq_optimizer = AcqOptimizer$new(opt("random_tabular", table = ins_tabular$table, batch_size = 1000), trm("evals", n_evals = 1000))
+    instance = ins_tabular,
+    acq_function = AcqFunctionEI$new(surrogate),
+    acq_optimizer = AcqOptimizer$new(opt("random_tabular", table = ins_tabular$table, batch_size = 1000), trm("evals", n_evals = NROW(tabular_init)))
   )
-  tabular_bo_full = get_trace(ins_tabular$archive, "tabular", "bo_full")
+  tabular_bo_full = get_trace(ins_tabular$archive, "tabular", "bo_full", full_budget = TRUE)
   
   bayesopt_soo(
-    instance  = ins_surrogate,
-    acq_function = AcqFunctionEI$new(SurrogateSingleCritLearner$new(lrn("regr.ranger"))),
-    acq_optimizer = AcqOptimizer$new(opt("random_search", batch_size = 1000), trm("evals", n_evals = 1000)),
-    n_design = 4
+    instance = ins_surrogate,
+    acq_function = AcqFunctionEI$new(surrogate),
+    acq_optimizer = AcqOptimizer$new(opt("nloptr", algorithm = "NLOPT_LN_NELDERMEAD"), trm("none")),
+    n_design = 10
   )
-  surrogate_bo_full = get_trace(ins_surrogate$archive, "surrogate", "bo_full")
-
-  # random search
-  #ins_real = get_ins("branin", method = "real", full_budget = FALSE, budget = 100)
-  #ins_tabular = get_ins("branin", method = "tabular", full_budget = FALSE, budget = 100)
-  #ins_surrogate = get_ins("branin", method = "surrogate", full_budget = FALSE, budget = 100)
-
-  #opt("random_search", batch_size = 1)$optimize(ins_real)
-  #real_rs = get_trace(ins_real$archive, "real", "rs")
-  #
-  #opt("random_tabular", table = ins_tabular$table, batch_size = 1)$optimize(ins_tabular)
-  #tabular_rs = get_trace(ins_tabular$archive, "tabular", "rs")
-  #
-  #opt("random_search", batch_size = 1)$optimize(ins_surrogate)
-  #surrogate_rs = get_trace(ins_surrogate$archive, "surrogate", "rs")
-
-  ### BO
-  #ins_real$clear()
-  #ins_tabular$clear()
-  #ins_surrogate$clear()
-  #
-  #bayesopt_soo(
-  #  instance  = ins_real,
-  #  acq_function = AcqFunctionEI$new(SurrogateSingleCritLearner$new(lrn("regr.ranger"))),
-  #  acq_optimizer = AcqOptimizer$new(opt("random_search", batch_size = 1000), trm("evals", n_evals = 1000)),
-  #  n_design = 4
-  #)
-  #real_bo = get_trace(ins_real$archive, "real", "bo")
-  #
-  #ins_tabular$eval_batch(ins_tabular$table[sample(seq_len(NROW(ins_tabular$table)), size = 4, replace = FALSE), ins_tabular$x_cols, with = FALSE])
-  #bayesopt_soo(
-  #  instance  = ins_tabular,
-  #  acq_function = AcqFunctionEI$new(SurrogateSingleCritLearner$new(lrn("regr.ranger"))),
-  #  acq_optimizer = AcqOptimizer$new(opt("random_tabular", table = ins_tabular$table, batch_size = 1000), trm("evals", n_evals = 1000))
-  #)
-  #tabular_bo = get_trace(ins_tabular$archive, "tabular", "bo")
-  #
-  #bayesopt_soo(
-  #  instance  = ins_surrogate,
-  #  acq_function = AcqFunctionEI$new(SurrogateSingleCritLearner$new(lrn("regr.ranger"))),
-  #  acq_optimizer = AcqOptimizer$new(opt("random_search", batch_size = 1000), trm("evals", n_evals = 1000)),
-  #  n_design = 4
-  #)
-  #surrogate_bo = get_trace(ins_surrogate$archive, "surrogate", "bo")
+  surrogate_bo_full = get_trace(ins_surrogate$archive, "surrogate", "bo_full", full_budget = TRUE)
 
   ### HB
-  ins_real$clear()
-  ins_tabular$clear()
-  ins_surrogate$clear()
+  ins_real = get_ins("branin", method = "real", full_budget = FALSE, budget = 100)
+  ins_tabular = get_ins("branin", method = "tabular", full_budget = FALSE, budget = 100)
+  ins_surrogate = get_ins("branin", method = "surrogate", full_budget = FALSE, budget = 100)
 
   param_set_hb = ParamSet$new(ins_real$search_space$params[-3])
 
@@ -114,8 +75,6 @@ results_branin = map_dtr(seq_len(repls), function(repl) {
   results = rbind(
     real_rs_full, tabular_rs_full, surrogate_rs_full,
     real_bo_full, tabular_bo_full, surrogate_bo_full,
-    #real_rs, tabular_rs, surrogate_rs,
-    #real_bo, tabular_bo, surrogate_bo,
     real_hb, tabular_hb, surrogate_hb)
   results[, normalized_regret := (best - min(best)) / diff(range(best)), by = .(method)]
   results[, repl := repl]
@@ -131,92 +90,49 @@ results_hartmann = map_dtr(seq_len(repls), function(repl) {
   ins_surrogate = get_ins("hartmann", method = "surrogate", full_budget = TRUE, budget = 100)
 
   opt("random_search", batch_size = 1)$optimize(ins_real)
-  real_rs_full = get_trace(ins_real$archive, "real", "rs_full")
+  real_rs_full = get_trace(ins_real$archive, "real", "rs_full", full_budget = TRUE)
   
   opt("random_tabular", table = ins_tabular$table, batch_size = 1)$optimize(ins_tabular)
-  tabular_rs_full = get_trace(ins_tabular$archive, "tabular", "rs_full")
+  tabular_rs_full = get_trace(ins_tabular$archive, "tabular", "rs_full", full_budget = TRUE)
   
   opt("random_search", batch_size = 1)$optimize(ins_surrogate)
-  surrogate_rs_full = get_trace(ins_surrogate$archive, "surrogate", "rs_full")
+  surrogate_rs_full = get_trace(ins_surrogate$archive, "surrogate", "rs_full", full_budget = TRUE)
 
   ### BO full budget
-  ins_real$clear()
-  ins_tabular$clear()
-  ins_surrogate$clear()
+  ins_real = get_ins("hartmann", method = "real", full_budget = TRUE, budget = 100)
+  ins_tabular = get_ins("hartmann", method = "tabular", full_budget = TRUE, budget = 100)
+  ins_surrogate = get_ins("hartmann", method = "surrogate", full_budget = TRUE, budget = 100)
   
   bayesopt_soo(
-    instance  = ins_real,
-    acq_function = AcqFunctionEI$new(SurrogateSingleCritLearner$new(lrn("regr.ranger"))),
-    acq_optimizer = AcqOptimizer$new(opt("random_search", batch_size = 1000), trm("evals", n_evals = 1000)),
-    n_design = 4
+    instance = ins_real,
+    acq_function = AcqFunctionEI$new(surrogate),
+    acq_optimizer = AcqOptimizer$new(opt("nloptr", algorithm = "NLOPT_LN_NELDERMEAD"), trm("none")),
+    n_design = 30
   )
-  real_bo_full = get_trace(ins_real$archive, "real", "bo_full")
+  real_bo_full = get_trace(ins_real$archive, "real", "bo_full", full_budget = TRUE)
   
   tabular_init = ins_tabular$table[fidelity == 1]
-  ins_tabular$eval_batch(tabular_init[sample(seq_len(NROW(tabular_init)), size = 4, replace = FALSE), ins_tabular$x_cols, with = FALSE])
+  ins_tabular$eval_batch(tabular_init[sample(seq_len(NROW(tabular_init)), size = 30, replace = FALSE), ins_tabular$x_cols, with = FALSE])
   bayesopt_soo(
-    instance  = ins_tabular,
-    acq_function = AcqFunctionEI$new(SurrogateSingleCritLearner$new(lrn("regr.ranger"))),
-    acq_optimizer = AcqOptimizer$new(opt("random_tabular", table = ins_tabular$table, batch_size = 1000), trm("evals", n_evals = 1000))
+    instance = ins_tabular,
+    acq_function = AcqFunctionEI$new(surrogate),
+    acq_optimizer = AcqOptimizer$new(opt("random_tabular", table = ins_tabular$table, batch_size = 1000), trm("evals", n_evals = NROW(tabular_init)))
   )
-  tabular_bo_full = get_trace(ins_tabular$archive, "tabular", "bo_full")
+  tabular_bo_full = get_trace(ins_tabular$archive, "tabular", "bo_full", full_budget = TRUE)
   
   bayesopt_soo(
-    instance  = ins_surrogate,
-    acq_function = AcqFunctionEI$new(SurrogateSingleCritLearner$new(lrn("regr.ranger"))),
-    acq_optimizer = AcqOptimizer$new(opt("random_search", batch_size = 1000), trm("evals", n_evals = 1000)),
-    n_design = 4
+    instance = ins_surrogate,
+    acq_function = AcqFunctionEI$new(surrogate),
+    acq_optimizer = AcqOptimizer$new(opt("nloptr", algorithm = "NLOPT_LN_NELDERMEAD"), trm("none")),
+    n_design = 30
   )
-  surrogate_bo_full = get_trace(ins_surrogate$archive, "surrogate", "bo_full")
-
-  # random search
-  #ins_real = get_ins("hartmann", method = "real", full_budget = FALSE, budget = 100)
-  #ins_tabular = get_ins("hartmann", method = "tabular", full_budget = FALSE, budget = 100)
-  #ins_surrogate = get_ins("hartmann", method = "surrogate", full_budget = FALSE, budget = 100)
-
-  #opt("random_search", batch_size = 1)$optimize(ins_real)
-  #real_rs = get_trace(ins_real$archive, "real", "rs")
-  #
-  #opt("random_tabular", table = ins_tabular$table, batch_size = 1)$optimize(ins_tabular)
-  #tabular_rs = get_trace(ins_tabular$archive, "tabular", "rs")
-  #
-  #opt("random_search", batch_size = 1)$optimize(ins_surrogate)
-  #surrogate_rs = get_trace(ins_surrogate$archive, "surrogate", "rs")
-
-  ### BO
-  #ins_real$clear()
-  #ins_tabular$clear()
-  #ins_surrogate$clear()
-  #
-  #bayesopt_soo(
-  #  instance  = ins_real,
-  #  acq_function = AcqFunctionEI$new(SurrogateSingleCritLearner$new(lrn("regr.ranger"))),
-  #  acq_optimizer = AcqOptimizer$new(opt("random_search", batch_size = 1000), trm("evals", n_evals = 1000)),
-  #  n_design = 4
-  #)
-  #real_bo = get_trace(ins_real$archive, "real", "bo")
-  #
-  #ins_tabular$eval_batch(ins_tabular$table[sample(seq_len(NROW(ins_tabular$table)), size = 4, replace = FALSE), ins_tabular$x_cols, with = FALSE])
-  #bayesopt_soo(
-  #  instance  = ins_tabular,
-  #  acq_function = AcqFunctionEI$new(SurrogateSingleCritLearner$new(lrn("regr.ranger"))),
-  #  acq_optimizer = AcqOptimizer$new(opt("random_tabular", table = ins_tabular$table, batch_size = 1000), trm("evals", n_evals = 1000))
-  #)
-  #tabular_bo = get_trace(ins_tabular$archive, "tabular", "bo")
-  #
-  #bayesopt_soo(
-  #  instance  = ins_surrogate,
-  #  acq_function = AcqFunctionEI$new(SurrogateSingleCritLearner$new(lrn("regr.ranger"))),
-  #  acq_optimizer = AcqOptimizer$new(opt("random_search", batch_size = 1000), trm("evals", n_evals = 1000)),
-  #  n_design = 4
-  #)
-  #surrogate_bo = get_trace(ins_surrogate$archive, "surrogate", "bo")
+  surrogate_bo_full = get_trace(ins_surrogate$archive, "surrogate", "bo_full", full_budget = TRUE)
 
   ### HB
-  ins_real$clear()
-  ins_tabular$clear()
-  ins_surrogate$clear()
-
+  ins_real = get_ins("hartmann", method = "real", full_budget = FALSE, budget = 100)
+  ins_tabular = get_ins("hartmann", method = "tabular", full_budget = FALSE, budget = 100)
+  ins_surrogate = get_ins("hartmann", method = "surrogate", full_budget = FALSE, budget = 100)
+  
   param_set_hb = ParamSet$new(ins_real$search_space$params[-7])
 
   opt("hyperband")$optimize(ins_real)
@@ -231,8 +147,6 @@ results_hartmann = map_dtr(seq_len(repls), function(repl) {
   results = rbind(
     real_rs_full, tabular_rs_full, surrogate_rs_full,
     real_bo_full, tabular_bo_full, surrogate_bo_full,
-    #real_rs, tabular_rs, surrogate_rs,
-    #real_bo, tabular_bo, surrogate_bo,
     real_hb, tabular_hb, surrogate_hb)
   results[, normalized_regret := (best - min(best)) / diff(range(best)), by = .(method)]
   results[, repl := repl]
@@ -242,12 +156,12 @@ results_hartmann = map_dtr(seq_len(repls), function(repl) {
 # Analysis
 results = results_branin
 
-results_agg = setNames(results[, mean(normalized_regret), by = .(iteration, method, optimizer)], c("iteration", "method", "optimizer", "mean_normalized_regret"))
-results_agg[, sd_normalized_regret := results[, sd(normalized_regret), by = .(iteration, method, optimizer)][["V1"]]]
+results_agg = setNames(results[, mean(best), by = .(iteration, method, optimizer, cumbudget)], c("iteration", "method", "optimizer", "cumbudget", "mean_normalized_regret"))
+results_agg[, sd_normalized_regret := results[, sd(best), by = .(iteration, method, optimizer, cumbudget)][["V1"]]]
 results_agg$lower = results_agg$mean_normalized_regret - results_agg$sd_normalized_regret
 results_agg$upper = results_agg$mean_normalized_regret + results_agg$sd_normalized_regret
 
-ggplot(aes(x = iteration, y = mean_normalized_regret, fill = optimizer, colour = optimizer), data = results_agg) +
+ggplot(aes(x = cumbudget, y = mean_normalized_regret, fill = optimizer, colour = optimizer), data = results_agg) +
   geom_line() +
   geom_ribbon(aes(min = lower, max = upper), alpha = 0.5, colour = NA) +
   facet_grid(~ method)
@@ -255,7 +169,7 @@ ggplot(aes(x = iteration, y = mean_normalized_regret, fill = optimizer, colour =
 ranks = map_dtr(unique(results$repl), function(r) {
   map_dtr(c("real", "tabular", "surrogate"), function(m) {
     tmp = results[repl == r & method == m, min(best), by = .(method, optimizer, repl)]
-    tmp$V1 = order(tmp$V1)
+    tmp$V1 = match(tmp$V1, sort(tmp$V1))
     setNames(tmp, c("method", "optimizer", "repl", "rank"))
   })
 })

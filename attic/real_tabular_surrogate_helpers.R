@@ -105,21 +105,24 @@ OptimizerRandomTabular = R6Class("OptimizerRandomTabular",
       batch_size = self$param_set$values$batch_size
       table = copy(self$table)
       # Full budget search is implemented below
-      if (length(inst$search_space$values)) {
-        if (names(inst$search_space$values) != "fidelity") {
+      if (length(inst$objective$constants$ids())) {
+        if (inst$objective$constants$ids() != "fidelity") {
           stop("Not implemented.")
         }
-        table = table[fidelity == inst$search_space$values$fidelity]
+        table = table[fidelity == inst$objective$constants$values$fidelity]
       }
       x_cols = inst$search_space$ids()
       # FIXME: assert column names
-      if (batch_size > NROW(table)) batch_size = NROW(table)
       repeat { # iterate until we have an exception from eval_batch
-        if (NROW(table) == 0L) stop("No points left.")
-        ids = sample(seq_len(NROW(table)), size = min(batch_size, NROW(table)), replace = FALSE)
-        design = table[ids, ]
-        table = table[-ids, ]
-        inst$eval_batch(design[, x_cols, with = FALSE])
+        if (batch_size > NROW(table)) batch_size = NROW(table)
+        if (batch_size > 0) {
+          ids = sample(seq_len(NROW(table)), size = min(batch_size, NROW(table)), replace = FALSE)
+          design = table[ids, ]
+          table = table[-ids, ]
+          inst$eval_batch(design[, x_cols, with = FALSE])
+        } else {
+          inst$eval_batch(design[1, x_cols, with = FALSE])
+        }
       }
     }
   )
@@ -142,30 +145,47 @@ OptimInstanceSingleCritTabular = R6Class("OptimInstanceSingleCritTabular",
     #' @description
     #' Creates a new instance of this [R6][R6::R6Class] class.
     #'
+    #' @param max_fidelity (`logical(1)`).
     #' @param table ([data.table::data.table]).
     #' @param x_cols (`character()`).
-    #' @param y_cols (`character(1)`).
+    #' @param y_col (`character(1)`).
+    #' @param search_space ([bbotk::ParamSet]).
     #' @param terminator ([Terminator]).
     #' @param check_values (`logical(1)`)\cr
     #' Should x-values that are added to the archive be checked for validity?
     #' Search space that is logged into archive.
-    initialize = function(table, x_cols, y_col, search_space, direction, terminator, keep_evals = "all", check_values = TRUE) {
+    initialize = function(max_fidelity, table, x_cols, y_col, search_space, direction, terminator, keep_evals = "all", check_values = TRUE) {
       self$x_cols = assert_subset(x_cols, choices = colnames(table))
       self$y_col = assert_choice(y_col, choices = setdiff(colnames(table), x_cols))
-      setkeyv(table, c(x_cols, y_col))
+      setkeyv(table, c(self$x_cols, "fidelity"))
       self$table = assert_data_table(table)
 
       assert_r6(search_space, "ParamSet")
       assert_choice(direction, choices = c("minimize", "maximize"))
 
-      objective = ObjectiveRFunDt$new(
-        fun = function(xdt) {
-          self$table[xdt, self$y_col, with = FALSE]
-        },
-        domain = search_space,
-        codomain = ParamSet$new(list(ParamDbl$new(id = self$y_col, tags = direction)))
-      )
+      if (max_fidelity) {
+        constants = ps(fidelity = p_dbl(lower = 1e-3, upper = 1, default = 1))
+        constants$values$fidelity = 1
 
+        objective = ObjectiveRFunDt$new(
+          fun = function(xdt, fidelity) {
+            xdt[, fidelity := 1]
+            setkeyv(xdt, c(self$x_cols, "fidelity"))
+            self$table[xdt, self$y_col, with = FALSE]
+          },
+          domain = search_space,
+          constants = constants,
+          codomain = ParamSet$new(list(ParamDbl$new(id = self$y_col, tags = direction)))
+        )
+      } else {
+        objective = ObjectiveRFunDt$new(
+          fun = function(xdt) {
+            self$table[xdt, self$y_col, with = FALSE]
+          },
+          domain = search_space,
+          codomain = ParamSet$new(list(ParamDbl$new(id = self$y_col, tags = direction)))
+        )
+      }
       super$initialize(objective, NULL, terminator, keep_evals, check_values)
     },
 
@@ -190,74 +210,129 @@ OptimInstanceSingleCritTabular = R6Class("OptimInstanceSingleCritTabular",
 
 get_ins = function(instance = c("branin", "hartmann"), method = c("real", "tabular", "surrogate"), full_budget = FALSE, budget = 100) {
   if (instance == "branin") {
-    search_space = if (full_budget) {
-      ss = cfg_branin$param_set
-      ss$values$fidelity = 1
-      ss
-    } else {
-      ss = cfg_branin$param_set
-      ss
-    }
-    switch(method,
+    if (full_budget) {
+      search_space = ParamSet$new(cfg_branin$param_set$params[-3])
+      switch(method,
       "real" =
       OptimInstanceSingleCrit$new(
-        objective = cfg_branin$get_objective(),
-        search_space = search_space,
-        terminator = trm("budget", budget = budget)
+        objective = {
+          tmp = cfg_branin$get_objective(max_fidelity = TRUE)
+          tmp$constants$values$fidelity = 1
+          tmp
+        },
+        terminator = trm("evals", n_evals = budget)
       ),
       "tabular" =
       OptimInstanceSingleCritTabular$new(
+        max_fidelity = TRUE,
         table = data_tabular_branin,
-        x_cols = c(paste0("x", 1:2), "fidelity"),
+        x_cols = paste0("x", 1:2),
         y_col = "y",
         search_space = search_space,
         direction = "minimize",
-        terminator = trm("budget", budget = budget)
+        terminator = trm("evals", n_evals = budget)
       ),
       "surrogate" =
       OptimInstanceSingleCrit$new(
-        objective = cfg_branin_surrogate$get_objective(),
-        search_space = search_space,
-        terminator = trm("budget", budget = budget)
+        objective = {
+          tmp = cfg_branin_surrogate$get_objective(max_fidelity = TRUE)
+          tmp$constants$values$fidelity = 1
+          tmp
+        },
+        terminator = trm("evals", n_evals = budget)
       )
     )
-  } else if (instance == "hartmann") {
-    search_space = if (full_budget) {
-      ss = cfg_hartmann$param_set
-      ss$values$fidelity = 1
-      ss
     } else {
-      ss = cfg_hartmann$param_set
-      ss
+      search_space = cfg_branin$param_set
+      switch(method,
+        "real" =
+        OptimInstanceSingleCrit$new(
+          objective = cfg_branin$get_objective(),
+          terminator = trm("budget", budget = budget)
+        ),
+        "tabular" =
+        OptimInstanceSingleCritTabular$new(
+          max_fidelity = FALSE,
+          table = data_tabular_branin,
+          x_cols = c(paste0("x", 1:2), "fidelity"),
+          y_col = "y",
+          search_space = search_space,
+          direction = "minimize",
+          terminator = trm("budget", budget = budget)
+        ),
+        "surrogate" =
+        OptimInstanceSingleCrit$new(
+          objective = cfg_branin_surrogate$get_objective(),
+          terminator = trm("budget", budget = budget)
+        )
+      )
     }
-    switch(method,
+  } else if (instance == "hartmann") {
+    if (full_budget) {
+      search_space = ParamSet$new(cfg_hartmann$param_set$params[-7])
+      switch(method,
       "real" =
       OptimInstanceSingleCrit$new(
-        objective = cfg_hartmann$get_objective(),
-        search_space = search_space,
-        terminator = trm("budget", budget = budget)
+        objective = {
+          tmp = cfg_hartmann$get_objective(max_fidelity = TRUE)
+          tmp$constants$values$fidelity = 1
+          tmp
+        },
+        terminator = trm("evals", n_evals = budget)
       ),
       "tabular" =
       OptimInstanceSingleCritTabular$new(
+        max_fidelity = TRUE,
         table = data_tabular_hartmann,
-        x_cols = c(paste0("x", 1:6), "fidelity"),
+        x_cols = paste0("x", 1:6),
         y_col = "y",
         search_space = search_space,
         direction = "minimize",
-        terminator = trm("budget", budget = budget)
+        terminator = trm("evals", n_evals = budget)
       ),
       "surrogate" =
       OptimInstanceSingleCrit$new(
-        objective = cfg_hartmann_surrogate$get_objective(),
-        search_space = search_space,
-        terminator = trm("budget", budget = budget)
+        objective = {
+          tmp = cfg_hartmann_surrogate$get_objective(max_fidelity = TRUE)
+          tmp$constants$values$fidelity = 1
+          tmp
+        },
+        terminator = trm("evals", n_evals = budget)
       )
     )
+    } else {
+      search_space = cfg_hartmann$param_set
+      switch(method,
+        "real" =
+        OptimInstanceSingleCrit$new(
+          objective = cfg_hartmann$get_objective(),
+          terminator = trm("budget", budget = budget)
+        ),
+        "tabular" =
+        OptimInstanceSingleCritTabular$new(
+          max_fidelity = FALSE,
+          table = data_tabular_hartmann,
+          x_cols = c(paste0("x", 1:6), "fidelity"),
+          y_col = "y",
+          search_space = search_space,
+          direction = "minimize",
+          terminator = trm("budget", budget = budget)
+        ),
+        "surrogate" =
+        OptimInstanceSingleCrit$new(
+          objective = cfg_hartmann_surrogate$get_objective(),
+          terminator = trm("budget", budget = budget)
+        )
+      )
+    }
   }
 }
 
-get_trace = function(archive, m, o) {
+get_trace = function(archive, m, o, full_budget = FALSE) {
   tmp = archive$data
+  if (full_budget) {
+    tmp$fidelity = 1
+  }
   tmp[, cumbudget := cumsum(fidelity)]
   tmp[, iteration := seq_len(.N)]
   tmp$best = map_dbl(tmp$iteration, function(i) {

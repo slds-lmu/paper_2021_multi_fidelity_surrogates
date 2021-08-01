@@ -40,7 +40,7 @@ ObjectiveONNX = R6Class("ObjectiveONNX",
     #'  Should params be trafoed back to their original range before return?
     #' @param properties (`character()`).
     initialize = function(model_path, data_order, trafo_dict, domain, full_codomain, codomain, task = NULL, id = "ONNX", active_session = TRUE, retrafo = FALSE,
-      properties = character(), constants = NULL, check_values = FALSE) {
+      properties = character(), constants = ps(), check_values = FALSE) {
       if (!is.null(task)) {
         task_id = domain$params[[domain$ids(tags = "task_id")]]
         task_id$default = task
@@ -51,10 +51,10 @@ ObjectiveONNX = R6Class("ObjectiveONNX",
         new_domain = ParamSet$new(domain$params[names(domain$params) != domain$ids(tags = "task_id")])
         new_domain$trafo = domain$trafo
         new_domain$deps = domain$deps
-        constants = ParamSet$new(list(task_id))
+        constants = ParamSetCollection$new(list(constants, ParamSet$new(list(task_id))))
       } else {
         new_domain = domain
-        constants = ParamSet$new()
+        constants = ParamSetCollection$new(list(constants, ParamSet$new()))
       }
       # Store dictionary of feature transformations
       self$active_session = assert_flag(active_session)
@@ -70,7 +70,7 @@ ObjectiveONNX = R6Class("ObjectiveONNX",
       self$full_codomain = full_codomain
       self$retrafo = retrafo
 
-      fun = function(xdt) {
+      fun = function(xdt, ...) {
         # Handle constants in-place
         if (!self$constants$is_empty) {
           for (constant in self$constants$params) {

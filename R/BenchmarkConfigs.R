@@ -111,8 +111,21 @@ BenchmarkConfigBranin = R6Class("BenchmarkConfigBranin",
       message("no setup necessary.")
     },
 
-    get_objective = function() {
-      bbotk::ObjectiveRFunDt$new(
+    get_objective = function(max_fidelity = FALSE) {
+      if (max_fidelity) {
+        bbotk::ObjectiveRFunDt$new(
+          fun = function(xdt, fidelity) {
+            xdt[, fidelity := fidelity]
+            y = (xdt[["x2"]] - ((5.1 / (4 * pi^2)) - 0.1 * (1 - xdt[["fidelity"]])) * xdt[["x1"]]^2 + (5 / pi) * xdt[["x1"]] - 6) ^ 2 +
+              10 * (1 - (1 / (8 * pi))) * cos(xdt[["x1"]]) + 10
+            data.table(y = y, cost = 0.01 + xdt[["fidelity"]])
+          },
+          domain = ps(x1 = p_dbl(lower = -5, upper = 10), x2 = p_dbl(lower = 0, upper = 15)),
+          codomain = self$codomain,
+          constants = ps(fidelity = p_dbl(lower = 1e-3, upper = 1, default = 1, tags = "budget"))
+        )
+      } else {
+        bbotk::ObjectiveRFunDt$new(
         fun = function(xdt) {
           y = (xdt[["x2"]] - ((5.1 / (4 * pi^2)) - 0.1 * (1 - xdt[["fidelity"]])) * xdt[["x1"]]^2 + (5 / pi) * xdt[["x1"]] - 6) ^ 2 +
             10 * (1 - (1 / (8 * pi))) * cos(xdt[["x1"]]) + 10
@@ -120,7 +133,8 @@ BenchmarkConfigBranin = R6Class("BenchmarkConfigBranin",
         },
         domain = self$param_set,
         codomain = self$codomain
-      )
+        )
+      }
     },
 
     plot = function(method = c("ggplot2", "rgl")) {
@@ -181,6 +195,33 @@ BenchmarkConfigBraninSurrogate = R6Class("BenchmarkConfigBraninSurrogate",
        ),
        packages = NULL
      )
+   },
+   get_objective = function(max_fidelity = FALSE, retrafo = TRUE) {
+     codomain = self$codomain$clone(deep = TRUE)
+     if (max_fidelity) {
+       ObjectiveONNX$new(
+         model_path = self$onnx_model_path,
+         data_order = readRDS(self$data_order_path),
+         trafo_dict = readRDS(self$dicts_path),
+         domain = ps(x1 = p_dbl(lower = -5, upper = 10), x2 = p_dbl(lower = 0, upper = 15)),
+         full_codomain = self$codomain$clone(deep = TRUE),  # needed to set the names
+         codomain = codomain,
+         task = NULL,
+         retrafo = retrafo,
+         constants = ps(fidelity = p_dbl(lower = 1e-3, upper = 1, default = 1, tags = "budget"))
+       )
+     } else {
+       ObjectiveONNX$new(
+         model_path = self$onnx_model_path,
+         data_order = readRDS(self$data_order_path),
+         trafo_dict = readRDS(self$dicts_path),
+         domain = self$opt_param_set,
+         full_codomain = self$codomain$clone(deep = TRUE),  # needed to set the names
+         codomain = codomain,
+         task = NULL,
+         retrafo = retrafo
+       )
+     }
    }
   ),
   active = list(
@@ -188,14 +229,20 @@ BenchmarkConfigBraninSurrogate = R6Class("BenchmarkConfigBraninSurrogate",
       if (is.null(private$.data)) private$.data = preproc_branin_surrogate(self)
       private$.data
     },
-    param_set = function() readRDS(self$param_set_path)
+    param_set = function() {
+      ps(
+        x1 = p_dbl(lower = -5, upper = 10),
+        x2 = p_dbl(lower = 0, upper = 15),
+        fidelity = p_dbl(lower = 1e-3, upper = 1, tags = "budget")
+      )
+    }
   )
 )
 #' @include BenchmarkConfig.R
 benchmark_configs$add("branin_surrogate", BenchmarkConfigBraninSurrogate)
 
 
-
+# FIXME: se above
 #' @export
 # augmented Hartmann as described in Kandasamy et al. 2017
 # p = 1, d = 6
@@ -228,31 +275,61 @@ BenchmarkConfigHartmann = R6Class("BenchmarkConfigHartmann",
       message("no setup necessary.")
     },
 
-    get_objective = function() {
-      bbotk::ObjectiveRFunDt$new(
-        fun = function(xdt) {
-          x = xdt[, - "fidelity"]
-          alpha = c(1, 1.2, 3, 3.2)
-          A = matrix(c(10, 3, 17, 3.5, 1.7, 8,
-                       0.05, 10, 17, 0.1, 8, 14,
-                       3, 3.5, 1.7, 10, 17, 8,
-                       17, 8, 0.05, 10, 0.1, 14), nrow = 4, ncol = 6, byrow = TRUE)
-          P = 10^(-4) * matrix(c(1312, 1696, 5569, 124, 8283, 5886,
-                                 2329, 4135, 8307, 3736, 1004, 9991,
-                                 2348, 1451, 3522, 2883, 3047, 6650,
-                                 4047, 8828, 8732, 5743, 1091, 381), nrow = 4, ncol = 6, byrow = TRUE)
-          map_dtr(seq_len(NROW(xdt)), function(row_id) {
-            y = 0
-            for (i in 1:4) {
-              ai = if (i == 1) 0.1 * (1 - xdt[row_id, ][["fidelity"]]) else 0
-              y = y + ((alpha[i] - ai) * exp(- sum(A[i, ] * ((x[row_id, ] - P[i, ]) ^ 2))))
-            }
-            data.table(y = -y, cost = 0.01 + xdt[row_id, ][["fidelity"]])
-          })
-        },
-        domain = self$param_set,
-        codomain = self$codomain
-      )
+    get_objective = function(max_fidelity = FALSE) {
+      if (max_fidelity) {
+        bbotk::ObjectiveRFunDt$new(
+          fun = function(xdt, fidelity) {
+            xdt[, fidelity := fidelity]
+            x = xdt[, - "fidelity"]
+            alpha = c(1, 1.2, 3, 3.2)
+            A = matrix(c(10, 3, 17, 3.5, 1.7, 8,
+                         0.05, 10, 17, 0.1, 8, 14,
+                         3, 3.5, 1.7, 10, 17, 8,
+                         17, 8, 0.05, 10, 0.1, 14), nrow = 4, ncol = 6, byrow = TRUE)
+            P = 10^(-4) * matrix(c(1312, 1696, 5569, 124, 8283, 5886,
+                                   2329, 4135, 8307, 3736, 1004, 9991,
+                                   2348, 1451, 3522, 2883, 3047, 6650,
+                                   4047, 8828, 8732, 5743, 1091, 381), nrow = 4, ncol = 6, byrow = TRUE)
+            map_dtr(seq_len(NROW(xdt)), function(row_id) {
+              y = 0
+              for (i in 1:4) {
+                ai = if (i == 1) 0.1 * (1 - xdt[row_id, ][["fidelity"]]) else 0
+                y = y + ((alpha[i] - ai) * exp(- sum(A[i, ] * ((x[row_id, ] - P[i, ]) ^ 2))))
+              }
+              data.table(y = -y, cost = 0.01 + xdt[row_id, ][["fidelity"]])
+            })
+          },
+          domain = ps(x1 = p_dbl(lower = 0, upper = 1), x2 = p_dbl(lower = 0, upper = 1), x3 = p_dbl(lower = 0, upper = 1), x4 = p_dbl(lower = 0, upper = 1), x5 = p_dbl(lower = 0, upper = 1), x6 = p_dbl(lower = 0, upper = 1)),
+          codomain = self$codomain,
+          constants = ps(fidelity = p_dbl(lower = 1e-3, upper = 1, default = 1, tags = "budget"))
+
+        )
+      } else {      
+        bbotk::ObjectiveRFunDt$new(
+          fun = function(xdt) {
+            x = xdt[, - "fidelity"]
+            alpha = c(1, 1.2, 3, 3.2)
+            A = matrix(c(10, 3, 17, 3.5, 1.7, 8,
+                         0.05, 10, 17, 0.1, 8, 14,
+                         3, 3.5, 1.7, 10, 17, 8,
+                         17, 8, 0.05, 10, 0.1, 14), nrow = 4, ncol = 6, byrow = TRUE)
+            P = 10^(-4) * matrix(c(1312, 1696, 5569, 124, 8283, 5886,
+                                   2329, 4135, 8307, 3736, 1004, 9991,
+                                   2348, 1451, 3522, 2883, 3047, 6650,
+                                   4047, 8828, 8732, 5743, 1091, 381), nrow = 4, ncol = 6, byrow = TRUE)
+            map_dtr(seq_len(NROW(xdt)), function(row_id) {
+              y = 0
+              for (i in 1:4) {
+                ai = if (i == 1) 0.1 * (1 - xdt[row_id, ][["fidelity"]]) else 0
+                y = y + ((alpha[i] - ai) * exp(- sum(A[i, ] * ((x[row_id, ] - P[i, ]) ^ 2))))
+              }
+              data.table(y = -y, cost = 0.01 + xdt[row_id, ][["fidelity"]])
+            })
+          },
+          domain = self$param_set,
+          codomain = self$codomain
+        )
+      }
     }
   ),
   active = list(
@@ -295,14 +372,53 @@ BenchmarkConfigHartmannSurrogate = R6Class("BenchmarkConfigHartmannSurrogate",
        ),
        packages = NULL
      )
+   },
+   get_objective = function(max_fidelity = FALSE, retrafo = TRUE) {
+     codomain = self$codomain$clone(deep = TRUE)
+     if (max_fidelity) {
+       ObjectiveONNX$new(
+         model_path = self$onnx_model_path,
+         data_order = readRDS(self$data_order_path),
+         trafo_dict = readRDS(self$dicts_path),
+         domain = ps(x1 = p_dbl(lower = 0, upper = 1), x2 = p_dbl(lower = 0, upper = 1), x3 = p_dbl(lower = 0, upper = 1), x4 = p_dbl(lower = 0, upper = 1), x5 = p_dbl(lower = 0, upper = 1), x6 = p_dbl(lower = 0, upper = 1)),
+         full_codomain = self$codomain$clone(deep = TRUE),  # needed to set the names
+         codomain = codomain,
+         task = NULL,
+         retrafo = retrafo,
+         constants = ps(fidelity = p_dbl(lower = 1e-3, upper = 1, default = 1, tags = "budget"))
+       )
+     } else {
+       ObjectiveONNX$new(
+         model_path = self$onnx_model_path,
+         data_order = readRDS(self$data_order_path),
+         trafo_dict = readRDS(self$dicts_path),
+         domain = self$opt_param_set,
+         full_codomain = self$codomain$clone(deep = TRUE),  # needed to set the names
+         codomain = codomain,
+         task = NULL,
+         retrafo = retrafo
+       )
+     }
    }
+
+
   ),
   active = list(
     data = function() {
       if (is.null(private$.data)) private$.data = preproc_hartmann_surrogate(self)
       private$.data
     },
-    param_set = function() readRDS(self$param_set_path)
+    param_set = function() {
+      ps(
+        x1 = p_dbl(lower = 0, upper = 1),
+        x2 = p_dbl(lower = 0, upper = 1),
+        x3 = p_dbl(lower = 0, upper = 1),
+        x4 = p_dbl(lower = 0, upper = 1),
+        x5 = p_dbl(lower = 0, upper = 1),
+        x6 = p_dbl(lower = 0, upper = 1),
+        fidelity = p_dbl(lower = 1e-3, upper = 1, tags = "budget")
+      )
+    }
   )
 )
 #' @include BenchmarkConfig.R
