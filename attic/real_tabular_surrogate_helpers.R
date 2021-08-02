@@ -88,9 +88,10 @@ OptimizerRandomTabular = R6Class("OptimizerRandomTabular",
     initialize = function(table) {
       self$table = assert_data_table(table)
       param_set = ps(
-        batch_size = p_int(default = 1L, tags = "required")
+        batch_size = p_int(default = 1L, tags = "required"),
+        fb_acqo = p_lgl(default = FALSE, tags = "required")
       )
-      param_set$values = list(batch_size = 1L)
+      param_set$values = list(batch_size = 1L, fb_acqo = FALSE)
 
       super$initialize(
         param_set = param_set,
@@ -111,7 +112,12 @@ OptimizerRandomTabular = R6Class("OptimizerRandomTabular",
         }
         table = table[fidelity == inst$objective$constants$values$fidelity]
       }
+      # Full budget search as acquisition function optimizer
+      if (self$param_set$values$fb_acqo) {
+        table = table[fidelity == 1]
+      }
       x_cols = inst$search_space$ids()
+
       # FIXME: assert column names
       repeat { # iterate until we have an exception from eval_batch
         if (batch_size > NROW(table)) batch_size = NROW(table)
@@ -121,7 +127,7 @@ OptimizerRandomTabular = R6Class("OptimizerRandomTabular",
           table = table[-ids, ]
           inst$eval_batch(design[, x_cols, with = FALSE])
         } else {
-          inst$eval_batch(design[1, x_cols, with = FALSE])
+          inst$eval_batch(design[1, x_cols, with = FALSE])  # this is needed to trigger the exception for termination
         }
       }
     }
@@ -157,7 +163,6 @@ OptimInstanceSingleCritTabular = R6Class("OptimInstanceSingleCritTabular",
     initialize = function(max_fidelity, table, x_cols, y_col, search_space, direction, terminator, keep_evals = "all", check_values = TRUE) {
       self$x_cols = assert_subset(x_cols, choices = colnames(table))
       self$y_col = assert_choice(y_col, choices = setdiff(colnames(table), x_cols))
-      setkeyv(table, c(self$x_cols, "fidelity"))
       self$table = assert_data_table(table)
 
       assert_r6(search_space, "ParamSet")
@@ -170,8 +175,7 @@ OptimInstanceSingleCritTabular = R6Class("OptimInstanceSingleCritTabular",
         objective = ObjectiveRFunDt$new(
           fun = function(xdt, fidelity) {
             xdt[, fidelity := 1]
-            setkeyv(xdt, c(self$x_cols, "fidelity"))
-            self$table[xdt, self$y_col, with = FALSE]
+            self$table[xdt, self$y_col, with = FALSE, on = c(self$x_cols, "fidelity")]
           },
           domain = search_space,
           constants = constants,
@@ -180,7 +184,7 @@ OptimInstanceSingleCritTabular = R6Class("OptimInstanceSingleCritTabular",
       } else {
         objective = ObjectiveRFunDt$new(
           fun = function(xdt) {
-            self$table[xdt, self$y_col, with = FALSE]
+            self$table[xdt, self$y_col, with = FALSE, on = c(self$x_cols, "fidelity")]
           },
           domain = search_space,
           codomain = ParamSet$new(list(ParamDbl$new(id = self$y_col, tags = direction)))

@@ -3,7 +3,7 @@ source("real_tabular_surrogate_helpers.R")
 # FIXME: add eggholder or schwefel (more local minima)
 # FIXME: HPOlib
 
-repls = 30
+repls = 4
 
 #learner = GraphLearner$new(ppl("robustify") %>>% lrn("regr.km", covtype = "matern3_2", optim.method = "gen", nugget.stability = 10^-8))
 learner = lrn("regr.km", covtype = "matern3_2", optim.method = "gen", nugget.stability = 10^-8)
@@ -34,7 +34,7 @@ results_branin = map_dtr(seq_len(repls), function(repl) {
   bayesopt_soo(
     instance = ins_real,
     acq_function = AcqFunctionEI$new(surrogate),
-    acq_optimizer = AcqOptimizer$new(opt("nloptr", algorithm = "NLOPT_LN_NELDERMEAD"), trm("none")),
+    acq_optimizer = AcqOptimizer$new(opt("nloptr", algorithm = "NLOPT_LN_BOBYQA"), trm("none")),
     n_design = 10
   )
   real_bo_full = get_trace(ins_real$archive, "real", "bo_full", full_budget = TRUE)
@@ -44,14 +44,14 @@ results_branin = map_dtr(seq_len(repls), function(repl) {
   bayesopt_soo(
     instance = ins_tabular,
     acq_function = AcqFunctionEI$new(surrogate),
-    acq_optimizer = AcqOptimizer$new(opt("random_tabular", table = ins_tabular$table, batch_size = 1000), trm("evals", n_evals = NROW(tabular_init)))
+    acq_optimizer = AcqOptimizer$new(opt("random_tabular", table = ins_tabular$table, batch_size = 1000, fb_acqo = TRUE), trm("evals", n_evals = NROW(tabular_init)))
   )
   tabular_bo_full = get_trace(ins_tabular$archive, "tabular", "bo_full", full_budget = TRUE)
   
   bayesopt_soo(
     instance = ins_surrogate,
     acq_function = AcqFunctionEI$new(surrogate),
-    acq_optimizer = AcqOptimizer$new(opt("nloptr", algorithm = "NLOPT_LN_NELDERMEAD"), trm("none")),
+    acq_optimizer = AcqOptimizer$new(opt("nloptr", algorithm = "NLOPT_LN_BOBYQA"), trm("none")),
     n_design = 10
   )
   surrogate_bo_full = get_trace(ins_surrogate$archive, "surrogate", "bo_full", full_budget = TRUE)
@@ -106,7 +106,7 @@ results_hartmann = map_dtr(seq_len(repls), function(repl) {
   bayesopt_soo(
     instance = ins_real,
     acq_function = AcqFunctionEI$new(surrogate),
-    acq_optimizer = AcqOptimizer$new(opt("nloptr", algorithm = "NLOPT_LN_NELDERMEAD"), trm("none")),
+    acq_optimizer = AcqOptimizer$new(opt("nloptr", algorithm = "NLOPT_LN_BOBYQA"), trm("none")),
     n_design = 30
   )
   real_bo_full = get_trace(ins_real$archive, "real", "bo_full", full_budget = TRUE)
@@ -116,14 +116,14 @@ results_hartmann = map_dtr(seq_len(repls), function(repl) {
   bayesopt_soo(
     instance = ins_tabular,
     acq_function = AcqFunctionEI$new(surrogate),
-    acq_optimizer = AcqOptimizer$new(opt("random_tabular", table = ins_tabular$table, batch_size = 1000), trm("evals", n_evals = NROW(tabular_init)))
+    acq_optimizer = AcqOptimizer$new(opt("random_tabular", table = ins_tabular$table, batch_size = 1000, fb_acqo = TRUE), trm("evals", n_evals = NROW(tabular_init)))
   )
   tabular_bo_full = get_trace(ins_tabular$archive, "tabular", "bo_full", full_budget = TRUE)
   
   bayesopt_soo(
     instance = ins_surrogate,
     acq_function = AcqFunctionEI$new(surrogate),
-    acq_optimizer = AcqOptimizer$new(opt("nloptr", algorithm = "NLOPT_LN_NELDERMEAD"), trm("none")),
+    acq_optimizer = AcqOptimizer$new(opt("nloptr", algorithm = "NLOPT_LN_BOBYQA"), trm("none")),
     n_design = 30
   )
   surrogate_bo_full = get_trace(ins_surrogate$archive, "surrogate", "bo_full", full_budget = TRUE)
@@ -132,7 +132,7 @@ results_hartmann = map_dtr(seq_len(repls), function(repl) {
   ins_real = get_ins("hartmann", method = "real", full_budget = FALSE, budget = 100)
   ins_tabular = get_ins("hartmann", method = "tabular", full_budget = FALSE, budget = 100)
   ins_surrogate = get_ins("hartmann", method = "surrogate", full_budget = FALSE, budget = 100)
-  
+
   param_set_hb = ParamSet$new(ins_real$search_space$params[-7])
 
   opt("hyperband")$optimize(ins_real)
@@ -156,12 +156,13 @@ results_hartmann = map_dtr(seq_len(repls), function(repl) {
 # Analysis
 results = results_branin
 
-results_agg = setNames(results[, mean(best), by = .(iteration, method, optimizer, cumbudget)], c("iteration", "method", "optimizer", "cumbudget", "mean_normalized_regret"))
-results_agg[, sd_normalized_regret := results[, sd(best), by = .(iteration, method, optimizer, cumbudget)][["V1"]]]
-results_agg$lower = results_agg$mean_normalized_regret - results_agg$sd_normalized_regret
-results_agg$upper = results_agg$mean_normalized_regret + results_agg$sd_normalized_regret
+results_agg = setNames(results[, mean(normalized_regret), by = .(iteration, method, optimizer, cumbudget)], c("iteration", "method", "optimizer", "cumbudget", "mean_normalized_regret"))
+results_agg[, sd_normalized_regret := results[, sd(normalized_regret), by = .(iteration, method, optimizer, cumbudget)][["V1"]]]
+results_agg$se_normalized_regret = results_agg$sd_normalized_regret / sqrt(repls)
+results_agg$lower = results_agg$mean_normalized_regret - results_agg$se_normalized_regret
+results_agg$upper = results_agg$mean_normalized_regret + results_agg$se_normalized_regret
 
-ggplot(aes(x = cumbudget, y = mean_normalized_regret, fill = optimizer, colour = optimizer), data = results_agg) +
+g = ggplot(aes(x = cumbudget, y = mean_normalized_regret, fill = optimizer, colour = optimizer), data = results_agg) +
   geom_line() +
   geom_ribbon(aes(min = lower, max = upper), alpha = 0.5, colour = NA) +
   facet_grid(~ method)
