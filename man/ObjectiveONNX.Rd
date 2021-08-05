@@ -45,7 +45,7 @@ Creates a new instance of this [R6][R6::R6Class] class.
   active_session = TRUE,
   retrafo = FALSE,
   properties = character(),
-  constants = NULL,
+  constants = ps(),
   check_values = FALSE
 )}\if{html}{\out{</div>}}
 }
