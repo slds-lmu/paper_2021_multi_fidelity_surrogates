@@ -832,7 +832,7 @@ benchmark_configs$add("borehole", BenchmarkConfigBorehole)
 BenchmarkConfigBoreholeSurrogate = R6Class("BenchmarkConfigBoreholeSurrogate",
   inherit = BenchmarkConfig,
   public = list(
-   initialize = function(id = "CurrinSurrogate", workdir) {
+   initialize = function(id = "BoreholeSurrogate", workdir) {
      super$initialize(
        id,
        workdir = workdir,
