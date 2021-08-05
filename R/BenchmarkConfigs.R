@@ -118,7 +118,7 @@ BenchmarkConfigBranin = R6Class("BenchmarkConfigBranin",
             xdt[, fidelity := fidelity]
             y = (xdt[["x2"]] - ((5.1 / (4 * pi^2)) - 0.1 * (1 - xdt[["fidelity"]])) * xdt[["x1"]]^2 + (5 / pi) * xdt[["x1"]] - 6) ^ 2 +
               10 * (1 - (1 / (8 * pi))) * cos(xdt[["x1"]]) + 10
-            data.table(y = y, cost = 0.01 + xdt[["fidelity"]])
+            data.table(y = y)
           },
           domain = ps(x1 = p_dbl(lower = -5, upper = 10), x2 = p_dbl(lower = 0, upper = 15)),
           codomain = self$codomain,
@@ -129,7 +129,7 @@ BenchmarkConfigBranin = R6Class("BenchmarkConfigBranin",
         fun = function(xdt) {
           y = (xdt[["x2"]] - ((5.1 / (4 * pi^2)) - 0.1 * (1 - xdt[["fidelity"]])) * xdt[["x1"]]^2 + (5 / pi) * xdt[["x1"]] - 6) ^ 2 +
             10 * (1 - (1 / (8 * pi))) * cos(xdt[["x1"]]) + 10
-          data.table(y = y, cost = 0.01 + xdt[["fidelity"]])
+          data.table(y = y)
         },
         domain = self$param_set,
         codomain = self$codomain
@@ -242,21 +242,198 @@ BenchmarkConfigBraninSurrogate = R6Class("BenchmarkConfigBraninSurrogate",
 benchmark_configs$add("branin_surrogate", BenchmarkConfigBraninSurrogate)
 
 
-# FIXME: se above
+
 #' @export
 # augmented Hartmann as described in Kandasamy et al. 2017
-# p = 1, d = 6
-# https://arxiv.org/abs/1703.06240
-# y_min = -3.322368 at x1 = 0.2016896, x2 = 0.1500236, x3 = 0.4768785, x4 = 0.2753365, x5 = 0.3116548, x6 = 0.6573037, fidelity = 1
+# p = 2, d = 3
+# y_min = -3.86278 at x1 = 0.114614, x2 = 0.555649, x3 = 0.852547, fidelity = 1
 # y_max?
-BenchmarkConfigHartmann = R6Class("BenchmarkConfigHartmann",
+BenchmarkConfigHartmann3d = R6Class("BenchmarkConfigHartmann3d",
   inherit = BenchmarkConfig,
   public = list(
-    initialize = function(id = "Hartmann") {
+    initialize = function(id = "Hartmann3d") {
       super$initialize(
         id,
         workdir = NULL,
-        model_name = "hartmann",
+        model_name = "hartmann3d",
+        param_set_file = NULL,
+        data_file = NULL,
+        data_order_file = "NULL",
+        dicts_file = NULL,
+        keras_model_file = NULL,
+        onnx_model_file = NULL,
+        target_variables = "y",
+        codomain = ps(
+          y = p_dbl(lower = -Inf, upper = Inf, tags = "minimize")
+        ),
+        packages = NULL
+      )
+    },
+
+    setup = function() {
+      message("no setup necessary.")
+    },
+
+    get_objective = function(max_fidelity = FALSE) {
+      if (max_fidelity) {
+        bbotk::ObjectiveRFunDt$new(
+          fun = function(xdt, fidelity) {
+            xdt[, fidelity := fidelity]
+            x = xdt[, - "fidelity"]
+            alpha = c(1, 1.2, 3, 3.2)
+            A = matrix(c(3, 10, 30,
+                         0.1, 10, 35,
+                         3, 10, 30,
+                         0.1, 10, 35), nrow = 4, ncol = 3, byrow = TRUE)
+            P = 10^(-4) * matrix(c(3689, 1170, 2673,
+                                   4699, 4387, 7470,
+                                   1091, 8732, 5547,
+                                   381, 5743, 8828), nrow = 4, ncol = 3, byrow = TRUE)
+            p = 2
+            map_dtr(seq_len(NROW(xdt)), function(row_id) {
+              y = 0
+              for (i in 1:4) {
+                ai = if (i <= p) 0.1 * (1 - xdt[row_id, ][["fidelity"]]) else 0
+                y = y + ((alpha[i] - ai) * exp(- sum(A[i, ] * ((x[row_id, ] - P[i, ]) ^ 2))))
+              }
+              data.table(y = -y)
+            })
+          },
+          domain = ps(x1 = p_dbl(lower = 0, upper = 1), x2 = p_dbl(lower = 0, upper = 1), x3 = p_dbl(lower = 0, upper = 1)),
+          codomain = self$codomain,
+          constants = ps(fidelity = p_dbl(lower = 1e-3, upper = 1, default = 1, tags = "budget"))
+
+        )
+      } else {      
+        bbotk::ObjectiveRFunDt$new(
+          fun = function(xdt) {
+            x = xdt[, - "fidelity"]
+            alpha = c(1, 1.2, 3, 3.2)
+            A = matrix(c(3, 10, 30,
+                         0.1, 10, 35,
+                         3, 10, 30,
+                         0.1, 10, 35), nrow = 4, ncol = 3, byrow = TRUE)
+            P = 10^(-4) * matrix(c(3689, 1170, 2673,
+                                   4699, 4387, 7470,
+                                   1091, 8732, 5547,
+                                   381, 5743, 8828), nrow = 4, ncol = 3, byrow = TRUE)
+            p = 2
+            map_dtr(seq_len(NROW(xdt)), function(row_id) {
+              y = 0
+              for (i in 1:4) {
+                ai = if (i <= p) 0.1 * (1 - xdt[row_id, ][["fidelity"]]) else 0
+                y = y + ((alpha[i] - ai) * exp(- sum(A[i, ] * ((x[row_id, ] - P[i, ]) ^ 2))))
+              }
+              data.table(y = -y)
+            })
+          },
+          domain = self$param_set,
+          codomain = self$codomain
+        )
+      }
+    }
+  ),
+  active = list(
+    param_set = function() {
+      ps(
+        x1 = p_dbl(lower = 0, upper = 1),
+        x2 = p_dbl(lower = 0, upper = 1),
+        x3 = p_dbl(lower = 0, upper = 1),
+        fidelity = p_dbl(lower = 1e-3, upper = 1, tags = "budget")
+      )
+    }
+  )
+)
+#' @include BenchmarkConfig.R
+benchmark_configs$add("hartmann3d", BenchmarkConfigHartmann3d)
+
+
+
+#' @export
+BenchmarkConfigHartmann3dSurrogate = R6Class("BenchmarkConfigHartmann3dSurrogate",
+  inherit = BenchmarkConfig,
+  public = list(
+   initialize = function(id = "Hartmann3dSurrogate", workdir) {
+     super$initialize(
+       id,
+       workdir = workdir,
+       model_name = "hartmann3d_surrogate",
+       param_set_file = "param_set.rds",
+       data_file = "data.rds",
+       data_order_file = "data_order.rds",
+       dicts_file = "dicts.rds",
+       keras_model_file = "model.hdf5",
+       onnx_model_file = "model.onnx",
+       target_variables = "y",
+       codomain = ps(
+         y = p_dbl(lower = -Inf, upper = Inf, tags = "minimize")
+       ),
+       packages = NULL
+     )
+   },
+   get_objective = function(max_fidelity = FALSE, retrafo = TRUE) {
+     codomain = self$codomain$clone(deep = TRUE)
+     if (max_fidelity) {
+       ObjectiveONNX$new(
+         model_path = self$onnx_model_path,
+         data_order = readRDS(self$data_order_path),
+         trafo_dict = readRDS(self$dicts_path),
+         domain = ps(x1 = p_dbl(lower = 0, upper = 1), x2 = p_dbl(lower = 0, upper = 1), x3 = p_dbl(lower = 0, upper = 1)),
+         full_codomain = self$codomain$clone(deep = TRUE),  # needed to set the names
+         codomain = codomain,
+         task = NULL,
+         retrafo = retrafo,
+         constants = ps(fidelity = p_dbl(lower = 1e-3, upper = 1, default = 1, tags = "budget"))
+       )
+     } else {
+       ObjectiveONNX$new(
+         model_path = self$onnx_model_path,
+         data_order = readRDS(self$data_order_path),
+         trafo_dict = readRDS(self$dicts_path),
+         domain = self$opt_param_set,
+         full_codomain = self$codomain$clone(deep = TRUE),  # needed to set the names
+         codomain = codomain,
+         task = NULL,
+         retrafo = retrafo
+       )
+     }
+   }
+
+
+  ),
+  active = list(
+    data = function() {
+      if (is.null(private$.data)) private$.data = preproc_hartmann_surrogate(self)
+      private$.data
+    },
+    param_set = function() {
+      ps(
+        x1 = p_dbl(lower = 0, upper = 1),
+        x2 = p_dbl(lower = 0, upper = 1),
+        x3 = p_dbl(lower = 0, upper = 1),
+        fidelity = p_dbl(lower = 1e-3, upper = 1, tags = "budget")
+      )
+    }
+  )
+)
+#' @include BenchmarkConfig.R
+benchmark_configs$add("hartmann3d_surrogate", BenchmarkConfigHartmann3dSurrogate)
+
+
+
+#' @export
+# augmented Hartmann as described in Kandasamy et al. 2017
+# p = 2, d = 6
+# y_min = -3.322368 at x1 = 0.2016896, x2 = 0.1500236, x3 = 0.4768785, x4 = 0.2753365, x5 = 0.3116548, x6 = 0.6573037, fidelity = 1
+# y_max?
+BenchmarkConfigHartmann6d = R6Class("BenchmarkConfigHartmann6d",
+  inherit = BenchmarkConfig,
+  public = list(
+    initialize = function(id = "Hartmann6d") {
+      super$initialize(
+        id,
+        workdir = NULL,
+        model_name = "hartmann6d",
         param_set_file = NULL,
         data_file = NULL,
         data_order_file = "NULL",
@@ -290,16 +467,18 @@ BenchmarkConfigHartmann = R6Class("BenchmarkConfigHartmann",
                                    2329, 4135, 8307, 3736, 1004, 9991,
                                    2348, 1451, 3522, 2883, 3047, 6650,
                                    4047, 8828, 8732, 5743, 1091, 381), nrow = 4, ncol = 6, byrow = TRUE)
+            p = 2
             map_dtr(seq_len(NROW(xdt)), function(row_id) {
               y = 0
               for (i in 1:4) {
-                ai = if (i == 1) 0.1 * (1 - xdt[row_id, ][["fidelity"]]) else 0
+                ai = if (i <= p) 0.1 * (1 - xdt[row_id, ][["fidelity"]]) else 0
                 y = y + ((alpha[i] - ai) * exp(- sum(A[i, ] * ((x[row_id, ] - P[i, ]) ^ 2))))
               }
-              data.table(y = -y, cost = 0.01 + xdt[row_id, ][["fidelity"]])
+              data.table(y = -y)
             })
           },
-          domain = ps(x1 = p_dbl(lower = 0, upper = 1), x2 = p_dbl(lower = 0, upper = 1), x3 = p_dbl(lower = 0, upper = 1), x4 = p_dbl(lower = 0, upper = 1), x5 = p_dbl(lower = 0, upper = 1), x6 = p_dbl(lower = 0, upper = 1)),
+          domain = ps(x1 = p_dbl(lower = 0, upper = 1), x2 = p_dbl(lower = 0, upper = 1), x3 = p_dbl(lower = 0, upper = 1),
+                      x4 = p_dbl(lower = 0, upper = 1), x5 = p_dbl(lower = 0, upper = 1), x6 = p_dbl(lower = 0, upper = 1)),
           codomain = self$codomain,
           constants = ps(fidelity = p_dbl(lower = 1e-3, upper = 1, default = 1, tags = "budget"))
 
@@ -317,13 +496,14 @@ BenchmarkConfigHartmann = R6Class("BenchmarkConfigHartmann",
                                    2329, 4135, 8307, 3736, 1004, 9991,
                                    2348, 1451, 3522, 2883, 3047, 6650,
                                    4047, 8828, 8732, 5743, 1091, 381), nrow = 4, ncol = 6, byrow = TRUE)
+            p = 2
             map_dtr(seq_len(NROW(xdt)), function(row_id) {
               y = 0
               for (i in 1:4) {
-                ai = if (i == 1) 0.1 * (1 - xdt[row_id, ][["fidelity"]]) else 0
+                ai = if (i <= p) 0.1 * (1 - xdt[row_id, ][["fidelity"]]) else 0
                 y = y + ((alpha[i] - ai) * exp(- sum(A[i, ] * ((x[row_id, ] - P[i, ]) ^ 2))))
               }
-              data.table(y = -y, cost = 0.01 + xdt[row_id, ][["fidelity"]])
+              data.table(y = -y)
             })
           },
           domain = self$param_set,
@@ -347,19 +527,19 @@ BenchmarkConfigHartmann = R6Class("BenchmarkConfigHartmann",
   )
 )
 #' @include BenchmarkConfig.R
-benchmark_configs$add("hartmann", BenchmarkConfigHartmann)
+benchmark_configs$add("hartmann6d", BenchmarkConfigHartmann6d)
 
 
 
 #' @export
-BenchmarkConfigHartmannSurrogate = R6Class("BenchmarkConfigHartmannSurrogate",
+BenchmarkConfigHartmann6dSurrogate = R6Class("BenchmarkConfigHartmann6dSurrogate",
   inherit = BenchmarkConfig,
   public = list(
-   initialize = function(id = "HartmannSurrogate", workdir) {
+   initialize = function(id = "Hartmann6dSurrogate", workdir) {
      super$initialize(
        id,
        workdir = workdir,
-       model_name = "hartmann_surrogate",
+       model_name = "hartmann6d_surrogate",
        param_set_file = "param_set.rds",
        data_file = "data.rds",
        data_order_file = "data_order.rds",
@@ -422,7 +602,303 @@ BenchmarkConfigHartmannSurrogate = R6Class("BenchmarkConfigHartmannSurrogate",
   )
 )
 #' @include BenchmarkConfig.R
-benchmark_configs$add("hartmann_surrogate", BenchmarkConfigHartmannSurrogate)
+benchmark_configs$add("hartmann6d_surrogate", BenchmarkConfigHartmann6dSurrogate)
+
+
+
+#' @export
+# augmented Currin as described in Kandasamy et al. 2017
+# https://arxiv.org/abs/1703.06240
+# y_min?
+# y_max?
+BenchmarkConfigCurrin = R6Class("BenchmarkConfigCurrin",
+  inherit = BenchmarkConfig,
+  public = list(
+    initialize = function(id = "Currin") {
+      super$initialize(
+        id,
+        workdir = NULL,
+        model_name = "currin",
+        param_set_file = NULL,
+        data_file = NULL,
+        data_order_file = "NULL",
+        dicts_file = NULL,
+        keras_model_file = NULL,
+        onnx_model_file = NULL,
+        target_variables = "y",
+        codomain = ps(
+          y = p_dbl(lower = -Inf, upper = Inf, tags = "minimize")
+        ),
+        packages = NULL
+      )
+    },
+
+    setup = function() {
+      message("no setup necessary.")
+    },
+
+    get_objective = function(max_fidelity = FALSE) {
+      if (max_fidelity) {
+        bbotk::ObjectiveRFunDt$new(
+          fun = function(xdt, fidelity) {
+            xdt[, fidelity := fidelity]
+            y = (1 - 0.1 * (1 - xdt[["fidelity"]]) * exp(- 1 / (2 * xdt[["x2"]]))) * ((2300 * (xdt[["x1"]] ^ 3) + 1900 * (xdt[["x1"]] ^ 2) + 2092 * xdt[["x1"]] + 60) / ((100 * (xdt[["x1"]] ^ 3) + 500 * (xdt[["x1"]] ^ 2) + 4 * xdt[["x1"]] + 20)))
+            data.table(y = - y)  # we want to minimize by default
+          },
+          domain = ps(x1 = p_dbl(lower = 0, upper = 1), x2 = p_dbl(lower = 0, upper = 1)),
+          codomain = self$codomain,
+          constants = ps(fidelity = p_dbl(lower = 1e-3, upper = 1, default = 1, tags = "budget"))
+
+        )
+      } else {      
+        bbotk::ObjectiveRFunDt$new(
+          fun = function(xdt) {
+            y = (1 - (0.1 * (1 - xdt[["fidelity"]]) * exp(- 1 / (2 * xdt[["x2"]])))) * ((2300 * (xdt[["x1"]] ^ 3) + 1900 * (xdt[["x1"]] ^ 2) + 2092 * xdt[["x1"]] + 60) / ((100 * (xdt[["x1"]] ^ 3) + 500 * (xdt[["x1"]] ^ 2) + 4 * xdt[["x1"]] + 20)))
+            data.table(y = - y)  # we want to minimize by default
+          },
+          domain = self$param_set,
+          codomain = self$codomain
+        )
+      }
+    }
+  ),
+  active = list(
+    param_set = function() {
+      ps(
+        x1 = p_dbl(lower = 0, upper = 1),
+        x2 = p_dbl(lower = 0, upper = 1),
+        fidelity = p_dbl(lower = 1e-3, upper = 1, tags = "budget")
+      )
+    }
+  )
+)
+#' @include BenchmarkConfig.R
+benchmark_configs$add("currin", BenchmarkConfigCurrin)
+
+
+#' @export
+BenchmarkConfigCurrinSurrogate = R6Class("BenchmarkConfigCurrinSurrogate",
+  inherit = BenchmarkConfig,
+  public = list(
+   initialize = function(id = "CurrinSurrogate", workdir) {
+     super$initialize(
+       id,
+       workdir = workdir,
+       model_name = "currin_surrogate",
+       param_set_file = "param_set.rds",
+       data_file = "data.rds",
+       data_order_file = "data_order.rds",
+       dicts_file = "dicts.rds",
+       keras_model_file = "model.hdf5",
+       onnx_model_file = "model.onnx",
+       target_variables = "y",
+       codomain = ps(
+         y = p_dbl(lower = -Inf, upper = Inf, tags = "minimize")
+       ),
+       packages = NULL
+     )
+   },
+   get_objective = function(max_fidelity = FALSE, retrafo = TRUE) {
+     codomain = self$codomain$clone(deep = TRUE)
+     if (max_fidelity) {
+       ObjectiveONNX$new(
+         model_path = self$onnx_model_path,
+         data_order = readRDS(self$data_order_path),
+         trafo_dict = readRDS(self$dicts_path),
+         domain = ps(x1 = p_dbl(lower = 0, upper = 1), x2 = p_dbl(lower = 0, upper = 1)),
+         full_codomain = self$codomain$clone(deep = TRUE),  # needed to set the names
+         codomain = codomain,
+         task = NULL,
+         retrafo = retrafo,
+         constants = ps(fidelity = p_dbl(lower = 1e-3, upper = 1, default = 1, tags = "budget"))
+       )
+     } else {
+       ObjectiveONNX$new(
+         model_path = self$onnx_model_path,
+         data_order = readRDS(self$data_order_path),
+         trafo_dict = readRDS(self$dicts_path),
+         domain = self$opt_param_set,
+         full_codomain = self$codomain$clone(deep = TRUE),  # needed to set the names
+         codomain = codomain,
+         task = NULL,
+         retrafo = retrafo
+       )
+     }
+   }
+
+
+  ),
+  active = list(
+    data = function() {
+      if (is.null(private$.data)) private$.data = preproc_currin_surrogate(self)
+      private$.data
+    },
+    param_set = function() {
+      ps(
+        x1 = p_dbl(lower = 0, upper = 1),
+        x2 = p_dbl(lower = 0, upper = 1),
+        fidelity = p_dbl(lower = 1e-3, upper = 1, tags = "budget")
+      )
+    }
+  )
+)
+#' @include BenchmarkConfig.R
+benchmark_configs$add("currin_surrogate", BenchmarkConfigCurrinSurrogate)
+
+
+
+#' @export
+# augmented Borehole as described in Kandasamy et al. 2017
+# y_min?
+# y_max?
+BenchmarkConfigBorehole = R6Class("BenchmarkConfigBorehole",
+  inherit = BenchmarkConfig,
+  public = list(
+    initialize = function(id = "Borehole") {
+      super$initialize(
+        id,
+        workdir = NULL,
+        model_name = "borehole",
+        param_set_file = NULL,
+        data_file = NULL,
+        data_order_file = "NULL",
+        dicts_file = NULL,
+        keras_model_file = NULL,
+        onnx_model_file = NULL,
+        target_variables = "y",
+        codomain = ps(
+          y = p_dbl(lower = -Inf, upper = Inf, tags = "minimize")
+        ),
+        packages = NULL
+      )
+    },
+
+    setup = function() {
+      message("no setup necessary.")
+    },
+
+    get_objective = function(max_fidelity = FALSE) {
+      if (max_fidelity) {
+        bbotk::ObjectiveRFunDt$new(
+          fun = function(xdt, fidelity) {
+            xdt[, fidelity := fidelity]
+            f2 = (2 * pi * xdt[["x3"]] * (xdt[["x4"]] - xdt[["x6"]])) / (log(xdt[["x2"]] / xdt[["x1"]]) * (1 + ((2 * xdt[["x7"]] * xdt[["x3"]]) / (log(xdt[["x2"]] / xdt[["x1"]]) * (xdt[["x1"]] ^ 2) * xdt[["x8"]])) + (xdt[["x3"]] / xdt[["x5"]])))
+            f1 = (5 * xdt[["x3"]] * (xdt[["x4"]] - xdt[["x6"]])) / (log(xdt[["x2"]] / xdt[["x1"]]) * (1.5 + ((2 * xdt[["x7"]] * xdt[["x3"]]) / (log(xdt[["x2"]] / xdt[["x1"]]) * (xdt[["x1"]] ^ 2) * xdt[["x8"]])) + (xdt[["x3"]] / xdt[["x5"]])))
+            y = xdt[["fidelity"]] * f2 + (1 - xdt[["fidelity"]]) * f1
+            data.table(y = - y)  # we want to minimize by default
+          },
+          domain = ps(x1 = p_dbl(lower = 0.05, upper = 0.15), x2 = p_dbl(lower = 100, upper = 50 * 1000), x3 = p_dbl(lower = 63.07 * 1000, upper = 115.6 * 1000), x4 = p_dbl(lower = 990, upper = 1110),
+                      x5 = p_dbl(lower = 63.1, upper = 116), x6 = p_dbl(lower = 700, upper = 820), x7 = p_dbl(lower = 1120, upper = 1680), x8 = p_dbl(lower = 9855, upper = 12045)),
+          codomain = self$codomain,
+          constants = ps(fidelity = p_dbl(lower = 1e-3, upper = 1, default = 1, tags = "budget"))
+
+        )
+      } else {      
+        bbotk::ObjectiveRFunDt$new(
+          fun = function(xdt) {
+            f2 = (2 * pi * xdt[["x3"]] * (xdt[["x4"]] - xdt[["x6"]])) / (log(xdt[["x2"]] / xdt[["x1"]]) * (1 + ((2 * xdt[["x7"]] * xdt[["x3"]]) / (log(xdt[["x2"]] / xdt[["x1"]]) * (xdt[["x1"]] ^ 2) * xdt[["x8"]])) + (xdt[["x3"]] / xdt[["x5"]])))
+            f1 = (5 * xdt[["x3"]] * (xdt[["x4"]] - xdt[["x6"]])) / (log(xdt[["x2"]] / xdt[["x1"]]) * (1.5 + ((2 * xdt[["x7"]] * xdt[["x3"]]) / (log(xdt[["x2"]] / xdt[["x1"]]) * (xdt[["x1"]] ^ 2) * xdt[["x8"]])) + (xdt[["x3"]] / xdt[["x5"]])))
+            y = xdt[["fidelity"]] * f2 + (1 - xdt[["fidelity"]]) * f1
+            data.table(y = - y)  # we want to minimize by default
+          },
+          domain = self$param_set,
+          codomain = self$codomain
+        )
+      }
+    }
+  ),
+  active = list(
+    param_set = function() {
+      ps(
+         x1 = p_dbl(lower = 0.05, upper = 0.15),
+         x2 = p_dbl(lower = 100, upper = 50 * 1000),
+         x3 = p_dbl(lower = 63.07 * 1000, upper = 115.6 * 1000),
+         x4 = p_dbl(lower = 990, upper = 1110),
+         x5 = p_dbl(lower = 63.1, upper = 116),
+         x6 = p_dbl(lower = 700, upper = 820),
+         x7 = p_dbl(lower = 1120, upper = 1680),
+         x8 = p_dbl(lower = 9855, upper = 12045),
+         fidelity = p_dbl(lower = 1e-3, upper = 1, tags = "budget")
+      )
+    }
+  )
+)
+#' @include BenchmarkConfig.R
+benchmark_configs$add("borehole", BenchmarkConfigBorehole)
+
+
+
+#' @export
+BenchmarkConfigBoreholeSurrogate = R6Class("BenchmarkConfigBoreholeSurrogate",
+  inherit = BenchmarkConfig,
+  public = list(
+   initialize = function(id = "CurrinSurrogate", workdir) {
+     super$initialize(
+       id,
+       workdir = workdir,
+       model_name = "borehole_surrogate",
+       param_set_file = "param_set.rds",
+       data_file = "data.rds",
+       data_order_file = "data_order.rds",
+       dicts_file = "dicts.rds",
+       keras_model_file = "model.hdf5",
+       onnx_model_file = "model.onnx",
+       target_variables = "y",
+       codomain = ps(
+         y = p_dbl(lower = -Inf, upper = Inf, tags = "minimize")
+       ),
+       packages = NULL
+     )
+   },
+   get_objective = function(max_fidelity = FALSE, retrafo = TRUE) {
+     codomain = self$codomain$clone(deep = TRUE)
+     if (max_fidelity) {
+       ObjectiveONNX$new(
+         model_path = self$onnx_model_path,
+         data_order = readRDS(self$data_order_path),
+         trafo_dict = readRDS(self$dicts_path),
+         domain = ps(x1 = p_dbl(lower = 0.05, upper = 0.15), x2 = p_dbl(lower = 100, upper = 50 * 1000), x3 = p_dbl(lower = 63.07 * 1000, upper = 115.6 * 1000), x4 = p_dbl(lower = 990, upper = 1110),
+                     x5 = p_dbl(lower = 63.1, upper = 116), x6 = p_dbl(lower = 700, upper = 820), x7 = p_dbl(lower = 1120, upper = 1680), x8 = p_dbl(lower = 9855, upper = 12045)),
+         full_codomain = self$codomain$clone(deep = TRUE),  # needed to set the names
+         codomain = codomain,
+         task = NULL,
+         retrafo = retrafo,
+         constants = ps(fidelity = p_dbl(lower = 1e-3, upper = 1, default = 1, tags = "budget"))
+       )
+     } else {
+       ObjectiveONNX$new(
+         model_path = self$onnx_model_path,
+         data_order = readRDS(self$data_order_path),
+         trafo_dict = readRDS(self$dicts_path),
+         domain = self$opt_param_set,
+         full_codomain = self$codomain$clone(deep = TRUE),  # needed to set the names
+         codomain = codomain,
+         task = NULL,
+         retrafo = retrafo
+       )
+     }
+   }
+
+
+  ),
+  active = list(
+    data = function() {
+      if (is.null(private$.data)) private$.data = preproc_borehole_surrogate(self)
+      private$.data
+    },
+    param_set = function() {
+      ps(
+        x1 = p_dbl(lower = 0, upper = 1),
+        x2 = p_dbl(lower = 0, upper = 1),
+        fidelity = p_dbl(lower = 1e-3, upper = 1, tags = "budget")
+      )
+    }
+  )
+)
+#' @include BenchmarkConfig.R
+benchmark_configs$add("borehole_surrogate", BenchmarkConfigBoreholeSurrogate)
+
+
 
 
 
@@ -461,7 +937,7 @@ BenchmarkConfigShekel = R6Class("BenchmarkConfigShekel",
       assert_int(m, lower = 1L, upper = 20L)
       bbotk::ObjectiveRFunDt$new(
         fun = function(xdt) {
-          xdt[["fidelity"]] =  4 * xdt[["fidelity"]]  # scale to from [0, 1] to [0, 4]
+          xdt[["fidelity"]] = 4 * xdt[["fidelity"]]  # scale to from [0, 1] to [0, 4]
           xdt_mat = as.matrix(xdt)
           b = 0.1 * c(1, 2, 2, 4, 4, 6, 3, 7, 5, 5)
           C = c(4.0, 1.0, 8.0, 6.0, 3.0, 2.0, 5.0, 8.0, 6.0, 7.0,
@@ -604,7 +1080,7 @@ BenchmarkConfigRBv2SVM = R6Class("BenchmarkConfigRBv2SVM",
     param_set = function() {
       ps(
         kernel = p_fct(levels = c("linear", "polynomial", "radial")),
-        cost =  p_dbl(lower = -10, upper = 10, tags = "log", trafo = function(x) exp(x)),
+        cost = p_dbl(lower = -10, upper = 10, tags = "log", trafo = function(x) exp(x)),
         gamma = p_dbl(lower = -10, upper = 10, tags = "log", trafo = function(x) exp(x), depends = kernel == "radial"),
         tolerance = p_dbl(lower = -10, upper = log(2), tags = "log", trafo = function(x) exp(x)),
         degree = p_int(lower = 2, upper = 5, depends = kernel == "polynomial"),
@@ -833,7 +1309,7 @@ BenchmarkConfigRBv2xgboost = R6Class("BenchmarkConfigRBv2xgboost",
         colsample_bytree = p_dbl(lower = 0.01, upper = 1, depends = booster %in% c("dart", "gbtree")),
         colsample_bylevel = p_dbl(lower = 0.01, upper = 1, depends = booster %in% c("dart", "gbtree")),
         rate_drop = p_dbl(lower = 0, upper = 1, depends = booster == "dart"),
-        skip_drop = p_dbl(lower =  0, upper = 1, depends = booster == "dart"),
+        skip_drop = p_dbl(lower = 0, upper = 1, depends = booster == "dart"),
         trainsize = p_dbl(lower = 0.05, upper = 1, tag = "budget"),
         repl = p_int(lower = 1, upper = 10, tag = "budget"),
         num.impute.selected.cpo = p_fct(levels = c("impute.mean", "impute.median", "impute.hist")),
@@ -1050,7 +1526,7 @@ BenchmarkConfigSuperRBv2 = R6Class("BenchmarkConfigSuperRBv2",
           # svm
           svm.kernel = p_fct(levels = c("linear", "polynomial", "radial")),
           svm.cost = p_dbl(lower = -10, upper = 10, tags = "log", trafo = function(x) exp(x)),
-          svm.gamma =  p_dbl(lower = -10, upper = 10, tags = "log", trafo = function(x) exp(x), depends = svm.kernel == "radial"),
+          svm.gamma = p_dbl(lower = -10, upper = 10, tags = "log", trafo = function(x) exp(x), depends = svm.kernel == "radial"),
           svm.tolerance = p_dbl(lower = -10, upper = log(2), tags = "log", trafo = function(x) exp(x)),
           svm.degree = p_int(lower = 2, upper = 5, depends = svm.kernel == "polynomial"),
           # glmnet
@@ -1079,7 +1555,7 @@ BenchmarkConfigSuperRBv2 = R6Class("BenchmarkConfigSuperRBv2",
           xgboost.booster = p_fct(levels = c("gblinear", "gbtree", "dart")),
           xgboost.nrounds = p_dbl(lower = 2, upper = 8, tags = c("int", "log"), trafo = function(x) as.integer(round(exp(x)))),
           xgboost.eta = p_dbl(lower = -7, upper = 0, tags = "log", trafo = function(x) exp(x), depends = xgboost.booster %in% c("dart", "gbtree")),
-          xgboost.gamma =  p_dbl(lower = -10, upper = 2, tags = "log", trafo = function(x) exp(x), depends = xgboost.booster %in% c("dart", "gbtree")),
+          xgboost.gamma = p_dbl(lower = -10, upper = 2, tags = "log", trafo = function(x) exp(x), depends = xgboost.booster %in% c("dart", "gbtree")),
           xgboost.lambda = p_dbl(lower = -7, upper = 7, tags = "log", trafo = function(x) exp(x)),
           xgboost.alpha = p_dbl(lower = -7, upper = 7, tags = "log", trafo = function(x) exp(x)),
           xgboost.subsample = p_dbl(lower = 0.1, upper = 1),
@@ -1088,7 +1564,7 @@ BenchmarkConfigSuperRBv2 = R6Class("BenchmarkConfigSuperRBv2",
           xgboost.colsample_bytree = p_dbl(lower = 0.01, upper = 1, depends = xgboost.booster %in% c("dart", "gbtree")),
           xgboost.colsample_bylevel = p_dbl(lower = 0.01, upper = 1, depends = xgboost.booster %in% c("dart", "gbtree")),
           xgboost.rate_drop = p_dbl(lower = 0, upper = 1, depends = xgboost.booster == "dart"),
-          xgboost.skip_drop = p_dbl(lower =  0, upper = 1, depends = xgboost.booster == "dart"),
+          xgboost.skip_drop = p_dbl(lower = 0, upper = 1, depends = xgboost.booster == "dart"),
           # learner
           trainsize = p_dbl(lower = 0.05, upper = 1, tag = "budget"),
           repl = p_int(lower = 1, upper = 10, tag = "budget"),
@@ -1264,8 +1740,8 @@ BenchmarkConfigTaskSet = R6Class("BenchmarkConfigTaskSet",
 #     requires = quote(optimizer == "sgd")),
 #   p_int(id = "layers", lower = 1L, upper = 4L),
 #   p_fct(id = "batchnorm_dropout", values = c("batchnorm", "dropout", "none")),
-#   p_dbl(id = "input_dropout_rate", lower = -5, upper = 0, requires = quote(batchnorm_dropout == "dropout"), trafo =  function(x) 3^(x/2)),
-#   p_dbl(id = "dropout_rate", lower = -5, upper = 0, requires = quote(batchnorm_dropout == "dropout"), trafo =  function(x) 3^(x/2)),
+#   p_dbl(id = "input_dropout_rate", lower = -5, upper = 0, requires = quote(batchnorm_dropout == "dropout"), trafo = function(x) 3^(x/2)),
+#   p_dbl(id = "dropout_rate", lower = -5, upper = 0, requires = quote(batchnorm_dropout == "dropout"), trafo = function(x) 3^(x/2)),
 #   # Neurons / Layers
 #   p_dbl(id = "units_layer1", lower = 3L, upper = 9, trafo = function(x) round(2^x)),
 #   p_dbl(id = "units_layer2", lower = 3L, upper = 9, trafo = function(x) round(2^x), requires = quote(layers >= 2)),
