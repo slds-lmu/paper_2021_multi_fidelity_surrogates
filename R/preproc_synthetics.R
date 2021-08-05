@@ -120,7 +120,15 @@ preproc_borehole_surrogate = function(config, seed = 123L, n_max = 2*10^6, frac 
   train = tt$train
   train = preproc_iid(train)
   trafos = c(
-    map(train[, "y", with = FALSE], scale_base_0_1, base = 1, p = 0)
+    map(train[, "y", with = FALSE], scale_base_0_1, base = 1, p = 0),
+    map(train[, "x1", with = FALSE], scale_base_0_1, base = 1, p = 0),
+    map(train[, "x2", with = FALSE], scale_base_0_1, base = 1, p = 0),
+    map(train[, "x3", with = FALSE], scale_base_0_1, base = 1, p = 0),
+    map(train[, "x4", with = FALSE], scale_base_0_1, base = 1, p = 0),
+    map(train[, "x5", with = FALSE], scale_base_0_1, base = 1, p = 0),
+    map(train[, "x6", with = FALSE], scale_base_0_1, base = 1, p = 0),
+    map(train[, "x7", with = FALSE], scale_base_0_1, base = 1, p = 0),
+    map(train[, "x8", with = FALSE], scale_base_0_1, base = 1, p = 0)
   )
   train[, names(trafos) := pmap(list(.SD, trafos), function(x, t) {t$trafo(x)}), .SDcols = names(trafos)]
   y = as.matrix(train[, config$target_variables, with = FALSE])
