@@ -887,10 +887,15 @@ BenchmarkConfigBoreholeSurrogate = R6Class("BenchmarkConfigBoreholeSurrogate",
       private$.data
     },
     param_set = function() {
-      ps(
-        x1 = p_dbl(lower = 0, upper = 1),
-        x2 = p_dbl(lower = 0, upper = 1),
-        fidelity = p_dbl(lower = 1e-3, upper = 1, tags = "budget")
+      ps(x1 = p_dbl(lower = 0.05, upper = 0.15),
+         x2 = p_dbl(lower = 100, upper = 50 * 1000),
+         x3 = p_dbl(lower = 63.07 * 1000, upper = 115.6 * 1000),
+         x4 = p_dbl(lower = 990, upper = 1110),
+         x5 = p_dbl(lower = 63.1, upper = 116),
+         x6 = p_dbl(lower = 700, upper = 820),
+         x7 = p_dbl(lower = 1120, upper = 1680),
+         x8 = p_dbl(lower = 9855, upper = 12045),
+         fidelity = p_dbl(lower = 1e-3, upper = 1, tags = "budget")
       )
     }
   )
