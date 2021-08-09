@@ -911,6 +911,11 @@ BenchmarkConfigRpartPhoneme = R6Class("BenchmarkConfigRpartPhoneme",
   inherit = BenchmarkConfig,
   public = list(
     initialize = function(id = "RpartPhoneme") {
+    self$learner = mlr3::LearnerClassifRpart$new()
+    self$task = mlr3misc::dictionary_sugar_get(mlr3::mlr_tasks, "oml", data_id = 1489)
+    # different fidelities of train size, 1/(2^(0:9)) fidelity steps
+    self$train_id = list("10" = 1:4864, "9" = 1:2432, "8" = 1:1216, "7" = 1:608, "6" = 1:304, "5" = 1:152, "4" = 1:76, "3" = 1:38, "2" = 1:19, "1" = 1:10)
+    self$test_id = 4865:5404
       super$initialize(
         id,
         workdir = NULL,
@@ -929,11 +934,10 @@ BenchmarkConfigRpartPhoneme = R6Class("BenchmarkConfigRpartPhoneme",
       )
     },
 
-    learner = mlr3::LearnerClassifRpart$new(),
-    task = mlr3misc::dictionary_sugar_get(mlr3::mlr_tasks, "oml", data_id = 1489),
-    # different fidelities of train size, 1/(2^(0:9)) fidelity steps
-    train_id = list("10" = 1:4864, "9" = 1:2432, "8" = 1:1216, "7" = 1:608, "6" = 1:304, "5" = 1:152, "4" = 1:76, "3" = 1:38, "2" = 1:19, "1" = 1:10),
-    test_id = 4865:5404,
+    learner = NULL,
+    task = NULL,
+    train_id = NULL,
+    test_id = NULL,
 
     setup = function() {
       message("no setup necessary.")
