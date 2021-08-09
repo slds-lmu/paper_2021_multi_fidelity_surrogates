@@ -34,6 +34,9 @@ BenchmarkConfig = R6Class("BenchmarkConfig",
       self$target_variables = assert_character(target_variables, min.len = 1L)
       self$codomain = assert_param_set(codomain)
       self$packages = assert_character(packages, null.ok = TRUE)
+      if (length(self$packages)) {
+        mlr3misc::require_namespaces(self$packages)
+      }
     },
 
     setup = function(force_download = FALSE, data = FALSE) {

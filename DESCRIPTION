@@ -19,7 +19,9 @@ Depends:
 Imports:
     bbotk,
     data.table,
+    mlr3,
     mlr3misc,
+    mlr3oml,
     keras,
     paradox (>= 0.7.1),
     R6,

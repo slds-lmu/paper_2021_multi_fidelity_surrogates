@@ -40,32 +40,32 @@ benchmark_configs$add("nb301", BenchmarkConfigNB301)
 BenchmarkConfigLCBench = R6Class("BenchmarkConfigLCBench",
   inherit = BenchmarkConfig,
   public = list(
-   initialize = function(id = "LCBench", workdir) {
-     super$initialize(
-       id,
-       workdir = workdir,
-       model_name = "lcbench",
-       param_set_file = "param_set.rds",
-       data_file = "data.rds",
-       data_order_file = "data_order.rds",
-       dicts_file = "dicts.rds",
-       keras_model_file = "model.hdf5",
-       onnx_model_file = "model.onnx",
-       target_variables = c("val_accuracy", "val_cross_entropy", "val_balanced_accuracy", "test_cross_entropy", "test_balanced_accuracy", "time"),
-       codomain = ps(
-         val_accuracy = p_dbl(lower = 0, upper = 100, tags = "maximize"),
-         val_cross_entropy = p_dbl(lower = 0, upper = Inf, tags = "minimize"),
-         val_balanced_accuracy = p_dbl(lower = 0, upper = 1, tags = "maximize"),
-         test_cross_entropy = p_dbl(lower = 0, upper = Inf, tags = "minimize"),
-         test_balanced_accuracy = p_dbl(lower = 0, upper = 1, tags = "maximize"),
-         time = p_dbl(lower = 0, upper = Inf, tags = "minimize")
-       ),
-       packages = NULL
-     )
-   },
-   get_task_ids = function() {
-     self$param_set$params$OpenML_task_id$levels
-   }
+    initialize = function(id = "LCBench", workdir) {
+      super$initialize(
+        id,
+        workdir = workdir,
+        model_name = "lcbench",
+        param_set_file = "param_set.rds",
+        data_file = "data.rds",
+        data_order_file = "data_order.rds",
+        dicts_file = "dicts.rds",
+        keras_model_file = "model.hdf5",
+        onnx_model_file = "model.onnx",
+        target_variables = c("val_accuracy", "val_cross_entropy", "val_balanced_accuracy", "test_cross_entropy", "test_balanced_accuracy", "time"),
+        codomain = ps(
+          val_accuracy = p_dbl(lower = 0, upper = 100, tags = "maximize"),
+          val_cross_entropy = p_dbl(lower = 0, upper = Inf, tags = "minimize"),
+          val_balanced_accuracy = p_dbl(lower = 0, upper = 1, tags = "maximize"),
+          test_cross_entropy = p_dbl(lower = 0, upper = Inf, tags = "minimize"),
+          test_balanced_accuracy = p_dbl(lower = 0, upper = 1, tags = "maximize"),
+          time = p_dbl(lower = 0, upper = Inf, tags = "minimize")
+        ),
+        packages = NULL
+      )
+    },
+    get_task_ids = function() {
+      self$param_set$params$OpenML_task_id$levels
+    }
   ),
   active = list(
     data = function() {
@@ -178,51 +178,51 @@ benchmark_configs$add("branin", BenchmarkConfigBranin)
 BenchmarkConfigBraninSurrogate = R6Class("BenchmarkConfigBraninSurrogate",
   inherit = BenchmarkConfig,
   public = list(
-   initialize = function(id = "BraninSurrogate", workdir) {
-     super$initialize(
-       id,
-       workdir = workdir,
-       model_name = "branin_surrogate",
-       param_set_file = "param_set.rds",
-       data_file = "data.rds",
-       data_order_file = "data_order.rds",
-       dicts_file = "dicts.rds",
-       keras_model_file = "model.hdf5",
-       onnx_model_file = "model.onnx",
-       target_variables = "y",
-       codomain = ps(
-         y = p_dbl(lower = -Inf, upper = Inf, tags = "minimize")
-       ),
-       packages = NULL
-     )
-   },
-   get_objective = function(max_fidelity = FALSE, retrafo = TRUE) {
-     codomain = self$codomain$clone(deep = TRUE)
-     if (max_fidelity) {
-       ObjectiveONNX$new(
-         model_path = self$onnx_model_path,
-         data_order = readRDS(self$data_order_path),
-         trafo_dict = readRDS(self$dicts_path),
-         domain = ps(x1 = p_dbl(lower = -5, upper = 10), x2 = p_dbl(lower = 0, upper = 15)),
-         full_codomain = self$codomain$clone(deep = TRUE),  # needed to set the names
-         codomain = codomain,
-         task = NULL,
-         retrafo = retrafo,
-         constants = ps(fidelity = p_dbl(lower = 1e-3, upper = 1, default = 1, tags = "budget"))
-       )
-     } else {
-       ObjectiveONNX$new(
-         model_path = self$onnx_model_path,
-         data_order = readRDS(self$data_order_path),
-         trafo_dict = readRDS(self$dicts_path),
-         domain = self$opt_param_set,
-         full_codomain = self$codomain$clone(deep = TRUE),  # needed to set the names
-         codomain = codomain,
-         task = NULL,
-         retrafo = retrafo
-       )
-     }
-   }
+    initialize = function(id = "BraninSurrogate", workdir) {
+      super$initialize(
+        id,
+        workdir = workdir,
+        model_name = "branin_surrogate",
+        param_set_file = "param_set.rds",
+        data_file = "data.rds",
+        data_order_file = "data_order.rds",
+        dicts_file = "dicts.rds",
+        keras_model_file = "model.hdf5",
+        onnx_model_file = "model.onnx",
+        target_variables = "y",
+        codomain = ps(
+          y = p_dbl(lower = -Inf, upper = Inf, tags = "minimize")
+        ),
+        packages = NULL
+      )
+    },
+    get_objective = function(max_fidelity = FALSE, retrafo = TRUE) {
+      codomain = self$codomain$clone(deep = TRUE)
+      if (max_fidelity) {
+        ObjectiveONNX$new(
+          model_path = self$onnx_model_path,
+          data_order = readRDS(self$data_order_path),
+          trafo_dict = readRDS(self$dicts_path),
+          domain = ps(x1 = p_dbl(lower = -5, upper = 10), x2 = p_dbl(lower = 0, upper = 15)),
+          full_codomain = self$codomain$clone(deep = TRUE),  # needed to set the names
+          codomain = codomain,
+          task = NULL,
+          retrafo = retrafo,
+          constants = ps(fidelity = p_dbl(lower = 1e-3, upper = 1, default = 1, tags = "budget"))
+        )
+      } else {
+        ObjectiveONNX$new(
+          model_path = self$onnx_model_path,
+          data_order = readRDS(self$data_order_path),
+          trafo_dict = readRDS(self$dicts_path),
+          domain = self$opt_param_set,
+          full_codomain = self$codomain$clone(deep = TRUE),  # needed to set the names
+          codomain = codomain,
+          task = NULL,
+          retrafo = retrafo
+        )
+      }
+    }
   ),
   active = list(
     data = function() {
@@ -353,53 +353,51 @@ benchmark_configs$add("hartmann3d", BenchmarkConfigHartmann3d)
 BenchmarkConfigHartmann3dSurrogate = R6Class("BenchmarkConfigHartmann3dSurrogate",
   inherit = BenchmarkConfig,
   public = list(
-   initialize = function(id = "Hartmann3dSurrogate", workdir) {
-     super$initialize(
-       id,
-       workdir = workdir,
-       model_name = "hartmann3d_surrogate",
-       param_set_file = "param_set.rds",
-       data_file = "data.rds",
-       data_order_file = "data_order.rds",
-       dicts_file = "dicts.rds",
-       keras_model_file = "model.hdf5",
-       onnx_model_file = "model.onnx",
-       target_variables = "y",
-       codomain = ps(
-         y = p_dbl(lower = -Inf, upper = Inf, tags = "minimize")
-       ),
-       packages = NULL
-     )
-   },
-   get_objective = function(max_fidelity = FALSE, retrafo = TRUE) {
-     codomain = self$codomain$clone(deep = TRUE)
-     if (max_fidelity) {
-       ObjectiveONNX$new(
-         model_path = self$onnx_model_path,
-         data_order = readRDS(self$data_order_path),
-         trafo_dict = readRDS(self$dicts_path),
-         domain = ps(x1 = p_dbl(lower = 0, upper = 1), x2 = p_dbl(lower = 0, upper = 1), x3 = p_dbl(lower = 0, upper = 1)),
-         full_codomain = self$codomain$clone(deep = TRUE),  # needed to set the names
-         codomain = codomain,
-         task = NULL,
-         retrafo = retrafo,
-         constants = ps(fidelity = p_dbl(lower = 1e-3, upper = 1, default = 1, tags = "budget"))
-       )
-     } else {
-       ObjectiveONNX$new(
-         model_path = self$onnx_model_path,
-         data_order = readRDS(self$data_order_path),
-         trafo_dict = readRDS(self$dicts_path),
-         domain = self$opt_param_set,
-         full_codomain = self$codomain$clone(deep = TRUE),  # needed to set the names
-         codomain = codomain,
-         task = NULL,
-         retrafo = retrafo
-       )
-     }
-   }
-
-
+    initialize = function(id = "Hartmann3dSurrogate", workdir) {
+      super$initialize(
+        id,
+        workdir = workdir,
+        model_name = "hartmann3d_surrogate",
+        param_set_file = "param_set.rds",
+        data_file = "data.rds",
+        data_order_file = "data_order.rds",
+        dicts_file = "dicts.rds",
+        keras_model_file = "model.hdf5",
+        onnx_model_file = "model.onnx",
+        target_variables = "y",
+        codomain = ps(
+          y = p_dbl(lower = -Inf, upper = Inf, tags = "minimize")
+        ),
+        packages = NULL
+      )
+    },
+    get_objective = function(max_fidelity = FALSE, retrafo = TRUE) {
+      codomain = self$codomain$clone(deep = TRUE)
+      if (max_fidelity) {
+        ObjectiveONNX$new(
+          model_path = self$onnx_model_path,
+          data_order = readRDS(self$data_order_path),
+          trafo_dict = readRDS(self$dicts_path),
+          domain = ps(x1 = p_dbl(lower = 0, upper = 1), x2 = p_dbl(lower = 0, upper = 1), x3 = p_dbl(lower = 0, upper = 1)),
+          full_codomain = self$codomain$clone(deep = TRUE),  # needed to set the names
+          codomain = codomain,
+          task = NULL,
+          retrafo = retrafo,
+          constants = ps(fidelity = p_dbl(lower = 1e-3, upper = 1, default = 1, tags = "budget"))
+        )
+      } else {
+        ObjectiveONNX$new(
+          model_path = self$onnx_model_path,
+          data_order = readRDS(self$data_order_path),
+          trafo_dict = readRDS(self$dicts_path),
+          domain = self$opt_param_set,
+          full_codomain = self$codomain$clone(deep = TRUE),  # needed to set the names
+          codomain = codomain,
+          task = NULL,
+          retrafo = retrafo
+        )
+      }
+    }
   ),
   active = list(
     data = function() {
@@ -535,53 +533,51 @@ benchmark_configs$add("hartmann6d", BenchmarkConfigHartmann6d)
 BenchmarkConfigHartmann6dSurrogate = R6Class("BenchmarkConfigHartmann6dSurrogate",
   inherit = BenchmarkConfig,
   public = list(
-   initialize = function(id = "Hartmann6dSurrogate", workdir) {
-     super$initialize(
-       id,
-       workdir = workdir,
-       model_name = "hartmann6d_surrogate",
-       param_set_file = "param_set.rds",
-       data_file = "data.rds",
-       data_order_file = "data_order.rds",
-       dicts_file = "dicts.rds",
-       keras_model_file = "model.hdf5",
-       onnx_model_file = "model.onnx",
-       target_variables = "y",
-       codomain = ps(
-         y = p_dbl(lower = -Inf, upper = Inf, tags = "minimize")
-       ),
-       packages = NULL
-     )
-   },
-   get_objective = function(max_fidelity = FALSE, retrafo = TRUE) {
-     codomain = self$codomain$clone(deep = TRUE)
-     if (max_fidelity) {
-       ObjectiveONNX$new(
-         model_path = self$onnx_model_path,
-         data_order = readRDS(self$data_order_path),
-         trafo_dict = readRDS(self$dicts_path),
-         domain = ps(x1 = p_dbl(lower = 0, upper = 1), x2 = p_dbl(lower = 0, upper = 1), x3 = p_dbl(lower = 0, upper = 1), x4 = p_dbl(lower = 0, upper = 1), x5 = p_dbl(lower = 0, upper = 1), x6 = p_dbl(lower = 0, upper = 1)),
-         full_codomain = self$codomain$clone(deep = TRUE),  # needed to set the names
-         codomain = codomain,
-         task = NULL,
-         retrafo = retrafo,
-         constants = ps(fidelity = p_dbl(lower = 1e-3, upper = 1, default = 1, tags = "budget"))
-       )
-     } else {
-       ObjectiveONNX$new(
-         model_path = self$onnx_model_path,
-         data_order = readRDS(self$data_order_path),
-         trafo_dict = readRDS(self$dicts_path),
-         domain = self$opt_param_set,
-         full_codomain = self$codomain$clone(deep = TRUE),  # needed to set the names
-         codomain = codomain,
-         task = NULL,
-         retrafo = retrafo
-       )
-     }
-   }
-
-
+    initialize = function(id = "Hartmann6dSurrogate", workdir) {
+      super$initialize(
+        id,
+        workdir = workdir,
+        model_name = "hartmann6d_surrogate",
+        param_set_file = "param_set.rds",
+        data_file = "data.rds",
+        data_order_file = "data_order.rds",
+        dicts_file = "dicts.rds",
+        keras_model_file = "model.hdf5",
+        onnx_model_file = "model.onnx",
+        target_variables = "y",
+        codomain = ps(
+          y = p_dbl(lower = -Inf, upper = Inf, tags = "minimize")
+        ),
+        packages = NULL
+      )
+    },
+    get_objective = function(max_fidelity = FALSE, retrafo = TRUE) {
+      codomain = self$codomain$clone(deep = TRUE)
+      if (max_fidelity) {
+        ObjectiveONNX$new(
+          model_path = self$onnx_model_path,
+          data_order = readRDS(self$data_order_path),
+          trafo_dict = readRDS(self$dicts_path),
+          domain = ps(x1 = p_dbl(lower = 0, upper = 1), x2 = p_dbl(lower = 0, upper = 1), x3 = p_dbl(lower = 0, upper = 1), x4 = p_dbl(lower = 0, upper = 1), x5 = p_dbl(lower = 0, upper = 1), x6 = p_dbl(lower = 0, upper = 1)),
+          full_codomain = self$codomain$clone(deep = TRUE),  # needed to set the names
+          codomain = codomain,
+          task = NULL,
+          retrafo = retrafo,
+          constants = ps(fidelity = p_dbl(lower = 1e-3, upper = 1, default = 1, tags = "budget"))
+        )
+      } else {
+        ObjectiveONNX$new(
+          model_path = self$onnx_model_path,
+          data_order = readRDS(self$data_order_path),
+          trafo_dict = readRDS(self$dicts_path),
+          domain = self$opt_param_set,
+          full_codomain = self$codomain$clone(deep = TRUE),  # needed to set the names
+          codomain = codomain,
+          task = NULL,
+          retrafo = retrafo
+        )
+      }
+    }
   ),
   active = list(
     data = function() {
@@ -680,53 +676,51 @@ benchmark_configs$add("currin", BenchmarkConfigCurrin)
 BenchmarkConfigCurrinSurrogate = R6Class("BenchmarkConfigCurrinSurrogate",
   inherit = BenchmarkConfig,
   public = list(
-   initialize = function(id = "CurrinSurrogate", workdir) {
-     super$initialize(
-       id,
-       workdir = workdir,
-       model_name = "currin_surrogate",
-       param_set_file = "param_set.rds",
-       data_file = "data.rds",
-       data_order_file = "data_order.rds",
-       dicts_file = "dicts.rds",
-       keras_model_file = "model.hdf5",
-       onnx_model_file = "model.onnx",
-       target_variables = "y",
-       codomain = ps(
-         y = p_dbl(lower = -Inf, upper = Inf, tags = "minimize")
-       ),
-       packages = NULL
-     )
-   },
-   get_objective = function(max_fidelity = FALSE, retrafo = TRUE) {
-     codomain = self$codomain$clone(deep = TRUE)
-     if (max_fidelity) {
-       ObjectiveONNX$new(
-         model_path = self$onnx_model_path,
-         data_order = readRDS(self$data_order_path),
-         trafo_dict = readRDS(self$dicts_path),
-         domain = ps(x1 = p_dbl(lower = 0, upper = 1), x2 = p_dbl(lower = 0, upper = 1)),
-         full_codomain = self$codomain$clone(deep = TRUE),  # needed to set the names
-         codomain = codomain,
-         task = NULL,
-         retrafo = retrafo,
-         constants = ps(fidelity = p_dbl(lower = 1e-3, upper = 1, default = 1, tags = "budget"))
-       )
-     } else {
-       ObjectiveONNX$new(
-         model_path = self$onnx_model_path,
-         data_order = readRDS(self$data_order_path),
-         trafo_dict = readRDS(self$dicts_path),
-         domain = self$opt_param_set,
-         full_codomain = self$codomain$clone(deep = TRUE),  # needed to set the names
-         codomain = codomain,
-         task = NULL,
-         retrafo = retrafo
-       )
-     }
-   }
-
-
+    initialize = function(id = "CurrinSurrogate", workdir) {
+      super$initialize(
+        id,
+        workdir = workdir,
+        model_name = "currin_surrogate",
+        param_set_file = "param_set.rds",
+        data_file = "data.rds",
+        data_order_file = "data_order.rds",
+        dicts_file = "dicts.rds",
+        keras_model_file = "model.hdf5",
+        onnx_model_file = "model.onnx",
+        target_variables = "y",
+        codomain = ps(
+          y = p_dbl(lower = -Inf, upper = Inf, tags = "minimize")
+        ),
+        packages = NULL
+      )
+    },
+    get_objective = function(max_fidelity = FALSE, retrafo = TRUE) {
+      codomain = self$codomain$clone(deep = TRUE)
+      if (max_fidelity) {
+        ObjectiveONNX$new(
+          model_path = self$onnx_model_path,
+          data_order = readRDS(self$data_order_path),
+          trafo_dict = readRDS(self$dicts_path),
+          domain = ps(x1 = p_dbl(lower = 0, upper = 1), x2 = p_dbl(lower = 0, upper = 1)),
+          full_codomain = self$codomain$clone(deep = TRUE),  # needed to set the names
+          codomain = codomain,
+          task = NULL,
+          retrafo = retrafo,
+          constants = ps(fidelity = p_dbl(lower = 1e-3, upper = 1, default = 1, tags = "budget"))
+        )
+      } else {
+        ObjectiveONNX$new(
+          model_path = self$onnx_model_path,
+          data_order = readRDS(self$data_order_path),
+          trafo_dict = readRDS(self$dicts_path),
+          domain = self$opt_param_set,
+          full_codomain = self$codomain$clone(deep = TRUE),  # needed to set the names
+          codomain = codomain,
+          task = NULL,
+          retrafo = retrafo
+        )
+      }
+    }
   ),
   active = list(
     data = function() {
@@ -832,54 +826,52 @@ benchmark_configs$add("borehole", BenchmarkConfigBorehole)
 BenchmarkConfigBoreholeSurrogate = R6Class("BenchmarkConfigBoreholeSurrogate",
   inherit = BenchmarkConfig,
   public = list(
-   initialize = function(id = "BoreholeSurrogate", workdir) {
-     super$initialize(
-       id,
-       workdir = workdir,
-       model_name = "borehole_surrogate",
-       param_set_file = "param_set.rds",
-       data_file = "data.rds",
-       data_order_file = "data_order.rds",
-       dicts_file = "dicts.rds",
-       keras_model_file = "model.hdf5",
-       onnx_model_file = "model.onnx",
-       target_variables = "y",
-       codomain = ps(
-         y = p_dbl(lower = -Inf, upper = Inf, tags = "minimize")
-       ),
-       packages = NULL
-     )
-   },
-   get_objective = function(max_fidelity = FALSE, retrafo = TRUE) {
-     codomain = self$codomain$clone(deep = TRUE)
-     if (max_fidelity) {
-       ObjectiveONNX$new(
-         model_path = self$onnx_model_path,
-         data_order = readRDS(self$data_order_path),
-         trafo_dict = readRDS(self$dicts_path),
-         domain = ps(x1 = p_dbl(lower = 0.05, upper = 0.15), x2 = p_dbl(lower = 100, upper = 50 * 1000), x3 = p_dbl(lower = 63.07 * 1000, upper = 115.6 * 1000), x4 = p_dbl(lower = 990, upper = 1110),
-                     x5 = p_dbl(lower = 63.1, upper = 116), x6 = p_dbl(lower = 700, upper = 820), x7 = p_dbl(lower = 1120, upper = 1680), x8 = p_dbl(lower = 9855, upper = 12045)),
-         full_codomain = self$codomain$clone(deep = TRUE),  # needed to set the names
-         codomain = codomain,
-         task = NULL,
-         retrafo = retrafo,
-         constants = ps(fidelity = p_dbl(lower = 1e-3, upper = 1, default = 1, tags = "budget"))
-       )
-     } else {
-       ObjectiveONNX$new(
-         model_path = self$onnx_model_path,
-         data_order = readRDS(self$data_order_path),
-         trafo_dict = readRDS(self$dicts_path),
-         domain = self$opt_param_set,
-         full_codomain = self$codomain$clone(deep = TRUE),  # needed to set the names
-         codomain = codomain,
-         task = NULL,
-         retrafo = retrafo
-       )
-     }
-   }
-
-
+    initialize = function(id = "BoreholeSurrogate", workdir) {
+      super$initialize(
+        id,
+        workdir = workdir,
+        model_name = "borehole_surrogate",
+        param_set_file = "param_set.rds",
+        data_file = "data.rds",
+        data_order_file = "data_order.rds",
+        dicts_file = "dicts.rds",
+        keras_model_file = "model.hdf5",
+        onnx_model_file = "model.onnx",
+        target_variables = "y",
+        codomain = ps(
+          y = p_dbl(lower = -Inf, upper = Inf, tags = "minimize")
+        ),
+        packages = NULL
+      )
+    },
+    get_objective = function(max_fidelity = FALSE, retrafo = TRUE) {
+      codomain = self$codomain$clone(deep = TRUE)
+      if (max_fidelity) {
+        ObjectiveONNX$new(
+          model_path = self$onnx_model_path,
+          data_order = readRDS(self$data_order_path),
+          trafo_dict = readRDS(self$dicts_path),
+          domain = ps(x1 = p_dbl(lower = 0.05, upper = 0.15), x2 = p_dbl(lower = 100, upper = 50 * 1000), x3 = p_dbl(lower = 63.07 * 1000, upper = 115.6 * 1000), x4 = p_dbl(lower = 990, upper = 1110),
+                      x5 = p_dbl(lower = 63.1, upper = 116), x6 = p_dbl(lower = 700, upper = 820), x7 = p_dbl(lower = 1120, upper = 1680), x8 = p_dbl(lower = 9855, upper = 12045)),
+          full_codomain = self$codomain$clone(deep = TRUE),  # needed to set the names
+          codomain = codomain,
+          task = NULL,
+          retrafo = retrafo,
+          constants = ps(fidelity = p_dbl(lower = 1e-3, upper = 1, default = 1, tags = "budget"))
+        )
+      } else {
+        ObjectiveONNX$new(
+          model_path = self$onnx_model_path,
+          data_order = readRDS(self$data_order_path),
+          trafo_dict = readRDS(self$dicts_path),
+          domain = self$opt_param_set,
+          full_codomain = self$codomain$clone(deep = TRUE),  # needed to set the names
+          codomain = codomain,
+          task = NULL,
+          retrafo = retrafo
+        )
+      }
+    }
   ),
   active = list(
     data = function() {
@@ -904,6 +896,160 @@ BenchmarkConfigBoreholeSurrogate = R6Class("BenchmarkConfigBoreholeSurrogate",
 benchmark_configs$add("borehole_surrogate", BenchmarkConfigBoreholeSurrogate)
 
 
+
+rpart_on_phoneme = function(learner, task, train_id, test_id, psvals) {
+  task_train = task$clone(deep = TRUE)$filter(rows = train_id)
+  task_test = task$clone(deep = TRUE)$filter(rows = test_id)
+  learner$param_set$values = mlr3misc::insert_named(learner$param_set$values, psvals)
+  learner$train(task_train)
+  p = learner$predict(task_test)
+  data.table(y = unname(p$score()))
+}
+
+#' @export
+BenchmarkConfigRpartPhoneme = R6Class("BenchmarkConfigRpartPhoneme",
+  inherit = BenchmarkConfig,
+  public = list(
+    initialize = function(id = "RpartPhoneme") {
+      super$initialize(
+        id,
+        workdir = NULL,
+        model_name = "rpartphoneme",
+        param_set_file = NULL,
+        data_file = NULL,
+        data_order_file = "NULL",
+        dicts_file = NULL,
+        keras_model_file = NULL,
+        onnx_model_file = NULL,
+        target_variables = "y",
+        codomain = ps(
+          y = p_dbl(lower = 0, upper = 1, tags = "minimize")
+        ),
+        packages = "mlr3"
+      )
+    },
+
+    learner = mlr3::LearnerClassifRpart$new(),
+    task = mlr3misc::dictionary_sugar_get(mlr3::mlr_tasks, "oml", data_id = 1489),
+    # different fidelities of train size, 1/(2^(0:9)) fidelity steps
+    train_id = list("10" = 1:4864, "9" = 1:2432, "8" = 1:1216, "7" = 1:608, "6" = 1:304, "5" = 1:152, "4" = 1:76, "3" = 1:38, "2" = 1:19, "1" = 1:10),
+    test_id = 4865:5404,
+
+    setup = function() {
+      message("no setup necessary.")
+    },
+
+    get_objective = function(max_fidelity = FALSE) {
+      if (max_fidelity) {
+        bbotk::ObjectiveRFunDt$new(
+          fun = function(xdt, fidelity) {
+            xdt[, fidelity := fidelity]
+            map_dtr(seq_len(nrow(xdt)), function(i) {
+              train_id = self$train_id[[match(xdt[i, ][["fidelity"]], 1/(2^(0:9)))]]
+              rpart_on_phoneme(learner = self$learner, task = self$task, train_id = train_id, test_id = self$test_id, psvals = as.list(xdt[i, - "fidelity"]))
+            })
+          },
+          domain = ps(cp = p_dbl(lower = 0.001, upper = 0.1), minsplit = p_int(lower = 1, upper = 30), maxdepth = p_int(lower = 1, upper = 30)),
+          codomain = self$codomain,
+          constants = ps(fidelity = p_dbl(lower = 1e-3, upper = 1, default = 1, tags = "budget"))
+        )
+      } else {      
+        bbotk::ObjectiveRFunDt$new(
+          fun = function(xdt) {
+            map_dtr(seq_len(nrow(xdt)), function(i) {
+              train_id = self$train_id[[match(xdt[i, ][["fidelity"]], 1/(2^(0:9)))]]
+              rpart_on_phoneme(learner = self$learner, task = self$task, train_id = train_id, test_id = self$test_id, psvals = as.list(xdt[i, - "fidelity"]))
+            })
+          },
+          domain = self$param_set,
+          codomain = self$codomain
+        )
+      }
+    }
+  ),
+  active = list(
+    param_set = function() {
+      ps(
+         cp = p_dbl(lower = 0.001, upper = 0.1),
+         minsplit = p_int(lower = 1, upper = 30),
+         maxdepth = p_int(lower = 1, upper = 30),
+         fidelity = p_dbl(lower = 1e-3, upper = 1, tags = "budget")
+      )
+    }
+  )
+)
+#' @include BenchmarkConfig.R
+benchmark_configs$add("rpartphoneme", BenchmarkConfigRpartPhoneme)
+
+
+
+#' @export
+BenchmarkConfigRpartPhonemeSurrogate = R6Class("BenchmarkConfigRpartPhonemeSurrogate",
+  inherit = BenchmarkConfig,
+  public = list(
+    initialize = function(id = "BenchmarkConfigRpartPhonemeSurrogate", workdir) {
+      super$initialize(
+        id,
+        workdir = workdir,
+        model_name = "rpartphoneme_surrogate",
+        param_set_file = "param_set.rds",
+        data_file = "data.rds",
+        data_order_file = "data_order.rds",
+        dicts_file = "dicts.rds",
+        keras_model_file = "model.hdf5",
+        onnx_model_file = "model.onnx",
+        target_variables = "y",
+        codomain = ps(
+          y = p_dbl(lower = -Inf, upper = Inf, tags = "minimize")
+        ),
+        packages = NULL
+      )
+    },
+    get_objective = function(max_fidelity = FALSE, retrafo = TRUE) {
+      codomain = self$codomain$clone(deep = TRUE)
+      if (max_fidelity) {
+        ObjectiveONNX$new(
+          model_path = self$onnx_model_path,
+          data_order = readRDS(self$data_order_path),
+          trafo_dict = readRDS(self$dicts_path),
+          domain = ps(cp = p_dbl(lower = 0.001, upper = 0.1), minsplit = p_int(lower = 1, upper = 30), maxdepth = p_int(lower = 1, upper = 30)),
+          full_codomain = self$codomain$clone(deep = TRUE),  # needed to set the names
+          codomain = codomain,
+          task = NULL,
+          retrafo = retrafo,
+          constants = ps(fidelity = p_dbl(lower = 1e-3, upper = 1, default = 1, tags = "budget"))
+        )
+      } else {
+        ObjectiveONNX$new(
+          model_path = self$onnx_model_path,
+          data_order = readRDS(self$data_order_path),
+          trafo_dict = readRDS(self$dicts_path),
+          domain = self$opt_param_set,
+          full_codomain = self$codomain$clone(deep = TRUE),  # needed to set the names
+          codomain = codomain,
+          task = NULL,
+          retrafo = retrafo
+        )
+      }
+    }
+  ),
+  active = list(
+    data = function() {
+      if (is.null(private$.data)) private$.data = preproc_rpartphoneme_surrogate(self)
+      private$.data
+    },
+    param_set = function() {
+      ps(
+         cp = p_dbl(lower = 0.001, upper = 0.1),
+         minsplit = p_int(lower = 1, upper = 30),
+         maxdepth = p_int(lower = 1, upper = 30),
+         fidelity = p_dbl(lower = 1e-3, upper = 1, tags = "budget")
+      )
+    }
+  )
+)
+#' @include BenchmarkConfig.R
+benchmark_configs$add("rpartphoneme_surrogate", BenchmarkConfigRpartPhonemeSurrogate)
 
 
 
