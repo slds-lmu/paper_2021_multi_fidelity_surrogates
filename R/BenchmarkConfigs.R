@@ -897,7 +897,7 @@ benchmark_configs$add("borehole_surrogate", BenchmarkConfigBoreholeSurrogate)
 
 
 
-svm_on_phoneme = function(learner, task, train_id, test_id, psvals) {
+rpart_on_phoneme = function(learner, task, train_id, test_id, psvals) {
   task_train = task$clone(deep = TRUE)$filter(rows = train_id)
   task_test = task$clone(deep = TRUE)$filter(rows = test_id)
   learner$param_set$values = mlr3misc::insert_named(learner$param_set$values, psvals)
@@ -908,13 +908,11 @@ svm_on_phoneme = function(learner, task, train_id, test_id, psvals) {
 
 #' @export
 # FIXME: can only be evaluated on the discrete fidelity steps below
-BenchmarkConfigSVMPhoneme = R6Class("BenchmarkConfigSVMPhoneme",
+BenchmarkConfigRpartPhoneme = R6Class("BenchmarkConfigRpartPhoneme",
   inherit = BenchmarkConfig,
   public = list(
-    initialize = function(id = "SVMPhoneme") {
-    self$learner = mlr3learners::LearnerClassifSVM$new()
-    self$learner$param_set$values$kernel = "radial"
-    self$learner$param_set$values$type = "C-classification"
+    initialize = function(id = "RpartPhoneme") {
+    self$learner = mlr3::LearnerClassifRpart$new()
     self$learner$predict_type = "prob"
     self$task = mlr3misc::dictionary_sugar_get(mlr3::mlr_tasks, "oml", data_id = 1489)
     # different fidelities of train size, 1/(2^(0:9)) fidelity steps
@@ -923,7 +921,7 @@ BenchmarkConfigSVMPhoneme = R6Class("BenchmarkConfigSVMPhoneme",
       super$initialize(
         id,
         workdir = NULL,
-        model_name = "svmphoneme",
+        model_name = "rpartphoneme",
         param_set_file = NULL,
         data_file = NULL,
         data_order_file = "NULL",
@@ -955,10 +953,10 @@ BenchmarkConfigSVMPhoneme = R6Class("BenchmarkConfigSVMPhoneme",
             map_dtr(seq_len(nrow(xdt)), function(i) {
               psvals = as.list(xdt[i, - "fidelity"])
               train_id = self$train_id[[match(xdt[i, ][["fidelity"]], 1/(2^(0:9)))]]
-              svm_on_phoneme(learner = self$learner, task = self$task, train_id = train_id, test_id = self$test_id, psvals = psvals)
+              rpart_on_phoneme(learner = self$learner, task = self$task, train_id = train_id, test_id = self$test_id, psvals = psvals)
             })
           },
-          domain = ps(cost = p_dbl(lower = -10, upper = 10, tags = "log", trafo = function(x) exp(x)), gamma = p_dbl(lower = -10, upper = 10, tags = "log", trafo = function(x) exp(x)), tolerance = p_dbl(lower = -10, upper = log(2), tags = "log", trafo = function(x) exp(x))),
+          domain = ps(cp = p_dbl(lower = 0, upper = 0.2), maxdepth = p_dbl(lower = log(1), upper = log(30), tags = "log", trafo = function(x) as.integer(round(exp(x), 0)))),
           codomain = self$codomain,
           constants = ps(fidelity = p_dbl(lower = 1e-3, upper = 1, default = 1, tags = "budget")),
           check_values = FALSE
@@ -969,7 +967,7 @@ BenchmarkConfigSVMPhoneme = R6Class("BenchmarkConfigSVMPhoneme",
             map_dtr(seq_len(nrow(xdt)), function(i) {
               psvals = as.list(xdt[i, - "fidelity"])
               train_id = self$train_id[[match(xdt[i, ][["fidelity"]], 1/(2^(0:9)))]]
-              svm_on_phoneme(learner = self$learner, task = self$task, train_id = train_id, test_id = self$test_id, psvals = psvals)
+              rpart_on_phoneme(learner = self$learner, task = self$task, train_id = train_id, test_id = self$test_id, psvals = psvals)
             })
           },
           domain = self$param_set,
@@ -982,28 +980,27 @@ BenchmarkConfigSVMPhoneme = R6Class("BenchmarkConfigSVMPhoneme",
   active = list(
     param_set = function() {
       ps(
-         cost = p_dbl(lower = -10, upper = 10, tags = "log", trafo = function(x) exp(x)),
-         gamma = p_dbl(lower = -10, upper = 10, tags = "log", trafo = function(x) exp(x)),
-         tolerance = p_dbl(lower = -10, upper = log(2), tags = "log", trafo = function(x) exp(x)),
+         cp = p_dbl(lower = 0, upper = 0.2),
+         maxdepth = p_dbl(lower = log(1), upper = log(30), tags = "log", trafo = function(x) as.integer(round(exp(x), 0))),
          fidelity = p_dbl(lower = 1e-3, upper = 1, tags = "budget")
       )
     }
   )
 )
 #' @include BenchmarkConfig.R
-benchmark_configs$add("svmphoneme", BenchmarkConfigSVMPhoneme)
+benchmark_configs$add("rpartphoneme", BenchmarkConfigRpartPhoneme)
 
 
 
 #' @export
-BenchmarkConfigSVMPhonemeSurrogate = R6Class("BenchmarkConfigSVMPhonemeSurrogate",
+BenchmarkConfigRpartPhonemeSurrogate = R6Class("BenchmarkConfigRpartPhonemeSurrogate",
   inherit = BenchmarkConfig,
   public = list(
-    initialize = function(id = "BenchmarkConfigSVMPhonemeSurrogate", workdir) {
+    initialize = function(id = "BenchmarkConfigRpartPhonemeSurrogate", workdir) {
       super$initialize(
         id,
         workdir = workdir,
-        model_name = "svmphoneme_surrogate",
+        model_name = "rpartphoneme_surrogate",
         param_set_file = "param_set.rds",
         data_file = "data.rds",
         data_order_file = "data_order.rds",
@@ -1024,7 +1021,7 @@ BenchmarkConfigSVMPhonemeSurrogate = R6Class("BenchmarkConfigSVMPhonemeSurrogate
           model_path = self$onnx_model_path,
           data_order = readRDS(self$data_order_path),
           trafo_dict = readRDS(self$dicts_path),
-          domain = ps(cost = p_dbl(lower = -10, upper = 10, tags = "log", trafo = function(x) exp(x)), gamma = p_dbl(lower = -10, upper = 10, tags = "log", trafo = function(x) exp(x)), tolerance = p_dbl(lower = -10, upper = log(2), tags = "log", trafo = function(x) exp(x))),
+          domain = ps(cp = p_dbl(lower = 0, upper = 0.2), maxdepth = p_dbl(lower = log(1), upper = log(30), tags = "log", trafo = function(x) as.integer(round(exp(x), 0)))),
           full_codomain = self$codomain$clone(deep = TRUE),  # needed to set the names
           codomain = codomain,
           task = NULL,
@@ -1047,21 +1044,20 @@ BenchmarkConfigSVMPhonemeSurrogate = R6Class("BenchmarkConfigSVMPhonemeSurrogate
   ),
   active = list(
     data = function() {
-      if (is.null(private$.data)) private$.data = preproc_svmphoneme_surrogate(self)
+      if (is.null(private$.data)) private$.data = preproc_rpartphoneme_surrogate(self)
       private$.data
     },
     param_set = function() {
       ps(
-         cost = p_dbl(lower = -10, upper = 10, tags = "log", trafo = function(x) exp(x)),
-         gamma = p_dbl(lower = -10, upper = 10, tags = "log", trafo = function(x) exp(x)),
-         tolerance = p_dbl(lower = -10, upper = log(2), tags = "log", trafo = function(x) exp(x)),
+         cp = p_dbl(lower = 0, upper = 0.2),
+         maxdepth = p_dbl(lower = log(1), upper = log(30), tags = "log", trafo = function(x) as.integer(round(exp(x), 0))),
          fidelity = p_dbl(lower = 1e-3, upper = 1, tags = "budget")
       )
     }
   )
 )
 #' @include BenchmarkConfig.R
-benchmark_configs$add("svmphoneme_surrogate", BenchmarkConfigSVMPhonemeSurrogate)
+benchmark_configs$add("rpartphoneme_surrogate", BenchmarkConfigRpartPhonemeSurrogate)
 
 
 
