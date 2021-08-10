@@ -1024,7 +1024,7 @@ BenchmarkConfigSVMPhonemeSurrogate = R6Class("BenchmarkConfigSVMPhonemeSurrogate
           model_path = self$onnx_model_path,
           data_order = readRDS(self$data_order_path),
           trafo_dict = readRDS(self$dicts_path),
-          domain = ps(cp = p_dbl(lower = 0.001, upper = 0.1), minsplit = p_int(lower = 1, upper = 30), maxdepth = p_int(lower = 1, upper = 30)),
+          domain = ps(cost = p_dbl(lower = -10, upper = 10, tags = "log", trafo = function(x) exp(x)), gamma = p_dbl(lower = -10, upper = 10, tags = "log", trafo = function(x) exp(x)), tolerance = p_dbl(lower = -10, upper = log(2), tags = "log", trafo = function(x) exp(x))),
           full_codomain = self$codomain$clone(deep = TRUE),  # needed to set the names
           codomain = codomain,
           task = NULL,
@@ -1052,9 +1052,9 @@ BenchmarkConfigSVMPhonemeSurrogate = R6Class("BenchmarkConfigSVMPhonemeSurrogate
     },
     param_set = function() {
       ps(
-         cp = p_dbl(lower = 0.001, upper = 0.1),
-         minsplit = p_int(lower = 1, upper = 30),
-         maxdepth = p_int(lower = 1, upper = 30),
+         cost = p_dbl(lower = -10, upper = 10, tags = "log", trafo = function(x) exp(x)),
+         gamma = p_dbl(lower = -10, upper = 10, tags = "log", trafo = function(x) exp(x)),
+         tolerance = p_dbl(lower = -10, upper = log(2), tags = "log", trafo = function(x) exp(x)),
          fidelity = p_dbl(lower = 1e-3, upper = 1, tags = "budget")
       )
     }

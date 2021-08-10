@@ -155,7 +155,7 @@ preproc_borehole_surrogate = function(config, seed = 123L, n_max = 2*10^6, frac 
   )
 }
 
-preproc_rpartphoneme_surrogate = function(config, seed = 123L, n_max = 2*10^6, frac = .1) {
+preproc_svmphoneme_surrogate = function(config, seed = 123L, n_max = 2*10^6, frac = .1) {
   set.seed(seed)
   path = config$data_path
   dt = readRDS(path)
@@ -166,8 +166,9 @@ preproc_rpartphoneme_surrogate = function(config, seed = 123L, n_max = 2*10^6, f
   train = preproc_iid(train)
   trafos = c(
     map(train[, "y", with = FALSE], scale_base_0_1, base = 10, p = 0),
-    map(train[, "minsplit", with = FALSE], scale_base_0_1, base = 1, p = 0),
-    map(train[, "maxdepth", with = FALSE], scale_base_0_1, base = 1, p = 0)
+    map(train[, "cost", with = FALSE], scale_base_0_1, base = 1, p = 0),
+    map(train[, "gamma", with = FALSE], scale_base_0_1, base = 1, p = 0),
+    map(train[, "tolerance", with = FALSE], scale_base_0_1, base = 1, p = 0)
   )
   train[, names(trafos) := pmap(list(.SD, trafos), function(x, t) {t$trafo(x)}), .SDcols = names(trafos)]
   y = as.matrix(train[, config$target_variables, with = FALSE])
