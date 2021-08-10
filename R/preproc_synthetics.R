@@ -165,7 +165,7 @@ preproc_rpartphoneme_surrogate = function(config, seed = 123L, n_max = 2*10^6, f
   train = tt$train
   train = preproc_iid(train)
   trafos = c(
-    #map(train[, "y", with = FALSE], scale_base_0_1, base = 1, p = 0),
+    map(train[, "y", with = FALSE], scale_base_0_1, base = 10, p = 0),
     map(train[, "minsplit", with = FALSE], scale_base_0_1, base = 1, p = 0),
     map(train[, "maxdepth", with = FALSE], scale_base_0_1, base = 1, p = 0)
   )
