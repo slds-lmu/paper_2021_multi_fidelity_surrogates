@@ -11,13 +11,13 @@ fit_surrogate = function(problem_config, model_config = default_model_config(), 
   output_shape = ncol(data$ytrain)
   model = make_architecture(embd, input_shape, output_shape, model_config)
 
-  cbs = list(mlr3keras::cb_es(patience = 20L))
+  cbs = list(mlr3keras::cb_es(patience = 50L))  # FIXME: 11/08/2021 from 20L to 50L
   history = model %>%
     fit(
       x = rs$data,
       y = data$ytrain,
       batch_size = model_config$batch_size,
-      validation_split = 0.1,
+      validation_split = 0.2,  # FIXME: 11/08/2021 from 0.1 to 0.2
       epochs = model_config$epochs,
       sample_weight = weights_from_target(data$ytrain),
       callbacks = cbs
