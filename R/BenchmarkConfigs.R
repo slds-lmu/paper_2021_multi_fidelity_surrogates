@@ -450,7 +450,7 @@ BenchmarkConfigHartmann6d = R6Class("BenchmarkConfigHartmann6d",
       message("no setup necessary.")
     },
 
-    get_objective = function(max_fidelity = FALSE) {
+    get_objective = function(max_fidelity = FALSE, augment_factor = 0) {
       if (max_fidelity) {
         bbotk::ObjectiveRFunDt$new(
           fun = function(xdt, fidelity) {
@@ -472,6 +472,7 @@ BenchmarkConfigHartmann6d = R6Class("BenchmarkConfigHartmann6d",
                 ai = if (i <= p) 0.1 * (1 - xdt[row_id, ][["fidelity"]]) else 0
                 y = y + ((alpha[i] - ai) * exp(- sum(A[i, ] * ((x[row_id, ] - P[i, ]) ^ 2))))
               }
+              y = y - augment_factor * 3.322368 * prod(cos(x[row_id, ] - 0.5))
               data.table(y = -y)
             })
           },
@@ -501,6 +502,7 @@ BenchmarkConfigHartmann6d = R6Class("BenchmarkConfigHartmann6d",
                 ai = if (i <= p) 0.1 * (1 - xdt[row_id, ][["fidelity"]]) else 0
                 y = y + ((alpha[i] - ai) * exp(- sum(A[i, ] * ((x[row_id, ] - P[i, ]) ^ 2))))
               }
+              y = y - augment_factor * 3.322368 * prod(cos(x[row_id, ] - 0.5))
               data.table(y = -y)
             })
           },
