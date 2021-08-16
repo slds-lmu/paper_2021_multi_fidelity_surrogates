@@ -897,7 +897,7 @@ benchmark_configs$add("borehole_surrogate", BenchmarkConfigBoreholeSurrogate)
 
 
 
-rpart_on_phoneme = function(learner, task, train_id, test_id, psvals) {
+learner_on_task = function(learner, task, train_id, test_id, psvals) {
   task_train = task$clone(deep = TRUE)$filter(rows = train_id)
   task_test = task$clone(deep = TRUE)$filter(rows = test_id)
   learner$param_set$values = mlr3misc::insert_named(learner$param_set$values, psvals)
@@ -914,10 +914,15 @@ BenchmarkConfigRpartPhoneme = R6Class("BenchmarkConfigRpartPhoneme",
     initialize = function(id = "RpartPhoneme") {
     self$learner = mlr3::LearnerClassifRpart$new()
     self$learner$predict_type = "prob"
-    self$task = mlr3misc::dictionary_sugar_get(mlr3::mlr_tasks, "oml", data_id = 1489)
+    self$task = {
+      orig = mlr3misc::dictionary_sugar_get(mlr3::mlr_tasks, "oml", data_id = 1489)$data()
+      set.seed(012)
+      new = orig[sample(nrow(orig), size = 17067, replace = TRUE), ]
+      TaskClassif$new(id = "Phoneme", backend = new, target = "Class", positive = "2")
+    }
     # different fidelities of train size, 1/(2^(0:9)) fidelity steps
-    self$train_id = list("10" = 1:4864, "9" = 1:2432, "8" = 1:1216, "7" = 1:608, "6" = 1:304, "5" = 1:152, "4" = 1:76, "3" = 1:38, "2" = 1:19, "1" = 1:10)
-    self$test_id = 4865:5404
+    self$train_id = list("10" = 1:15360, "9" = 1:7680, "8" = 1:3840, "7" = 1:1920, "6" = 1:960, "5" = 1:480, "4" = 1:240, "3" = 1:120, "2" = 1:60, "1" = 1:30)
+    self$test_id = 15361:17067  # 0.9/0.1 train test
       super$initialize(
         id,
         workdir = NULL,
@@ -953,7 +958,7 @@ BenchmarkConfigRpartPhoneme = R6Class("BenchmarkConfigRpartPhoneme",
             map_dtr(seq_len(nrow(xdt)), function(i) {
               psvals = as.list(xdt[i, - "fidelity"])
               train_id = self$train_id[[match(xdt[i, ][["fidelity"]], 1/(2^(0:9)))]]
-              rpart_on_phoneme(learner = self$learner, task = self$task, train_id = train_id, test_id = self$test_id, psvals = psvals)
+              learner_on_task(learner = self$learner, task = self$task, train_id = train_id, test_id = self$test_id, psvals = psvals)
             })
           },
           domain = ps(cp = p_dbl(lower = 0, upper = 0.2), maxdepth = p_dbl(lower = log(1), upper = log(30), tags = "log", trafo = function(x) as.integer(round(exp(x), 0)))),
@@ -967,7 +972,7 @@ BenchmarkConfigRpartPhoneme = R6Class("BenchmarkConfigRpartPhoneme",
             map_dtr(seq_len(nrow(xdt)), function(i) {
               psvals = as.list(xdt[i, - "fidelity"])
               train_id = self$train_id[[match(xdt[i, ][["fidelity"]], 1/(2^(0:9)))]]
-              rpart_on_phoneme(learner = self$learner, task = self$task, train_id = train_id, test_id = self$test_id, psvals = psvals)
+              learner_on_task(learner = self$learner, task = self$task, train_id = train_id, test_id = self$test_id, psvals = psvals)
             })
           },
           domain = self$param_set,
@@ -1058,6 +1063,485 @@ BenchmarkConfigRpartPhonemeSurrogate = R6Class("BenchmarkConfigRpartPhonemeSurro
 )
 #' @include BenchmarkConfig.R
 benchmark_configs$add("rpartphoneme_surrogate", BenchmarkConfigRpartPhonemeSurrogate)
+
+
+
+#' @export
+# FIXME: can only be evaluated on the discrete fidelity steps below
+BenchmarkConfigRpartBTC = R6Class("BenchmarkConfigRpartBTC",
+  inherit = BenchmarkConfig,
+  public = list(
+    initialize = function(id = "RpartBTC") {
+    self$learner = mlr3::LearnerClassifRpart$new()
+    self$learner$predict_type = "prob"
+    self$task = {
+      orig = mlr3misc::dictionary_sugar_get(mlr3::mlr_tasks, "oml", data_id = 1464)$data()
+      set.seed(234)
+      new = orig[sample(nrow(orig), size = 17067, replace = TRUE), ]
+      TaskClassif$new(id = "BTC", backend = new, target = "Class", positive = "2")
+    }
+    # different fidelities of train size, 1/(2^(0:9)) fidelity steps
+    self$train_id = list("10" = 1:15360, "9" = 1:7680, "8" = 1:3840, "7" = 1:1920, "6" = 1:960, "5" = 1:480, "4" = 1:240, "3" = 1:120, "2" = 1:60, "1" = 1:30)
+    self$test_id = 15361:17067  # 0.9/0.1 train test
+      super$initialize(
+        id,
+        workdir = NULL,
+        model_name = "rpartbtc",
+        param_set_file = NULL,
+        data_file = NULL,
+        data_order_file = "NULL",
+        dicts_file = NULL,
+        keras_model_file = NULL,
+        onnx_model_file = NULL,
+        target_variables = "y",
+        codomain = ps(
+          y = p_dbl(lower = 0, upper = Inf, tags = "minimize")
+        ),
+        packages = c("mlr3", "mlr3oml", "mlr3learners")
+      )
+    },
+
+    learner = NULL,
+    task = NULL,
+    train_id = NULL,
+    test_id = NULL,
+
+    setup = function() {
+      message("no setup necessary.")
+    },
+
+    get_objective = function(max_fidelity = FALSE) {
+      if (max_fidelity) {
+        bbotk::ObjectiveRFunDt$new(
+          fun = function(xdt, fidelity) {
+            xdt[, fidelity := fidelity]
+            map_dtr(seq_len(nrow(xdt)), function(i) {
+              psvals = as.list(xdt[i, - "fidelity"])
+              train_id = self$train_id[[match(xdt[i, ][["fidelity"]], 1/(2^(0:9)))]]
+              learner_on_task(learner = self$learner, task = self$task, train_id = train_id, test_id = self$test_id, psvals = psvals)
+            })
+          },
+          domain = ps(cp = p_dbl(lower = 0, upper = 0.2), maxdepth = p_dbl(lower = log(1), upper = log(30), tags = "log", trafo = function(x) as.integer(round(exp(x), 0)))),
+          codomain = self$codomain,
+          constants = ps(fidelity = p_dbl(lower = 1e-3, upper = 1, default = 1, tags = "budget")),
+          check_values = FALSE
+        )
+      } else {
+        bbotk::ObjectiveRFunDt$new(
+          fun = function(xdt) {
+            map_dtr(seq_len(nrow(xdt)), function(i) {
+              psvals = as.list(xdt[i, - "fidelity"])
+              train_id = self$train_id[[match(xdt[i, ][["fidelity"]], 1/(2^(0:9)))]]
+              learner_on_task(learner = self$learner, task = self$task, train_id = train_id, test_id = self$test_id, psvals = psvals)
+            })
+          },
+          domain = self$param_set,
+          codomain = self$codomain,
+          check_values = FALSE
+        )
+      }
+    }
+  ),
+  active = list(
+    param_set = function() {
+      ps(
+         cp = p_dbl(lower = 0, upper = 0.2),
+         maxdepth = p_dbl(lower = log(1), upper = log(30), tags = "log", trafo = function(x) as.integer(round(exp(x), 0))),
+         fidelity = p_dbl(lower = 1e-3, upper = 1, tags = "budget")
+      )
+    }
+  )
+)
+#' @include BenchmarkConfig.R
+benchmark_configs$add("rpartbtc", BenchmarkConfigRpartBTC)
+
+
+
+#' @export
+BenchmarkConfigRpartBTCSurrogate = R6Class("BenchmarkConfigRpartBTCSurrogate",
+  inherit = BenchmarkConfig,
+  public = list(
+    initialize = function(id = "BenchmarkConfigRpartBTCSurrogate", workdir) {
+      super$initialize(
+        id,
+        workdir = workdir,
+        model_name = "rpartbtc_surrogate",
+        param_set_file = "param_set.rds",
+        data_file = "data.rds",
+        data_order_file = "data_order.rds",
+        dicts_file = "dicts.rds",
+        keras_model_file = "model.hdf5",
+        onnx_model_file = "model.onnx",
+        target_variables = "y",
+        codomain = ps(
+          y = p_dbl(lower = -Inf, upper = Inf, tags = "minimize")
+        ),
+        packages = NULL
+      )
+    },
+    get_objective = function(max_fidelity = FALSE, retrafo = TRUE) {
+      codomain = self$codomain$clone(deep = TRUE)
+      if (max_fidelity) {
+        ObjectiveONNX$new(
+          model_path = self$onnx_model_path,
+          data_order = readRDS(self$data_order_path),
+          trafo_dict = readRDS(self$dicts_path),
+          domain = ps(cp = p_dbl(lower = 0, upper = 0.2), maxdepth = p_dbl(lower = log(1), upper = log(30), tags = "log", trafo = function(x) as.integer(round(exp(x), 0)))),
+          full_codomain = self$codomain$clone(deep = TRUE),  # needed to set the names
+          codomain = codomain,
+          task = NULL,
+          retrafo = retrafo,
+          constants = ps(fidelity = p_dbl(lower = 1e-3, upper = 1, default = 1, tags = "budget"))
+        )
+      } else {
+        ObjectiveONNX$new(
+          model_path = self$onnx_model_path,
+          data_order = readRDS(self$data_order_path),
+          trafo_dict = readRDS(self$dicts_path),
+          domain = self$opt_param_set,
+          full_codomain = self$codomain$clone(deep = TRUE),  # needed to set the names
+          codomain = codomain,
+          task = NULL,
+          retrafo = retrafo
+        )
+      }
+    }
+  ),
+  active = list(
+    data = function() {
+      if (is.null(private$.data)) private$.data = preproc_rpartbtc_surrogate(self)
+      private$.data
+    },
+    param_set = function() {
+      ps(
+         cp = p_dbl(lower = 0, upper = 0.2),
+         maxdepth = p_dbl(lower = log(1), upper = log(30), tags = "log", trafo = function(x) as.integer(round(exp(x), 0))),
+         fidelity = p_dbl(lower = 1e-3, upper = 1, tags = "budget")
+      )
+    }
+  )
+)
+#' @include BenchmarkConfig.R
+benchmark_configs$add("rpartbtc_surrogate", BenchmarkConfigRpartBTCSurrogate)
+
+
+
+#' @export
+# FIXME: can only be evaluated on the discrete fidelity steps below
+BenchmarkConfigGlmnetPhoneme = R6Class("BenchmarkConfigGlmnetPhoneme",
+  inherit = BenchmarkConfig,
+  public = list(
+    initialize = function(id = "GlmnetPhoneme") {
+    self$learner = mlr3learners::LearnerClassifGlmnet$new()
+    self$learner$predict_type = "prob"
+    self$task = {
+      orig = mlr3misc::dictionary_sugar_get(mlr3::mlr_tasks, "oml", data_id = 1489)$data()
+      set.seed(012)
+      new = orig[sample(nrow(orig), size = 17067, replace = TRUE), ]
+      TaskClassif$new(id = "Phoneme", backend = new, target = "Class", positive = "2")
+    }
+    # different fidelities of train size, 1/(2^(0:9)) fidelity steps
+    self$train_id = list("10" = 1:15360, "9" = 1:7680, "8" = 1:3840, "7" = 1:1920, "6" = 1:960, "5" = 1:480, "4" = 1:240, "3" = 1:120, "2" = 1:60, "1" = 1:30)
+    self$test_id = 15361:17067  # 0.9/0.1 train test
+      super$initialize(
+        id,
+        workdir = NULL,
+        model_name = "glmnetphoneme",
+        param_set_file = NULL,
+        data_file = NULL,
+        data_order_file = "NULL",
+        dicts_file = NULL,
+        keras_model_file = NULL,
+        onnx_model_file = NULL,
+        target_variables = "y",
+        codomain = ps(
+          y = p_dbl(lower = 0, upper = Inf, tags = "minimize")
+        ),
+        packages = c("mlr3", "mlr3oml", "mlr3learners")
+      )
+    },
+
+    learner = NULL,
+    task = NULL,
+    train_id = NULL,
+    test_id = NULL,
+
+    setup = function() {
+      message("no setup necessary.")
+    },
+
+    get_objective = function(max_fidelity = FALSE) {
+      if (max_fidelity) {
+        bbotk::ObjectiveRFunDt$new(
+          fun = function(xdt, fidelity) {
+            xdt[, fidelity := fidelity]
+            map_dtr(seq_len(nrow(xdt)), function(i) {
+              psvals = as.list(xdt[i, - "fidelity"])
+              train_id = self$train_id[[match(xdt[i, ][["fidelity"]], 1/(2^(0:9)))]]
+              learner_on_task(learner = self$learner, task = self$task, train_id = train_id, test_id = self$test_id, psvals = psvals)
+            })
+          },
+          domain = ps(alpha = p_dbl(lower = 0, upper = 1), s = p_dbl(lower = -7, upper = 7, tags = "log", trafo = function(x) exp(x))),
+          codomain = self$codomain,
+          constants = ps(fidelity = p_dbl(lower = 1e-3, upper = 1, default = 1, tags = "budget")),
+          check_values = FALSE
+        )
+      } else {
+        bbotk::ObjectiveRFunDt$new(
+          fun = function(xdt) {
+            map_dtr(seq_len(nrow(xdt)), function(i) {
+              psvals = as.list(xdt[i, - "fidelity"])
+              train_id = self$train_id[[match(xdt[i, ][["fidelity"]], 1/(2^(0:9)))]]
+              learner_on_task(learner = self$learner, task = self$task, train_id = train_id, test_id = self$test_id, psvals = psvals)
+            })
+          },
+          domain = self$param_set,
+          codomain = self$codomain,
+          check_values = FALSE
+        )
+      }
+    }
+  ),
+  active = list(
+    param_set = function() {
+      ps(
+         alpha = p_dbl(lower = 0, upper = 1),
+         s = p_dbl(lower = -7, upper = 7, tags = "log", trafo = function(x) exp(x)),
+         fidelity = p_dbl(lower = 1e-3, upper = 1, tags = "budget")
+      )
+    }
+  )
+)
+#' @include BenchmarkConfig.R
+benchmark_configs$add("glmnetphoneme", BenchmarkConfigGlmnetPhoneme)
+
+
+#' @export
+BenchmarkConfigGlmnetPhonemeSurrogate = R6Class("BenchmarkConfigGlmnetPhonemeSurrogate",
+  inherit = BenchmarkConfig,
+  public = list(
+    initialize = function(id = "BenchmarkConfigGlmnetPhonemeSurrogate", workdir) {
+      super$initialize(
+        id,
+        workdir = workdir,
+        model_name = "glmnetphoneme_surrogate",
+        param_set_file = "param_set.rds",
+        data_file = "data.rds",
+        data_order_file = "data_order.rds",
+        dicts_file = "dicts.rds",
+        keras_model_file = "model.hdf5",
+        onnx_model_file = "model.onnx",
+        target_variables = "y",
+        codomain = ps(
+          y = p_dbl(lower = -Inf, upper = Inf, tags = "minimize")
+        ),
+        packages = NULL
+      )
+    },
+    get_objective = function(max_fidelity = FALSE, retrafo = TRUE) {
+      codomain = self$codomain$clone(deep = TRUE)
+      if (max_fidelity) {
+        ObjectiveONNX$new(
+          model_path = self$onnx_model_path,
+          data_order = readRDS(self$data_order_path),
+          trafo_dict = readRDS(self$dicts_path),
+          domain = ps(alpha = p_dbl(lower = 0, upper = 1), s = p_dbl(lower = -7, upper = 7, tags = "log", trafo = function(x) exp(x))),
+          full_codomain = self$codomain$clone(deep = TRUE),  # needed to set the names
+          codomain = codomain,
+          task = NULL,
+          retrafo = retrafo,
+          constants = ps(fidelity = p_dbl(lower = 1e-3, upper = 1, default = 1, tags = "budget"))
+        )
+      } else {
+        ObjectiveONNX$new(
+          model_path = self$onnx_model_path,
+          data_order = readRDS(self$data_order_path),
+          trafo_dict = readRDS(self$dicts_path),
+          domain = self$opt_param_set,
+          full_codomain = self$codomain$clone(deep = TRUE),  # needed to set the names
+          codomain = codomain,
+          task = NULL,
+          retrafo = retrafo
+        )
+      }
+    }
+  ),
+  active = list(
+    data = function() {
+      if (is.null(private$.data)) private$.data = preproc_rpartphoneme_surrogate(self)
+      private$.data
+    },
+    param_set = function() {
+      ps(
+         alpha = p_dbl(lower = 0, upper = 1),
+         s = p_dbl(lower = -7, upper = 7, tags = "log", trafo = function(x) exp(x)),
+         fidelity = p_dbl(lower = 1e-3, upper = 1, tags = "budget")
+      )
+    }
+  )
+)
+#' @include BenchmarkConfig.R
+benchmark_configs$add("glmnetphoneme_surrogate", BenchmarkConfigGlmnetPhonemeSurrogate)
+
+
+
+#' @export
+# FIXME: can only be evaluated on the discrete fidelity steps below
+BenchmarkConfigGlmnetBTC = R6Class("BenchmarkConfigGlmnetBTC",
+  inherit = BenchmarkConfig,
+  public = list(
+    initialize = function(id = "GlmnetBTC") {
+    self$learner = mlr3learners::LearnerClassifGlmnet$new()
+    self$learner$predict_type = "prob"
+    self$task = {
+      orig = mlr3misc::dictionary_sugar_get(mlr3::mlr_tasks, "oml", data_id = 1464)$data()
+      set.seed(234)
+      new = orig[sample(nrow(orig), size = 17067, replace = TRUE), ]
+      TaskClassif$new(id = "BTC", backend = new, target = "Class", positive = "2")
+    }
+    # different fidelities of train size, 1/(2^(0:9)) fidelity steps
+    self$train_id = list("10" = 1:15360, "9" = 1:7680, "8" = 1:3840, "7" = 1:1920, "6" = 1:960, "5" = 1:480, "4" = 1:240, "3" = 1:120, "2" = 1:60, "1" = 1:30)
+    self$test_id = 15361:17067  # 0.9/0.1 train test
+      super$initialize(
+        id,
+        workdir = NULL,
+        model_name = "glmnetbtc",
+        param_set_file = NULL,
+        data_file = NULL,
+        data_order_file = "NULL",
+        dicts_file = NULL,
+        keras_model_file = NULL,
+        onnx_model_file = NULL,
+        target_variables = "y",
+        codomain = ps(
+          y = p_dbl(lower = 0, upper = Inf, tags = "minimize")
+        ),
+        packages = c("mlr3", "mlr3oml", "mlr3learners")
+      )
+    },
+
+    learner = NULL,
+    task = NULL,
+    train_id = NULL,
+    test_id = NULL,
+
+    setup = function() {
+      message("no setup necessary.")
+    },
+
+    get_objective = function(max_fidelity = FALSE) {
+      if (max_fidelity) {
+        bbotk::ObjectiveRFunDt$new(
+          fun = function(xdt, fidelity) {
+            xdt[, fidelity := fidelity]
+            map_dtr(seq_len(nrow(xdt)), function(i) {
+              psvals = as.list(xdt[i, - "fidelity"])
+              train_id = self$train_id[[match(xdt[i, ][["fidelity"]], 1/(2^(0:9)))]]
+              learner_on_task(learner = self$learner, task = self$task, train_id = train_id, test_id = self$test_id, psvals = psvals)
+            })
+          },
+          domain = ps(alpha = p_dbl(lower = 0, upper = 1), s = p_dbl(lower = -7, upper = 7, tags = "log", trafo = function(x) exp(x))),
+          codomain = self$codomain,
+          constants = ps(fidelity = p_dbl(lower = 1e-3, upper = 1, default = 1, tags = "budget")),
+          check_values = FALSE
+        )
+      } else {
+        bbotk::ObjectiveRFunDt$new(
+          fun = function(xdt) {
+            map_dtr(seq_len(nrow(xdt)), function(i) {
+              psvals = as.list(xdt[i, - "fidelity"])
+              train_id = self$train_id[[match(xdt[i, ][["fidelity"]], 1/(2^(0:9)))]]
+              learner_on_task(learner = self$learner, task = self$task, train_id = train_id, test_id = self$test_id, psvals = psvals)
+            })
+          },
+          domain = self$param_set,
+          codomain = self$codomain,
+          check_values = FALSE
+        )
+      }
+    }
+  ),
+  active = list(
+    param_set = function() {
+      ps(
+         alpha = p_dbl(lower = 0, upper = 1),
+         s = p_dbl(lower = -7, upper = 7, tags = "log", trafo = function(x) exp(x)),
+         fidelity = p_dbl(lower = 1e-3, upper = 1, tags = "budget")
+      )
+    }
+  )
+)
+#' @include BenchmarkConfig.R
+benchmark_configs$add("glmnetbtc", BenchmarkConfigGlmnetBTC)
+
+
+
+#' @export
+BenchmarkConfigGlmnetBTCSurrogate = R6Class("BenchmarkConfigGlmnetBTCSurrogate",
+  inherit = BenchmarkConfig,
+  public = list(
+    initialize = function(id = "BenchmarkConfigGlmnetBTCSurrogate", workdir) {
+      super$initialize(
+        id,
+        workdir = workdir,
+        model_name = "glmnetbtc_surrogate",
+        param_set_file = "param_set.rds",
+        data_file = "data.rds",
+        data_order_file = "data_order.rds",
+        dicts_file = "dicts.rds",
+        keras_model_file = "model.hdf5",
+        onnx_model_file = "model.onnx",
+        target_variables = "y",
+        codomain = ps(
+          y = p_dbl(lower = -Inf, upper = Inf, tags = "minimize")
+        ),
+        packages = NULL
+      )
+    },
+    get_objective = function(max_fidelity = FALSE, retrafo = TRUE) {
+      codomain = self$codomain$clone(deep = TRUE)
+      if (max_fidelity) {
+        ObjectiveONNX$new(
+          model_path = self$onnx_model_path,
+          data_order = readRDS(self$data_order_path),
+          trafo_dict = readRDS(self$dicts_path),
+          domain = ps(alpha = p_dbl(lower = 0, upper = 1), s = p_dbl(lower = -7, upper = 7, tags = "log", trafo = function(x) exp(x))),
+          full_codomain = self$codomain$clone(deep = TRUE),  # needed to set the names
+          codomain = codomain,
+          task = NULL,
+          retrafo = retrafo,
+          constants = ps(fidelity = p_dbl(lower = 1e-3, upper = 1, default = 1, tags = "budget"))
+        )
+      } else {
+        ObjectiveONNX$new(
+          model_path = self$onnx_model_path,
+          data_order = readRDS(self$data_order_path),
+          trafo_dict = readRDS(self$dicts_path),
+          domain = self$opt_param_set,
+          full_codomain = self$codomain$clone(deep = TRUE),  # needed to set the names
+          codomain = codomain,
+          task = NULL,
+          retrafo = retrafo
+        )
+      }
+    }
+  ),
+  active = list(
+    data = function() {
+      if (is.null(private$.data)) private$.data = preproc_rpartbtc_surrogate(self)
+      private$.data
+    },
+    param_set = function() {
+      ps(
+         alpha = p_dbl(lower = 0, upper = 1),
+         s = p_dbl(lower = -7, upper = 7, tags = "log", trafo = function(x) exp(x)),
+         fidelity = p_dbl(lower = 1e-3, upper = 1, tags = "budget")
+      )
+    }
+  )
+)
+#' @include BenchmarkConfig.R
+benchmark_configs$add("glmnetbtc_surrogate", BenchmarkConfigGlmnetBTCSurrogate)
 
 
 
