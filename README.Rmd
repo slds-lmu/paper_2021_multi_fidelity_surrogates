@@ -28,7 +28,7 @@ dt = data.frame(
                "rbv2_glmnet", "rbv2_ranger", "rbv2_xgboost", "rbv2_super", "fcnet"),
   space = c("Cat+Dep", "Mix", "Mix+Dep", "Mix", "Mix", "Mix", "Mix+Dep",
             "Mix+Dep","Mix+Dep", "Mix"),
-  n_dims = c(34L, 7L, 6L, 5L, 6L, 3L, 8L, 14L, 34L, 11L),
+  n_dims = c(34L, 7L, 6L, 5L, 6L, 3L, 8L, 14L, 38L, 11L),
   n_targets = c("2:perf(1)+rt", "6:perf(5)+rt","6:perf(4)+rt+pt","6:perf(4)+rt+pt","6:perf(4)+rt+pt", "6:perf(4)+rt+pt","6:perf(4)+rt+pt","6:perf(4)+rt+pt","6:perf(4)+rt+pt", "4:perf(2)+rt+ ms"),
   fidelity = c("epoch", "epoch", "trainsize+repl", "trainsize+repl", "trainsize+repl", "trainsize+repl", "trainsize+repl", "trainsize+repl", "trainsize+repl", "epoch+repl"),
   n_problems = c(1L, 35L, 96L, 101L, 99L, 98L, 114L, 109L, 89L, 4L),
