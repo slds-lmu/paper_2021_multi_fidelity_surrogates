@@ -162,9 +162,17 @@ preproc_rpart_surrogate = function(config, seed = 123L, n_max = 2*10^6, frac = .
 
   # Preproc train data
   train = tt$train
+  # We get rid of some upper outliers in training. This leads to mathematical instabilities otherwise.
+  upper_outliers = which(train$y > quantile(train$y, 0.99))
+  if (length(upper_outliers)) {
+    train = train[-upper_outliers, ]
+  }
+
   train = preproc_iid(train)
   trafos = c(
-    map(train[, "y", with = FALSE], scale_base_0_1, base = 1, p = 0)
+    map(train[, "y", with = FALSE], scale_base_0_1, base = 10, p = 0),
+    map(train[, "cp", with = FALSE], scale_base_0_1, base = 1, p = 0),
+    map(train[, "maxdepth", with = FALSE], scale_base_0_1, base = 1, p = 0)
   )
   train[, names(trafos) := pmap(list(.SD, trafos), function(x, t) {t$trafo(x)}), .SDcols = names(trafos)]
   y = as.matrix(train[, config$target_variables, with = FALSE])
@@ -199,9 +207,14 @@ preproc_glmnet_surrogate = function(config, seed = 123L, n_max = 2*10^6, frac = 
 
   # Preproc train data
   train = tt$train
+  # We get rid of some upper outliers in training. This leads to mathematical instabilities otherwise.
+  upper_outliers = which(train$y > quantile(train$y, 0.99))
+  if (length(upper_outliers)) {
+    train = train[-upper_outliers, ]
+  }
   train = preproc_iid(train)
   trafos = c(
-    map(train[, "y", with = FALSE], scale_base_0_1, base = exp(1), p = 0),
+    map(train[, "y", with = FALSE], scale_base_0_1, base = 10, p = 0),
     map(train[, "alpha", with = FALSE], scale_base_0_1, base = 1, p = 0),
     map(train[, "s", with = FALSE], scale_base_0_1, base = 1, p = 0)
   )
