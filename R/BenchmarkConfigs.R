@@ -1049,7 +1049,7 @@ BenchmarkConfigRpartPhonemeSurrogate = R6Class("BenchmarkConfigRpartPhonemeSurro
   ),
   active = list(
     data = function() {
-      if (is.null(private$.data)) private$.data = preproc_rpartphoneme_surrogate(self)
+      if (is.null(private$.data)) private$.data = preproc_rpart_surrogate(self)
       private$.data
     },
     param_set = function() {
@@ -1209,7 +1209,7 @@ BenchmarkConfigRpartBTCSurrogate = R6Class("BenchmarkConfigRpartBTCSurrogate",
   ),
   active = list(
     data = function() {
-      if (is.null(private$.data)) private$.data = preproc_rpartbtc_surrogate(self)
+      if (is.null(private$.data)) private$.data = preproc_rpart_surrogate(self)
       private$.data
     },
     param_set = function() {
@@ -1368,7 +1368,7 @@ BenchmarkConfigGlmnetPhonemeSurrogate = R6Class("BenchmarkConfigGlmnetPhonemeSur
   ),
   active = list(
     data = function() {
-      if (is.null(private$.data)) private$.data = preproc_rpartphoneme_surrogate(self)
+      if (is.null(private$.data)) private$.data = preproc_glmnet_surrogate(self)
       private$.data
     },
     param_set = function() {
@@ -1528,7 +1528,7 @@ BenchmarkConfigGlmnetBTCSurrogate = R6Class("BenchmarkConfigGlmnetBTCSurrogate",
   ),
   active = list(
     data = function() {
-      if (is.null(private$.data)) private$.data = preproc_rpartbtc_surrogate(self)
+      if (is.null(private$.data)) private$.data = preproc_glmnet_surrogate(self)
       private$.data
     },
     param_set = function() {
