@@ -158,20 +158,19 @@ preproc_rpart_surrogate = function(config, seed = 123L, n_max = 2*10^6, frac = .
   set.seed(seed)
   path = config$data_path
   dt = readRDS(path)
+  # We get rid of some outliers in training. This leads to mathematical instabilities otherwise.
+  upper_outliers = which(dt$y > quantile(dt$y, 0.95))
+  lower_outliers = which(dt$y < quantile(dt$y, 0.01))
+  if (length(upper_outliers)) {
+    dt = dt[-upper_outliers, ]
+  }
+  if (length(lower_outliers)) {
+    dt = dt[-lower_outliers, ]
+  }
   tt = split_by_col(dt, by = NULL, frac = 0.1)
 
   # Preproc train data
   train = tt$train
-  # We get rid of some outliers in training. This leads to mathematical instabilities otherwise.
-  upper_outliers = which(train$y > quantile(train$y, 0.95))
-  lower_outliers = which(train$y < quantile(train$y, 0.01))
-  if (length(upper_outliers)) {
-    train = train[-upper_outliers, ]
-  }
-  if (length(lower_outliers)) {
-    train = train[-lower_outliers, ]
-  }
-
   train = preproc_iid(train)
   trafos = c(
     map(train[, "y", with = FALSE], scale_base_0_1, base = 10, p = 0),
@@ -207,19 +206,19 @@ preproc_glmnet_surrogate = function(config, seed = 123L, n_max = 2*10^6, frac = 
   set.seed(seed)
   path = config$data_path
   dt = readRDS(path)
+  # We get rid of some outliers in training. This leads to mathematical instabilities otherwise.
+  upper_outliers = which(dt$y > quantile(dt$y, 0.95))
+  lower_outliers = which(dt$y < quantile(dt$y, 0.01))
+  if (length(upper_outliers)) {
+    dt = dt[-upper_outliers, ]
+  }
+  if (length(lower_outliers)) {
+    dt = dt[-lower_outliers, ]
+  }
   tt = split_by_col(dt, by = NULL, frac = 0.1)
 
   # Preproc train data
   train = tt$train
-  # We get rid of some outliers in training. This leads to mathematical instabilities otherwise.
-  upper_outliers = which(train$y > quantile(train$y, 0.95))
-  lower_outliers = which(train$y < quantile(train$y, 0.01))
-  if (length(upper_outliers)) {
-    train = train[-upper_outliers, ]
-  }
-  if (length(lower_outliers)) {
-    train = train[-lower_outliers, ]
-  }
   train = preproc_iid(train)
   trafos = c(
     map(train[, "y", with = FALSE], scale_base_0_1, base = 10, p = 0),
