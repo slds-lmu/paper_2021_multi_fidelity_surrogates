@@ -162,10 +162,14 @@ preproc_rpart_surrogate = function(config, seed = 123L, n_max = 2*10^6, frac = .
 
   # Preproc train data
   train = tt$train
-  # We get rid of some upper outliers in training. This leads to mathematical instabilities otherwise.
+  # We get rid of some outliers in training. This leads to mathematical instabilities otherwise.
   upper_outliers = which(train$y > quantile(train$y, 0.95))
+  lower_outliers = which(train$y < quantile(train$y, 0.01))
   if (length(upper_outliers)) {
     train = train[-upper_outliers, ]
+  }
+  if (length(lower_outliers)) {
+    train = train[-lower_outliers, ]
   }
 
   train = preproc_iid(train)
@@ -207,10 +211,14 @@ preproc_glmnet_surrogate = function(config, seed = 123L, n_max = 2*10^6, frac = 
 
   # Preproc train data
   train = tt$train
-  # We get rid of some upper outliers in training. This leads to mathematical instabilities otherwise.
+  # We get rid of some outliers in training. This leads to mathematical instabilities otherwise.
   upper_outliers = which(train$y > quantile(train$y, 0.95))
+  lower_outliers = which(train$y < quantile(train$y, 0.01))
   if (length(upper_outliers)) {
     train = train[-upper_outliers, ]
+  }
+  if (length(lower_outliers)) {
+    train = train[-lower_outliers, ]
   }
   train = preproc_iid(train)
   trafos = c(
