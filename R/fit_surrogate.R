@@ -11,6 +11,7 @@ fit_surrogate = function(problem_config, model_config = default_model_config(), 
   output_shape = ncol(data$ytrain)
   model = make_architecture(embd, input_shape, output_shape, model_config)
 
+  # FIXME: changed for rpart/glmnet phoneme/btc and hartmann6d_x
   cbs = list(mlr3keras::cb_es(patience = 50L))  # FIXME: 11/08/2021 from 20L to 50L
   history = model %>%
     fit(
