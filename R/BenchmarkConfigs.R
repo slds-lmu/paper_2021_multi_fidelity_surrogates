@@ -961,7 +961,7 @@ BenchmarkConfigRpartPhoneme = R6Class("BenchmarkConfigRpartPhoneme",
               learner_on_task(learner = self$learner, task = self$task, train_id = train_id, test_id = self$test_id, psvals = psvals)
             })
           },
-          domain = ps(cp = p_dbl(lower = 0, upper = 0.2), maxdepth = p_dbl(lower = log(1), upper = log(30), tags = "log", trafo = function(x) as.integer(round(exp(x), 0)))),
+          domain = ps(cp = p_dbl(lower = -7, upper = 0, default = log(0.01), tags = "log", trafo = function(x) exp(x))),
           codomain = self$codomain,
           constants = ps(fidelity = p_dbl(lower = 1e-3, upper = 1, default = 1, tags = "budget")),
           check_values = FALSE
@@ -985,8 +985,7 @@ BenchmarkConfigRpartPhoneme = R6Class("BenchmarkConfigRpartPhoneme",
   active = list(
     param_set = function() {
       ps(
-         cp = p_dbl(lower = 0, upper = 0.2),
-         maxdepth = p_dbl(lower = log(1), upper = log(30), tags = "log", trafo = function(x) as.integer(round(exp(x), 0))),
+         cp = p_dbl(lower = -7, upper = 0, default = log(0.01), tags = "log", trafo = function(x) exp(x)),
          fidelity = p_dbl(lower = 1e-3, upper = 1, tags = "budget")
       )
     }
@@ -1026,7 +1025,7 @@ BenchmarkConfigRpartPhonemeSurrogate = R6Class("BenchmarkConfigRpartPhonemeSurro
           model_path = self$onnx_model_path,
           data_order = readRDS(self$data_order_path),
           trafo_dict = readRDS(self$dicts_path),
-          domain = ps(cp = p_dbl(lower = 0, upper = 0.2), maxdepth = p_dbl(lower = log(1), upper = log(30), tags = "log", trafo = function(x) as.integer(round(exp(x), 0)))),
+          domain = ps(cp = p_dbl(lower = -7, upper = 0, default = log(0.01), tags = "log", trafo = function(x) exp(x))),
           full_codomain = self$codomain$clone(deep = TRUE),  # needed to set the names
           codomain = codomain,
           task = NULL,
@@ -1054,8 +1053,7 @@ BenchmarkConfigRpartPhonemeSurrogate = R6Class("BenchmarkConfigRpartPhonemeSurro
     },
     param_set = function() {
       ps(
-         cp = p_dbl(lower = 0, upper = 0.2),
-         maxdepth = p_dbl(lower = log(1), upper = log(30), tags = "log", trafo = function(x) as.integer(round(exp(x), 0))),
+         cp = p_dbl(lower = -7, upper = 0, default = log(0.01), tags = "log", trafo = function(x) exp(x)),
          fidelity = p_dbl(lower = 1e-3, upper = 1, tags = "budget")
       )
     }
@@ -1121,7 +1119,7 @@ BenchmarkConfigRpartBTC = R6Class("BenchmarkConfigRpartBTC",
               learner_on_task(learner = self$learner, task = self$task, train_id = train_id, test_id = self$test_id, psvals = psvals)
             })
           },
-          domain = ps(cp = p_dbl(lower = 0, upper = 0.2), maxdepth = p_dbl(lower = log(1), upper = log(30), tags = "log", trafo = function(x) as.integer(round(exp(x), 0)))),
+          domain = ps(cp = p_dbl(lower = -7, upper = 0, default = log(0.01), tags = "log", trafo = function(x) exp(x))),
           codomain = self$codomain,
           constants = ps(fidelity = p_dbl(lower = 1e-3, upper = 1, default = 1, tags = "budget")),
           check_values = FALSE
@@ -1145,8 +1143,7 @@ BenchmarkConfigRpartBTC = R6Class("BenchmarkConfigRpartBTC",
   active = list(
     param_set = function() {
       ps(
-         cp = p_dbl(lower = 0, upper = 0.2),
-         maxdepth = p_dbl(lower = log(1), upper = log(30), tags = "log", trafo = function(x) as.integer(round(exp(x), 0))),
+         cp = p_dbl(lower = -7, upper = 0, default = log(0.01), tags = "log", trafo = function(x) exp(x)),
          fidelity = p_dbl(lower = 1e-3, upper = 1, tags = "budget")
       )
     }
@@ -1186,7 +1183,7 @@ BenchmarkConfigRpartBTCSurrogate = R6Class("BenchmarkConfigRpartBTCSurrogate",
           model_path = self$onnx_model_path,
           data_order = readRDS(self$data_order_path),
           trafo_dict = readRDS(self$dicts_path),
-          domain = ps(cp = p_dbl(lower = 0, upper = 0.2), maxdepth = p_dbl(lower = log(1), upper = log(30), tags = "log", trafo = function(x) as.integer(round(exp(x), 0)))),
+          domain = ps(cp = p_dbl(lower = -7, upper = 0, default = log(0.01), tags = "log", trafo = function(x) exp(x))),
           full_codomain = self$codomain$clone(deep = TRUE),  # needed to set the names
           codomain = codomain,
           task = NULL,
@@ -1214,8 +1211,7 @@ BenchmarkConfigRpartBTCSurrogate = R6Class("BenchmarkConfigRpartBTCSurrogate",
     },
     param_set = function() {
       ps(
-         cp = p_dbl(lower = 0, upper = 0.2),
-         maxdepth = p_dbl(lower = log(1), upper = log(30), tags = "log", trafo = function(x) as.integer(round(exp(x), 0))),
+         cp = p_dbl(lower = -7, upper = 0, default = log(0.01), tags = "log", trafo = function(x) exp(x)),
          fidelity = p_dbl(lower = 1e-3, upper = 1, tags = "budget")
       )
     }

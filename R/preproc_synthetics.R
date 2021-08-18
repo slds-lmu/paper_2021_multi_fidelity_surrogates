@@ -170,7 +170,7 @@ preproc_rpart_surrogate = function(config, seed = 123L, n_max = 2*10^6, frac = .
   train = preproc_iid(train)
   trafos = c(
     map(train[, "y", with = FALSE], scale_base_0_1, base = 1, p = 0),
-    map(train[, "maxdepth", with = FALSE], scale_base_0_1, base = 1, p = 0)
+    map(train[, "cp", with = FALSE], scale_base_0_1, base = 1, p = 0),
   )
   train[, names(trafos) := pmap(list(.SD, trafos), function(x, t) {t$trafo(x)}), .SDcols = names(trafos)]
   y = as.matrix(train[, config$target_variables, with = FALSE])
