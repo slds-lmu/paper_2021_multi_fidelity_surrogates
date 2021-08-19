@@ -1,6 +1,31 @@
 {
   "hyperparameters": [
     {
+      "name": "learner",
+      "type": "categorical",
+      "choices": [
+        "aknn",
+        "glmnet",
+        "ranger",
+        "rpart",
+        "svm",
+        "xgboost"
+      ],
+      "default": "aknn",
+      "probabilities": null
+    },
+    {
+      "name": "num.impute.selected.cpo",
+      "type": "categorical",
+      "choices": [
+        "impute.mean",
+        "impute.median",
+        "impute.hist"
+      ],
+      "default": "impute.mean",
+      "probabilities": null
+    },
+    {
       "name": "aknn.M",
       "type": "uniform_int",
       "log": false,
@@ -58,31 +83,6 @@
       "lower": 0.0009118819655545162,
       "upper": 1096.6331584284585,
       "default": 1.0
-    },
-    {
-      "name": "learner",
-      "type": "categorical",
-      "choices": [
-        "aknn",
-        "glmnet",
-        "ranger",
-        "rpart",
-        "svm",
-        "xgboost"
-      ],
-      "default": "aknn",
-      "probabilities": null
-    },
-    {
-      "name": "num.impute.selected.cpo",
-      "type": "categorical",
-      "choices": [
-        "impute.mean",
-        "impute.median",
-        "impute.hist"
-      ],
-      "default": "impute.mean",
-      "probabilities": null
     },
     {
       "name": "ranger.min.node.size",
@@ -330,88 +330,370 @@
   ],
   "conditions": [
     {
-      "child": "ranger.num.random.splits",
-      "parent": "ranger.splitrule",
+      "child": "aknn.M",
+      "parent": "learner",
       "type": "EQ",
-      "value": "extratrees"
+      "value": "aknn"
+    },
+    {
+      "child": "aknn.distance",
+      "parent": "learner",
+      "type": "EQ",
+      "value": "aknn"
+    },
+    {
+      "child": "aknn.ef",
+      "parent": "learner",
+      "type": "EQ",
+      "value": "aknn"
+    },
+    {
+      "child": "aknn.ef_construction",
+      "parent": "learner",
+      "type": "EQ",
+      "value": "aknn"
+    },
+    {
+      "child": "aknn.k",
+      "parent": "learner",
+      "type": "EQ",
+      "value": "aknn"
+    },
+    {
+      "child": "glmnet.alpha",
+      "parent": "learner",
+      "type": "EQ",
+      "value": "glmnet"
+    },
+    {
+      "child": "glmnet.s",
+      "parent": "learner",
+      "type": "EQ",
+      "value": "glmnet"
+    },
+    {
+      "child": "ranger.min.node.size",
+      "parent": "learner",
+      "type": "EQ",
+      "value": "ranger"
+    },
+    {
+      "child": "ranger.mtry.power",
+      "parent": "learner",
+      "type": "EQ",
+      "value": "ranger"
+    },
+    {
+      "child": "ranger.num.trees",
+      "parent": "learner",
+      "type": "EQ",
+      "value": "ranger"
+    },
+    {
+      "child": "ranger.respect.unordered.factors",
+      "parent": "learner",
+      "type": "EQ",
+      "value": "ranger"
+    },
+    {
+      "child": "ranger.sample.fraction",
+      "parent": "learner",
+      "type": "EQ",
+      "value": "ranger"
+    },
+    {
+      "child": "ranger.splitrule",
+      "parent": "learner",
+      "type": "EQ",
+      "value": "ranger"
+    },
+    {
+      "child": "rpart.cp",
+      "parent": "learner",
+      "type": "EQ",
+      "value": "rpart"
+    },
+    {
+      "child": "rpart.maxdepth",
+      "parent": "learner",
+      "type": "EQ",
+      "value": "rpart"
+    },
+    {
+      "child": "rpart.minbucket",
+      "parent": "learner",
+      "type": "EQ",
+      "value": "rpart"
+    },
+    {
+      "child": "rpart.minsplit",
+      "parent": "learner",
+      "type": "EQ",
+      "value": "rpart"
+    },
+    {
+      "child": "svm.cost",
+      "parent": "learner",
+      "type": "EQ",
+      "value": "svm"
+    },
+    {
+      "child": "svm.kernel",
+      "parent": "learner",
+      "type": "EQ",
+      "value": "svm"
+    },
+    {
+      "child": "svm.tolerance",
+      "parent": "learner",
+      "type": "EQ",
+      "value": "svm"
+    },
+    {
+      "child": "xgboost.alpha",
+      "parent": "learner",
+      "type": "EQ",
+      "value": "xgboost"
+    },
+    {
+      "child": "xgboost.booster",
+      "parent": "learner",
+      "type": "EQ",
+      "value": "xgboost"
+    },
+    {
+      "child": "xgboost.lambda",
+      "parent": "learner",
+      "type": "EQ",
+      "value": "xgboost"
+    },
+    {
+      "child": "xgboost.nrounds",
+      "parent": "learner",
+      "type": "EQ",
+      "value": "xgboost"
+    },
+    {
+      "child": "xgboost.subsample",
+      "parent": "learner",
+      "type": "EQ",
+      "value": "xgboost"
+    },
+    {
+      "child": "ranger.num.random.splits",
+      "type": "AND",
+      "conditions": [
+        {
+          "child": "ranger.num.random.splits",
+          "parent": "ranger.splitrule",
+          "type": "EQ",
+          "value": "extratrees"
+        },
+        {
+          "child": "ranger.num.random.splits",
+          "parent": "learner",
+          "type": "EQ",
+          "value": "ranger"
+        }
+      ]
     },
     {
       "child": "svm.degree",
-      "parent": "svm.kernel",
-      "type": "EQ",
-      "value": "polynomial"
+      "type": "AND",
+      "conditions": [
+        {
+          "child": "svm.degree",
+          "parent": "svm.kernel",
+          "type": "EQ",
+          "value": "polynomial"
+        },
+        {
+          "child": "svm.degree",
+          "parent": "learner",
+          "type": "EQ",
+          "value": "svm"
+        }
+      ]
     },
     {
       "child": "svm.gamma",
-      "parent": "svm.kernel",
-      "type": "EQ",
-      "value": "radial"
+      "type": "AND",
+      "conditions": [
+        {
+          "child": "svm.gamma",
+          "parent": "svm.kernel",
+          "type": "EQ",
+          "value": "radial"
+        },
+        {
+          "child": "svm.gamma",
+          "parent": "learner",
+          "type": "EQ",
+          "value": "svm"
+        }
+      ]
     },
     {
       "child": "xgboost.colsample_bylevel",
-      "parent": "xgboost.booster",
-      "type": "IN",
-      "values": [
-        "dart",
-        "gbtree"
+      "type": "AND",
+      "conditions": [
+        {
+          "child": "xgboost.colsample_bylevel",
+          "parent": "xgboost.booster",
+          "type": "IN",
+          "values": [
+            "dart",
+            "gbtree"
+          ]
+        },
+        {
+          "child": "xgboost.colsample_bylevel",
+          "parent": "learner",
+          "type": "EQ",
+          "value": "xgboost"
+        }
       ]
     },
     {
       "child": "xgboost.colsample_bytree",
-      "parent": "xgboost.booster",
-      "type": "IN",
-      "values": [
-        "dart",
-        "gbtree"
+      "type": "AND",
+      "conditions": [
+        {
+          "child": "xgboost.colsample_bytree",
+          "parent": "xgboost.booster",
+          "type": "IN",
+          "values": [
+            "dart",
+            "gbtree"
+          ]
+        },
+        {
+          "child": "xgboost.colsample_bytree",
+          "parent": "learner",
+          "type": "EQ",
+          "value": "xgboost"
+        }
       ]
     },
     {
       "child": "xgboost.eta",
-      "parent": "xgboost.booster",
-      "type": "IN",
-      "values": [
-        "dart",
-        "gbtree"
+      "type": "AND",
+      "conditions": [
+        {
+          "child": "xgboost.eta",
+          "parent": "xgboost.booster",
+          "type": "IN",
+          "values": [
+            "dart",
+            "gbtree"
+          ]
+        },
+        {
+          "child": "xgboost.eta",
+          "parent": "learner",
+          "type": "EQ",
+          "value": "xgboost"
+        }
       ]
     },
     {
       "child": "xgboost.gamma",
-      "parent": "xgboost.booster",
-      "type": "IN",
-      "values": [
-        "dart",
-        "gbtree"
+      "type": "AND",
+      "conditions": [
+        {
+          "child": "xgboost.gamma",
+          "parent": "xgboost.booster",
+          "type": "IN",
+          "values": [
+            "dart",
+            "gbtree"
+          ]
+        },
+        {
+          "child": "xgboost.gamma",
+          "parent": "learner",
+          "type": "EQ",
+          "value": "xgboost"
+        }
       ]
     },
     {
       "child": "xgboost.max_depth",
-      "parent": "xgboost.booster",
-      "type": "IN",
-      "values": [
-        "dart",
-        "gbtree"
+      "type": "AND",
+      "conditions": [
+        {
+          "child": "xgboost.max_depth",
+          "parent": "xgboost.booster",
+          "type": "IN",
+          "values": [
+            "dart",
+            "gbtree"
+          ]
+        },
+        {
+          "child": "xgboost.max_depth",
+          "parent": "learner",
+          "type": "EQ",
+          "value": "xgboost"
+        }
       ]
     },
     {
       "child": "xgboost.min_child_weight",
-      "parent": "xgboost.booster",
-      "type": "IN",
-      "values": [
-        "dart",
-        "gbtree"
+      "type": "AND",
+      "conditions": [
+        {
+          "child": "xgboost.min_child_weight",
+          "parent": "xgboost.booster",
+          "type": "IN",
+          "values": [
+            "dart",
+            "gbtree"
+          ]
+        },
+        {
+          "child": "xgboost.min_child_weight",
+          "parent": "learner",
+          "type": "EQ",
+          "value": "xgboost"
+        }
       ]
     },
     {
       "child": "xgboost.rate_drop",
-      "parent": "xgboost.booster",
-      "type": "EQ",
-      "value": "dart"
+      "type": "AND",
+      "conditions": [
+        {
+          "child": "xgboost.rate_drop",
+          "parent": "xgboost.booster",
+          "type": "EQ",
+          "value": "dart"
+        },
+        {
+          "child": "xgboost.rate_drop",
+          "parent": "learner",
+          "type": "EQ",
+          "value": "xgboost"
+        }
+      ]
     },
     {
       "child": "xgboost.skip_drop",
-      "parent": "xgboost.booster",
-      "type": "EQ",
-      "value": "dart"
+      "type": "AND",
+      "conditions": [
+        {
+          "child": "xgboost.skip_drop",
+          "parent": "xgboost.booster",
+          "type": "EQ",
+          "value": "dart"
+        },
+        {
+          "child": "xgboost.skip_drop",
+          "parent": "learner",
+          "type": "EQ",
+          "value": "xgboost"
+        }
+      ]
     }
   ],
   "forbiddens": [],

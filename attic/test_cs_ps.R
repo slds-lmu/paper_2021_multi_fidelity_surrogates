@@ -21,7 +21,7 @@ with open('../src/configspaces/configspace_lcbench_drop_OpenML_task_id_epoch.jso
 
 cs_sample = py$cs$sample_configuration(10000L)
 cs_dicts = lapply(cs_sample, function(x) x$get_dictionary())
-cs_dat = map_dtr(cs_dicts, function(x) as.data.table(x))
+cs_dat = map_dtr(cs_dicts, function(x) as.data.table(x), .fill = TRUE)
 
 # same distributions achieved by random sampling
 summary(psx)
