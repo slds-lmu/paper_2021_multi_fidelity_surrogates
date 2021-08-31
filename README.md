@@ -298,5 +298,3 @@ ins = OptimInstanceMultiCrit$new(
 )
 opt("random_search")$optimize(ins)
 ```
-
-%## Overview
