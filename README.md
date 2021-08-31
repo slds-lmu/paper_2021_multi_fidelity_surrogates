@@ -7,25 +7,28 @@ This package contains several surrogates that approximate the
 hyperparameter response surface for several interesting machine learing
 algorithms across several tasks.
 
+For a continuation of this project see [YAHPO
+GYM](https://github.com/pfistfl/yahpo_gym).
+
 ## Overview
 
-|     | instance      | space   | n\_dims | n\_targets       | fidelity       | n\_problems | status | Rsq       | Rho       |
-|:----|:--------------|:--------|--------:|:-----------------|:---------------|------------:|:-------|:----------|:----------|
-| 1   | nb301         | Cat+Dep |      34 | 2:perf(1)+rt     | epoch          |           1 | ready  | 0.83-0.98 | 0.91-0.99 |
-| 2   | lcbench       | Mix     |       7 | 6:perf(5)+rt     | epoch          |          35 | ready  | 0.98-1    | 0.99-1    |
-| 10  | fcnet         | Mix     |      11 | 4:perf(2)+rt+ ms | epoch+repl     |           4 | ready  | 0.96-1    | 0.98-1    |
-| 9   | rbv2\_super   | Mix+Dep |      34 | 6:perf(4)+rt+pt  | trainsize+repl |          89 | ready  | 0.86-0.99 | 0.93-0.99 |
-| 3   | rbv2\_svm     | Mix+Dep |       6 | 6:perf(4)+rt+pt  | trainsize+repl |          96 | ready  | 0.83-0.99 | 0.91-1    |
-| 4   | rbv2\_rpart   | Mix     |       5 | 6:perf(4)+rt+pt  | trainsize+repl |         101 | ready  | 0.79-0.99 | 0.89-1    |
-| 5   | rbv2\_aknn    | Mix     |       6 | 6:perf(4)+rt+pt  | trainsize+repl |          99 | ready  | 0.74-0.99 | 0.86-1    |
-| 6   | rbv2\_glmnet  | Mix     |       3 | 6:perf(4)+rt+pt  | trainsize+repl |          98 | ready  | 0.91-1    | 0.96-1    |
-| 7   | rbv2\_ranger  | Mix+Dep |       8 | 6:perf(4)+rt+pt  | trainsize+repl |         114 | ready  | 0.85-1    | 0.92-1    |
-| 8   | rbv2\_xgboost | Mix+Dep |      14 | 6:perf(4)+rt+pt  | trainsize+repl |         109 | ready  | 0.87-0.98 | 0.93-0.99 |
+|     | instance     | space   | n_dims | n_targets        | fidelity       | n_problems | status | Rsq       | Rho       |
+|:----|:-------------|:--------|-------:|:-----------------|:---------------|-----------:|:-------|:----------|:----------|
+| 1   | nb301        | Cat+Dep |     34 | 2:perf(1)+rt     | epoch          |          1 | ready  | 0.83-0.98 | 0.91-0.99 |
+| 2   | lcbench      | Numeric |      7 | 6:perf(5)+rt     | epoch          |         35 | ready  | 0.98-1    | 0.99-1    |
+| 10  | fcnet        | Mix     |     11 | 4:perf(2)+rt+ ms | epoch+repl     |          4 | ready  | 0.96-1    | 0.98-1    |
+| 9   | rbv2_super   | Mix+Dep |     38 | 6:perf(4)+rt+pt  | trainsize+repl |         89 | ready  | 0.86-0.99 | 0.93-0.99 |
+| 3   | rbv2_svm     | Mix+Dep |      6 | 6:perf(4)+rt+pt  | trainsize+repl |         96 | ready  | 0.83-0.99 | 0.91-1    |
+| 4   | rbv2_rpart   | Mix     |      5 | 6:perf(4)+rt+pt  | trainsize+repl |        101 | ready  | 0.79-0.99 | 0.89-1    |
+| 5   | rbv2_aknn    | Mix     |      6 | 6:perf(4)+rt+pt  | trainsize+repl |         99 | ready  | 0.74-0.99 | 0.86-1    |
+| 6   | rbv2_glmnet  | Mix     |      3 | 6:perf(4)+rt+pt  | trainsize+repl |         98 | ready  | 0.91-1    | 0.96-1    |
+| 7   | rbv2_ranger  | Mix+Dep |      8 | 6:perf(4)+rt+pt  | trainsize+repl |        114 | ready  | 0.85-1    | 0.92-1    |
+| 8   | rbv2_xgboost | Mix+Dep |     14 | 6:perf(4)+rt+pt  | trainsize+repl |        109 | ready  | 0.87-0.98 | 0.93-0.99 |
 
-where for **n\_targets** (\#number):
+where for **n_targets** (#number):
 
 -   perf = performance measure
--   ms = model\_size
+-   ms = model_size
 -   rt = runtime
 -   pt = predicttime
 
@@ -35,11 +38,10 @@ or use the object’s printers via `cfgs("...")`.
 
 Toy test functions:
 
-| instance | space | n\_dims | n\_targets | fidelity | n\_problems | status           |
-|:---------|:------|--------:|:-----------|:---------|------------:|:-----------------|
-| Branin   | Num   |       2 | 1:y        | fidelity |           1 | ready            |
-| Shekel   | Num   |       4 | 1:y        | fidelity |           1 | ready            |
-| ZDT6     | Num   |      10 | 2:F1+F2    | fidelity |           1 | needs discussion |
+| instance | space | n_dims | n_targets | fidelity | n_problems | status |
+|:---------|:------|-------:|:----------|:---------|-----------:|:-------|
+| Branin   | Num   |      2 | 1:y       | fidelity |          1 | ready  |
+| Shekel   | Num   |      4 | 1:y       | fidelity |          1 | ready  |
 
 ## NASBench-301
 
@@ -62,7 +64,7 @@ library(bbotk)
 library(data.table)
 ins = OptimInstanceMultiCrit$new(
   objective = cfg$get_objective(),
-  terminator = trm("evals", n_evals = 2L)
+  terminator = trm("evals", n_evals = 10L)
 )
 opt("random_search")$optimize(ins)
 ```
@@ -124,7 +126,7 @@ cfg = cfgs("branin")
 this config contains our `objective` which we can use to optimize.
 
 ``` r
-ins = OptimInstanceMultiCrit$new(
+ins = OptimInstanceSingleCrit$new(
   objective = cfg$get_objective(),
   terminator = trm("evals", n_evals = 10L)
 )
@@ -143,24 +145,6 @@ this config contains our `objective` which we can use to optimize.
 
 ``` r
 ins = OptimInstanceSingleCrit$new(
-  objective = cfg$get_objective(),
-  terminator = trm("evals", n_evals = 10L)
-)
-opt("random_search")$optimize(ins)
-```
-
-## ZDT6
-
-We first load the config:
-
-``` r
-cfg = cfgs("zdt6")
-```
-
-this config contains our `objective` which we can use to optimize.
-
-``` r
-ins = OptimInstanceMultiCrit$new(
   objective = cfg$get_objective(),
   terminator = trm("evals", n_evals = 10L)
 )
@@ -294,7 +278,7 @@ opt("random_search")$optimize(ins)
 ## RandomBotv2 - super
 
 The **super** learner is a learner that is parametrized as a choice over
-all available randombot base learners. It has a highly hierarchical, 37
+all available randombot base learners. It has a highly hierarchical, 38
 dimensional parameter space that includes the configurations of all
 baselearners.
 
@@ -315,4 +299,4 @@ ins = OptimInstanceMultiCrit$new(
 opt("random_search")$optimize(ins)
 ```
 
-## Overview
+%## Overview

@@ -17,6 +17,8 @@ knitr::opts_chunk$set(
 
 This package contains several surrogates that approximate the hyperparameter response surface for several interesting machine learing algorithms across several tasks.
 
+For a continuation of this project see [YAHPO GYM](https://github.com/pfistfl/yahpo_gym).
+
 ## Overview
 
 ```{r, eval = FALSE, echo=FALSE}
@@ -26,7 +28,7 @@ library(data.table)
 dt = data.frame(
   instance = c("nb301", "lcbench", "rbv2_svm", "rbv2_rpart", "rbv2_aknn",
                "rbv2_glmnet", "rbv2_ranger", "rbv2_xgboost", "rbv2_super", "fcnet"),
-  space = c("Cat+Dep", "Mix", "Mix+Dep", "Mix", "Mix", "Mix", "Mix+Dep",
+  space = c("Cat+Dep", "Numeric", "Mix+Dep", "Mix", "Mix", "Mix", "Mix+Dep",
             "Mix+Dep","Mix+Dep", "Mix"),
   n_dims = c(34L, 7L, 6L, 5L, 6L, 3L, 8L, 14L, 38L, 11L),
   n_targets = c("2:perf(1)+rt", "6:perf(5)+rt","6:perf(4)+rt+pt","6:perf(4)+rt+pt","6:perf(4)+rt+pt", "6:perf(4)+rt+pt","6:perf(4)+rt+pt","6:perf(4)+rt+pt","6:perf(4)+rt+pt", "4:perf(2)+rt+ ms"),
@@ -52,9 +54,9 @@ knitr::kable(dt)
 |   |instance     |space   | n_dims|n_targets        |fidelity       | n_problems|status |Rsq       |Rho       |
 |:--|:------------|:-------|------:|:----------------|:--------------|----------:|:------|:---------|:---------|
 |1  |nb301        |Cat+Dep |     34|2:perf(1)+rt     |epoch          |          1|ready  |0.83-0.98 |0.91-0.99 |
-|2  |lcbench      |Mix     |      7|6:perf(5)+rt     |epoch          |         35|ready  |0.98-1    |0.99-1    |
+|2  |lcbench      |Numeric |      7|6:perf(5)+rt     |epoch          |         35|ready  |0.98-1    |0.99-1    |
 |10 |fcnet        |Mix     |     11|4:perf(2)+rt+ ms |epoch+repl     |          4|ready  |0.96-1    |0.98-1    |
-|9  |rbv2_super   |Mix+Dep |     34|6:perf(4)+rt+pt  |trainsize+repl |         89|ready  |0.86-0.99 |0.93-0.99 |
+|9  |rbv2_super   |Mix+Dep |     38|6:perf(4)+rt+pt  |trainsize+repl |         89|ready  |0.86-0.99 |0.93-0.99 |
 |3  |rbv2_svm     |Mix+Dep |      6|6:perf(4)+rt+pt  |trainsize+repl |         96|ready  |0.83-0.99 |0.91-1    |
 |4  |rbv2_rpart   |Mix     |      5|6:perf(4)+rt+pt  |trainsize+repl |        101|ready  |0.79-0.99 |0.89-1    |
 |5  |rbv2_aknn    |Mix     |      6|6:perf(4)+rt+pt  |trainsize+repl |         99|ready  |0.74-0.99 |0.86-1    |
@@ -75,13 +77,13 @@ Toy test functions:
 
 ```{r, echo=FALSE}
 dt = data.frame(
-  instance = c("Branin", "Shekel", "ZDT6"),
-  space = c("Num", "Num", "Num"),
-  n_dims = c(2L, 4L, 10L),
-  n_targets = c("1:y", "1:y", "2:F1+F2"),
-  fidelity = c("fidelity", "fidelity", "fidelity"),
-  n_problems = c(1L, 1L, 1L),
-  status = c("ready", "ready", "needs discussion")
+  instance = c("Branin", "Shekel"),
+  space = c("Num", "Num"),
+  n_dims = c(2L, 4L),
+  n_targets = c("1:y", "1:y"),
+  fidelity = c("fidelity", "fidelity"),
+  n_problems = c(1L, 1L),
+  status = c("ready", "ready")
 )
 knitr::kable(dt)
 ```
@@ -187,24 +189,6 @@ this config contains our `objective` which we can use to optimize.
 
 ```{r,eval=FALSE}
 ins = OptimInstanceSingleCrit$new(
-  objective = cfg$get_objective(),
-  terminator = trm("evals", n_evals = 10L)
-)
-opt("random_search")$optimize(ins)
-```
-
-## ZDT6
-
-We first load the config:
-
-```{r,eval=FALSE}
-cfg = cfgs("zdt6")
-```
-
-this config contains our `objective` which we can use to optimize.
-
-```{r,eval=FALSE}
-ins = OptimInstanceMultiCrit$new(
   objective = cfg$get_objective(),
   terminator = trm("evals", n_evals = 10L)
 )
@@ -338,7 +322,7 @@ opt("random_search")$optimize(ins)
 ## RandomBotv2 - super
 
 The **super** learner is a learner that is parametrized as a choice over all available randombot base learners.
-It has a highly hierarchical, $37$ dimensional parameter space that includes the configurations of all baselearners.
+It has a highly hierarchical, $38$ dimensional parameter space that includes the configurations of all baselearners.
 
 
 We first load the config:
@@ -358,7 +342,7 @@ ins = OptimInstanceMultiCrit$new(
 opt("random_search")$optimize(ins)
 ```
 
-## Overview
+%## Overview
 
 ```{r,echo=FALSE, eval=FALSE}
 perfs = rbindlist(map(cfgs()$keys(), function(k) {

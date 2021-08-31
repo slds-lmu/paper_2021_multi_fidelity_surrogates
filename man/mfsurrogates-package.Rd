@@ -4,7 +4,16 @@
 \name{mfsurrogates-package}
 \alias{mfsurrogates}
 \alias{mfsurrogates-package}
-\title{mfsurrogates: What the package does (short line)}
+\title{mfsurrogates: Surrogate benchmarks for HPO problems}
 \description{
-More about what it does (maybe more than one line)
+Surrogate benchmarks for HPO problems
+}
+\author{
+\strong{Maintainer}: Florian Pfisterer \email{pfistererf@googlemail.com} (\href{https://orcid.org/0000-0001-8867-762X}{ORCID})
+
+Authors:
+\itemize{
+  \item Lennart Schneider \email{lennart.sch@web.de} (\href{https://orcid.org/0000-0003-4152-5308}{ORCID})
+}
+
 }
