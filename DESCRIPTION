@@ -1,12 +1,21 @@
-Package: mfsurrogates2
+Package: mfsurrogates
 Type: Package
-Title: What the package does (short line)
+Title: Surrogate benchmarks for HPO problems 
 Version: 1.0
 Date: 2021-04-01
-Author: Who wrote it
-Maintainer: Who to complain to <yourfault@somewhere.net>
-Description: More about what it does (maybe more than one line)
-License: What license is it under?
+Authors@R:
+    c(person(given = "Florian",
+             family = "Pfisterer",
+             role = c("aut", "cre"),
+             email = "pfistererf@googlemail.com",
+             comment = c(ORCID = "0000-0001-8867-762X")),
+      person(given = "Lennart",
+             family = "Schneider",
+             role = "aut",
+             email = "lennart.sch@web.de",
+             comment = c(ORCID = "0000-0003-4152-5308")))
+Description: Surrogate benchmarks for HPO problems
+License: GPLv3
 Config/reticulate:
   list(
     packages = list(
@@ -19,7 +28,9 @@ Depends:
 Imports:
     bbotk,
     data.table,
+    mlr3,
     mlr3misc,
+    mlr3oml,
     keras,
     paradox (>= 0.7.1),
     R6,
@@ -59,6 +70,7 @@ Collate:
     'preproc_lcbench.R'
     'preproc_nasbench_301.R'
     'preproc_rbv2.R'
+    'preproc_synthetics.R'
     'preproc_task_set.R'
     'scalers.R'
     'zzz.R'

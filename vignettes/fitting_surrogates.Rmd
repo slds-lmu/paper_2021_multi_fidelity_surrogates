@@ -1,0 +1,262 @@
+---
+title: "Fitting Surrogates"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{fitting_surrogates}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+```{r, eval=FALSE}
+# One-time setup
+library(reticulate)
+envname = "r-reticulate"
+conda_create(
+  envname = envname,
+  packages = c("pandas", "python=3.8")
+)
+keras::install_keras("conda", tensorflow="2.3.1", envname=envname)
+conda_install(
+  envname = envname,
+  packages = c("keras2onnx", "onnxruntime"),
+  pip = TRUE
+)
+```
+
+```{r setup}
+reticulate::use_condaenv(envname, required = TRUE)
+devtools::load_all()
+```
+
+Creating a **BenchmarkConfig**:
+
+All benchmarks have an associated **BenchmarkConfig** that contains paths to relevant files and other configurations required.
+
+In order to fit surrogates or to get the objective we first instantiate the **Config** object.
+
+```{r}
+cfg = BenchmarkConfigNB301$new(workdir = workdir)
+```
+
+or alternatively use the sugar:
+
+```{r}
+cfg = cfgs('nb301', workdir = workdir)
+```
+
+and start fitting a surrogate:
+
+```{r}
+cfg$fit_surrogate()
+```
+
+We can adjust the NeuralNet architecture and fitting parameters by supplying a `model_config`.
+
+```{r}
+model_config = default_model_config()
+model_config$epochs = 1L
+cfg$fit_surrogate(model_config = model_config)
+```
+
+**NOTE** per default, models are not saved. We can enable this by supplying `overwrite = TRUE`.
+
+The same holds for all other models:
+
+
+
+## LCBench
+
+```{r}
+cfg = cfgs('lcbench', workdir = workdir)
+model_config = default_model_config()
+model_config$epochs = 1L
+cfg$fit_surrogate(model_config = model_config)
+```
+
+## SVM
+
+```{r}
+cfg = cfgs('rbv2_svm', workdir = workdir)
+model_config = default_model_config()
+model_config$epochs = 1L
+cfg$fit_surrogate(model_config = model_config, overwrite = TRUE)
+```
+
+Check the results
+```{r}
+  obj = cfg$get_objective()
+  des = paradox::generate_design_random(cfg$param_set, 10)
+  data = rbindlist(des$transpose(FALSE))[,names(obj$domain$params), with=FALSE]
+  obj$eval_dt(data)
+```
+
+
+```{r}
+save_task_ids(cfg)
+```
+
+## Ranger
+
+```{r}
+cfg = cfgs('rbv2_ranger', workdir = workdir)
+model_config = default_model_config()
+model_config$epochs = 1L
+cfg$fit_surrogate(model_config = model_config, overwrite = TRUE)
+```
+
+And we save the task_ids to a text file.
+
+```{r}
+save_task_ids(cfg)
+```
+
+and check whether this works
+
+```{r}
+  obj = cfg$get_objective()
+  des = paradox::generate_design_random(cfg$param_set, 10)
+  data = rbindlist(des$transpose(FALSE))[,names(obj$domain$params), with=FALSE]
+  obj$eval_dt(data)
+```
+
+
+## GLMNET
+
+```{r}
+cfg = cfgs('rbv2_glmnet', workdir = workdir)
+model_config = default_model_config()
+model_config$epochs = 1L
+cfg$fit_surrogate(model_config = model_config, overwrite = TRUE)
+```
+
+```{r}
+  obj = cfg$get_objective()
+  des = paradox::generate_design_random(cfg$param_set, 10)
+  data = rbindlist(des$transpose(FALSE))[,names(obj$domain$params), with=FALSE]
+  obj$eval_dt(data)
+```
+
+```{r}
+save_task_ids(cfg)
+```
+
+## RPART
+
+```{r}
+cfg = cfgs('rbv2_rpart', workdir = workdir)
+model_config = default_model_config()
+model_config$epochs = 1L
+cfg$fit_surrogate(model_config = model_config, overwrite = TRUE)
+```
+
+```{r}
+  obj = cfg$get_objective()
+  des = paradox::generate_design_random(cfg$param_set, 10)
+  data = rbindlist(des$transpose(FALSE))[,names(obj$domain$params), with=FALSE]
+  obj$eval_dt(data)
+```
+
+```{r}
+save_task_ids(cfg)
+```
+
+## XGBOOST
+
+```{r, eval = FALSE}
+cfg = cfgs('rbv2_xgboost', workdir = workdir)
+model_config = default_model_config()
+model_config$epochs = 1L
+cfg$fit_surrogate(model_config = model_config, overwrite = TRUE)
+```
+
+```{r}
+  obj = cfg$get_objective()
+  des = paradox::generate_design_random(cfg$param_set, 10)
+  data = rbindlist(des$transpose(FALSE))[,names(obj$domain$params), with=FALSE]
+  obj$eval_dt(data)
+```
+
+```{r}
+save_task_ids(cfg)
+```
+
+## Aproximate KNN (aknn)
+
+```{r, eval = FALSE}
+cfg = cfgs('rbv2_aknn', workdir = workdir)
+model_config = default_model_config()
+model_config$epochs = 1L
+cfg$fit_surrogate(model_config = model_config, overwrite = TRUE)
+```
+
+```{r}
+  obj = cfg$get_objective()
+  des = paradox::generate_design_random(cfg$param_set, 10)
+  data = rbindlist(des$transpose(FALSE))[,names(obj$domain$params), with=FALSE]
+  obj$eval_dt(data)
+```
+
+```{r}
+save_task_ids(cfg)
+```
+
+
+## SUPERLEARN
+
+```{r, eval = FALSE}
+cfg = cfgs('rbv2_super', workdir = workdir)
+model_config = default_model_config()
+model_config$epochs = 1L
+cfg$fit_surrogate(model_config = model_config, overwrite = TRUE)
+```
+
+## FCNet
+
+```{r}
+cfg = cfgs('fcnet', workdir = workdir)
+model_config = default_model_config()
+cfg$fit_surrogate(model_config = model_config, overwrite = TRUE)
+```
+
+
+## Determining task_ids for evaluation
+
+70 / 30 train-test split
+
+```{r}
+set.seed(444L)
+keys = cfgs()$keys()
+instances = rbindlist(map(keys, function(x) {
+  cf = cfgs(x, workdir=workdir)
+  data.table(
+    cfg = x,
+    level = cf$task_levels,
+    test = TRUE
+  )
+}), fill=TRUE)
+instances = instances[cfg %in% c("fcnet", "rbv2_super", "nb301", "zdt6", "branin", "shekel", "lcbench")]
+instances[sample(.N, ceiling(0.3 * .N)), test := FALSE, by = cfg]
+instances[cfg %in% c("fcnet", "branin", "shekel", "zdt6", "nb391"), test := TRUE]
+
+saveRDS(instances, "inst/instances.rds")
+```
+
+using it to obtain a list of `ObjectiveFunctions`.
+
+```{r}
+# The instantiation should probably not happen all together but later on.
+instances = readRDS(system.file("instances.rds", package = "mfsurrogates"))
+train = instances[test == FALSE, ]
+
+# For each row, we can now instantiate the objective:
+i = 1
+cf = cfgs(train$cfg[i], workdir=workdir)
+obj = cf$get_objective(train$level[i])
+```
