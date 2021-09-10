@@ -71,7 +71,6 @@ ObjectiveONNX = R6Class("ObjectiveONNX",
       self$retrafo = retrafo
 
       fun = function(xdt, ...) {
-        browser()
         # Handle constants in-place
         if (!self$constants$is_empty) {
           for (constant in self$constants$params) {
