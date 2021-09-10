@@ -84,8 +84,8 @@ ObjectiveONNX = R6Class("ObjectiveONNX",
       self$retrafo = retrafo
 
       fun = function(xdt, ...) {
-        # remove all-missing cols
-        xdt[, (which(colSums(is.na(xdt)) != 0)) := NULL]
+        # # remove all-missing cols
+        # xdt[, (which(colSums(is.na(xdt)) != 0)) := NULL]
         # Handle constants in-place
         if (!self$constants$is_empty) {
           for (constant in self$constants$params) {
