@@ -1,3 +1,8 @@
+sessiondict = new.env()
+
+
+
+
 #' @title Objective interface for ONNX Models.
 #'
 #' @description
@@ -40,7 +45,7 @@ ObjectiveONNX = R6Class("ObjectiveONNX",
     #'  Should params be trafoed back to their original range before return?
     #' @param properties (`character()`).
     initialize = function(model_path, data_order, trafo_dict, domain, full_codomain, codomain, task = NULL, id = "ONNX", active_session = TRUE, retrafo = FALSE,
-      properties = character(), constants = ps(), check_values = FALSE) {
+      properties = character(), constants = NULL, check_values = FALSE) {
       if (!is.null(task)) {
         task_id = domain$params[[domain$ids(tags = "task_id")]]
         task_id$default = task
@@ -51,18 +56,26 @@ ObjectiveONNX = R6Class("ObjectiveONNX",
         new_domain = ParamSet$new(domain$params[names(domain$params) != domain$ids(tags = "task_id")])
         new_domain$trafo = domain$trafo
         new_domain$deps = domain$deps
-        constants = ParamSetCollection$new(list(constants, ParamSet$new(list(task_id))))
+        constants = ParamSet$new(list(task_id))
       } else {
         new_domain = domain
-        constants = ParamSetCollection$new(list(constants, ParamSet$new()))
+        constants = ParamSet$new()
       }
       # Store dictionary of feature transformations
       self$active_session = assert_flag(active_session)
       self$trafo_dict = assert_list(trafo_dict)
       if (self$active_session) {
         # Import runtime and start session
-        rt = reticulate::import("onnxruntime")
-        self$session = sess = rt$InferenceSession(model_path)
+        if (!is.null(sessiondict[[model_path]])) {
+          self$session = sess = sessiondict[[model_path]]
+        } else {
+          rt = reticulate::import("onnxruntime")
+          opts = rt$SessionOptions()
+          opts$inter_op_num_threads = 1L
+          opts$intra_op_num_threads = 1L
+          self$session = sess = rt$InferenceSession(model_path, sess_options = opts)
+          sessiondict[[model_path]] = sess
+        }
       }
       # FIXME: assertions
       self$model_path = model_path
@@ -70,7 +83,9 @@ ObjectiveONNX = R6Class("ObjectiveONNX",
       self$full_codomain = full_codomain
       self$retrafo = retrafo
 
-      fun = function(xdt, ...) {
+      fun = function(xdt) {
+        # remove all-missing cols
+        #xdt[, (which(colSums(is.na(xdt)) != 0)) := NULL]
         # Handle constants in-place
         if (!self$constants$is_empty) {
           for (constant in self$constants$params) {
@@ -101,8 +116,16 @@ ObjectiveONNX = R6Class("ObjectiveONNX",
         )
 
         if (!self$active_session) {
-          rt = reticulate::import("onnxruntime")
-          session = rt$InferenceSession(model_path)
+          if (!is.null(sessiondict[[model_path]])) {
+            self$session = sess = sessiondict[[model_path]]
+          } else {
+            rt = reticulate::import("onnxruntime")
+            opts = rt$SessionOptions()
+            opts$inter_op_num_threads = 1L
+            opts$intra_op_num_threads = 1L
+            session = rt$InferenceSession(model_path, sess_options = opts)
+            sessiondict[[model_path]] = session
+          }
         } else {
           session = self$session
         }
