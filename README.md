@@ -12,18 +12,17 @@ GYM](https://github.com/pfistfl/yahpo_gym).
 
 ## Overview
 
-|     | instance     | space   | n_dims | n_targets        | fidelity       | n_problems | status | Rsq       | Rho       |
-|:----|:-------------|:--------|-------:|:-----------------|:---------------|-----------:|:-------|:----------|:----------|
-| 1   | nb301        | Cat+Dep |     34 | 2:perf(1)+rt     | epoch          |          1 | ready  | 0.83-0.98 | 0.91-0.99 |
-| 2   | lcbench      | Numeric |      7 | 6:perf(5)+rt     | epoch          |         35 | ready  | 0.98-1    | 0.99-1    |
-| 10  | fcnet        | Mix     |     11 | 4:perf(2)+rt+ ms | epoch+repl     |          4 | ready  | 0.96-1    | 0.98-1    |
-| 9   | rbv2_super   | Mix+Dep |     38 | 6:perf(4)+rt+pt  | trainsize+repl |         89 | ready  | 0.86-0.99 | 0.93-0.99 |
-| 3   | rbv2_svm     | Mix+Dep |      6 | 6:perf(4)+rt+pt  | trainsize+repl |         96 | ready  | 0.83-0.99 | 0.91-1    |
-| 4   | rbv2_rpart   | Mix     |      5 | 6:perf(4)+rt+pt  | trainsize+repl |        101 | ready  | 0.79-0.99 | 0.89-1    |
-| 5   | rbv2_aknn    | Mix     |      6 | 6:perf(4)+rt+pt  | trainsize+repl |         99 | ready  | 0.74-0.99 | 0.86-1    |
-| 6   | rbv2_glmnet  | Mix     |      3 | 6:perf(4)+rt+pt  | trainsize+repl |         98 | ready  | 0.91-1    | 0.96-1    |
-| 7   | rbv2_ranger  | Mix+Dep |      8 | 6:perf(4)+rt+pt  | trainsize+repl |        114 | ready  | 0.85-1    | 0.92-1    |
-| 8   | rbv2_xgboost | Mix+Dep |     14 | 6:perf(4)+rt+pt  | trainsize+repl |        109 | ready  | 0.87-0.98 | 0.93-0.99 |
+|     | instance     | space   | n_dims | n_targets       | fidelity       | n_problems | status | Rsq       | Rho       |
+|:----|:-------------|:--------|-------:|:----------------|:---------------|-----------:|:-------|:----------|:----------|
+| 1   | nb301        | Cat+Dep |     34 | 2:perf(1)+rt    | epoch          |          1 | ready  | 0.83-0.98 | 0.91-0.99 |
+| 2   | lcbench      | Numeric |      7 | 6:perf(5)+rt    | epoch          |         35 | ready  | 0.98-1    | 0.99-1    |
+| 9   | rbv2_super   | Mix+Dep |     38 | 6:perf(4)+rt+pt | trainsize+repl |         89 | ready  | 0.86-0.99 | 0.93-0.99 |
+| 3   | rbv2_svm     | Mix+Dep |      6 | 6:perf(4)+rt+pt | trainsize+repl |         96 | ready  | 0.83-0.99 | 0.91-1    |
+| 4   | rbv2_rpart   | Mix     |      5 | 6:perf(4)+rt+pt | trainsize+repl |        101 | ready  | 0.79-0.99 | 0.89-1    |
+| 5   | rbv2_aknn    | Mix     |      6 | 6:perf(4)+rt+pt | trainsize+repl |         99 | ready  | 0.74-0.99 | 0.86-1    |
+| 6   | rbv2_glmnet  | Mix     |      3 | 6:perf(4)+rt+pt | trainsize+repl |         98 | ready  | 0.91-1    | 0.96-1    |
+| 7   | rbv2_ranger  | Mix+Dep |      8 | 6:perf(4)+rt+pt | trainsize+repl |        114 | ready  | 0.85-1    | 0.92-1    |
+| 8   | rbv2_xgboost | Mix+Dep |     14 | 6:perf(4)+rt+pt | trainsize+repl |        109 | ready  | 0.87-0.98 | 0.93-0.99 |
 
 where for **n_targets** (#number):
 
@@ -69,7 +68,7 @@ ins = OptimInstanceMultiCrit$new(
 opt("random_search")$optimize(ins)
 ```
 
-Since NASBench is only trained on `CIFAR10`, we do not need to set a
+Since NASBench is only trained on `CIFAR100`, we do not need to set a
 specific `task_id` here.
 
 ## LCBench

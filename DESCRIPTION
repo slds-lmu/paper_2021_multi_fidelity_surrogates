@@ -54,7 +54,7 @@ Suggests:
 Remotes:
     mlr-org/mlr3keras,
     pfistfl/distillery
-RoxygenNote: 7.1.1
+RoxygenNote: 7.1.2
 Encoding: UTF-8
 VignetteBuilder: knitr
 SystemRequirements: Keras >= 2.3 (https://keras.io)

@@ -21,7 +21,7 @@ BenchmarkConfig = R6Class("BenchmarkConfig",
 
     initialize = function(id, workdir, model_name, param_set_file = NULL, data_file, data_order_file, dicts_file, keras_model_file, onnx_model_file, target_variables, codomain, packages) {
       self$id = assert_string(id)
-      self$download_url = paste0("https://syncandshare.lrz.de/dl/fiCMkzqj1bv1LfCUyvZKmLvd/", model_name, "/")
+      self$download_url = paste0("https://syncandshare.lrz.de/dl/fi7HBiNodEa5DBTzP2e8tgmN/", model_name, "/")
       self$workdir = if (!is.null(workdir)) if (!endsWith(workdir, "/")) paste0(workdir, "/") else workdir
       self$model_name = model_name
       self$subdir = if (!is.null(workdir) && !is.null(model_name)) paste0(self$workdir, model_name, "/") else NULL
