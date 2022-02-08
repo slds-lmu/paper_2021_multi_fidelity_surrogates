@@ -22,7 +22,7 @@ tabs = map(list.files(paste0(data_path, "/benchmark_tasks"), full.names = TRUE),
         dt = data.table(x$scenario, x$instance, paste0(x$target, collapse = ","))
         dt[, rho := xx]    
     }))
-    colnames(dt) = c("scenario", "instances", "target(s)", "rho")
+    colnames(dt) = c("scenario", "instances", "target(s)", "$\\rho$")
     return(dt)
 })
 
