@@ -1,3 +1,6 @@
+# cd /dss/dssfs02/lwp-dss-0001/pr74ze/pr74ze-dss-0000/supermuc_project/results
+# cp -r di57qoy2@lrz2:/dss/dssfs02/lwp-dss-0001/pr74ze/pr74ze-dss-0000/supermuc_project/results /home/flo/Documents
+
 library(data.table)
 library(mlr3misc)
 basepath = paste0(path.expand("~"), "/Downloads/superevals")
@@ -82,7 +85,7 @@ cfg = cfgs("rbv2_ranger", workdir = workdir)
 saveRDS(dt, gsub(".arff", ".rds", cfg$data_path))
 
 # svm
-this_file = files[grepl("svm.*_\\d*_prep", files)]
+this_file = files[grepl("svm.*_\\d*_prep", files)]kb(lU2~bZ!Es*+ld[J
 dt = rbindlist(map(this_file, readRDS), use.names = TRUE, fill = TRUE)
 dt[,c("task_id", "dataset") := split_task_col(task)]
 dt[,task := NULL]
