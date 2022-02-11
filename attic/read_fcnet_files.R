@@ -3,7 +3,7 @@ library(mlr3misc)
 library(jsonlite)
 library(rhdf5)
 
-basepath = paste0(path.expand("~"), "/LRZ Sync+Share/multifidelity_data/", "fcnet_tabular_benchmarks/")
+basepath = paste0(path.expand("~"), "/LRZ Sync+Share/multifidelity_data/", "fcnet/")
 
 # Map over chunks of the file
 map_chunked = function(all, fct, chunks = 10L) {
