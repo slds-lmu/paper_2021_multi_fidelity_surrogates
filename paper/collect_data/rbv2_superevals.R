@@ -63,6 +63,9 @@ split_task_col = function(x) {
   dt[as.integer(x),]
 }
 
+##########################################################################################################
+# Step 1: Convert to chunked .rds files
+# Chunking is required since memory overhead is massive.
 if (FALSE) {
   # First we iterate over all files to save the prepared data in chunks
   # (This is done to avoid memory problems)
@@ -78,15 +81,39 @@ if (FALSE) {
 files = list.files(basepath, full.names = TRUE)
 files = files[endsWith(files, "_prep.rds")]
 
+# What do we keep for csv export?
+metrics = c("timetrain", "timepredict", "acc", "bac", "auc", "multiclass.aunp", "brier", "multiclass.brier", "f1", "logloss", "M")
+cols = c("dataset", "task_id", "trainsize","repl")
+csv_path = "~/../LRZ Sync+Share/multifidelity_data/"
+
+##########################################################################################################
+# Step 2: Export collected data.
+# Saves the full data (for future use) as well as a .csv that is used to fit surrogates
+
+##########################################################################################################
 # glmnet
-this_file = files[grepl("glmnet_\\d*_prep", files)]
+learner = 'glmnet'
+this_file = files[grepl(paste0(learner, "_\\d*_prep"), files)]
 memfile = memfiles[grepl("glmnet", memfiles)]
 dt = rbindlist(map(this_file, readRDS))
 mems = fread(memfile)[, V1 := NULL][, data_id := as.factor(data_id)]
 dt = merge(dt, mems, by.x =c("seed", "dataset", "task_id", "learner"), by.y = c("seed", "task", "data_id", "learner_id"), how="left")
+# Save full data
 saveRDS(dt, gsub("_all_classif.(.*)_\\d_prep", "_\\1_full", this_file[1]))
 
+# Save csv for learning
+pars = c("alpha", "s", "num.impute.selected.cpo")
+# Decide on repl in 1:10 or repl mod 10 ...
+dt = dt[, c(cols, pars, metrics), with=FALSE]
+dt[, memory := M/1024][, M := NULL]
+dt[, brier := ifelse(is.na(brier), multiclass.brier, brier)][, multiclass.brier := NULL]
+dt[, auc := ifelse(is.na(auc ), multiclass.aunp, auc)][, multiclass.aunp := NULL]
+fwrite(dt, paste0(csv_path, "rbv2_", learner, "/data.csv"))
+
+
+##########################################################################################################
 # ranger
+learner = "ranger"
 this_file = files[grepl("ranger.pow_\\d*_prep", files)]
 dt = rbindlist(map(this_file, readRDS), use.names = TRUE)[, learner := "classif.ranger"]
 memfile = memfiles[grepl("ranger", memfiles)]
@@ -94,30 +121,54 @@ mems = fread(memfile)[, V1 := NULL][, data_id := as.factor(data_id)]
 dt = merge(dt, mems, by.x =c("seed", "dataset", "task_id", "learner"), by.y = c("seed", "task", "data_id", "learner_id"), how="left")
 saveRDS(dt, gsub("_all_classif.(.*)_\\d_prep", "_\\1_full", this_file[1]))
 
+# Save csv
+pars = c("num.trees", "replace", "sample.fraction", "mtry.power", "respect.unordered.factors", "min.node.size", "splitrule", "num.impute.selected.cpo")
+# Decide on repl in 1:10 or repl mod 10 ...
+dt = dt[as.integer(repl) %in% 1:10, c(cols, pars, metrics), with=FALSE]
+dt[, memory := M/1024][, M := NULL]
+dt[, brier := ifelse(is.na(brier), multiclass.brier, brier)][, multiclass.brier := NULL]
+dt[, auc := ifelse(is.na(auc ), multiclass.aunp, auc)][, multiclass.aunp := NULL]
+fwrite(dt, paste0(csv_path, "rbv2_", learner, "/data.csv"))
 
+
+##########################################################################################################
 # svm
+learner = 'svm'
 this_file = files[grepl("svm.*_\\d*_prep", files)]
 dt = rbindlist(map(this_file, readRDS), use.names = TRUE, fill = TRUE)# [, learner := "classif.svm"]
 dt[, fitted := NULL]
 dt[, kernel := ifelse(is.na(kernel), "radial", kernel)]
 dt[, shrinking := as.logical(shrinking)]
 dt[, kernel := as.factor(kernel)]
-# [, learner := as.factor("classif.svm")]
 memfile = memfiles[grepl("svm", memfiles)]
-mems = fread(memfile)[, V1 := NULL][, data_id := as.factor(data_id)][, learner_id := ifelse(setting == "all", "classif.svm", "classif.svm.radial")]
+mems = fread(memfile)[, V1 := NULL][, data_id := as.factor(data_id)][, learner_id := factor(ifelse(setting == "all", "classif.svm", "classif.svm.radial"))]
 dt = merge(dt, unique(mems), by.x =c("seed", "dataset", "task_id", "learner"), by.y = c("seed", "task", "data_id", "learner_id"), all.x = TRUE, all.y = FALSE)
 saveRDS(dt, gsub("_all_classif.(.*)_\\d_prep", "_\\1_full", this_file[1]))
 
+# Save csv
+pars = c("cost", "gamma", "tolerance", "shrinking", "kernel", "degree", "num.impute.selected.cpo")
+# Decide on repl in 1:10 or repl mod 10 ...
+dt = dt[, c(cols, pars, metrics), with=FALSE]
+dt[, memory := M/1024][, M := NULL]
+dt[, brier := ifelse(is.na(brier), multiclass.brier, brier)][, multiclass.brier := NULL]
+dt[, auc := ifelse(is.na(auc ), multiclass.aunp, auc)][, multiclass.aunp := NULL]
+fwrite(dt, paste0(csv_path, "rbv2_", learner, "/data.csv"))
 
+
+##########################################################################################################
 # xgboost
+learner = "xgboost"
 save_chunk = function(this_file, i) {
   dt = rbindlist(map(this_file, readRDS), use.names = TRUE, fill = TRUE)
   dt[, nthread := NULL]
+  browser()
   dt = merge(dt, unique(mems), 
     by.x =c("seed", "dataset", "task_id", "learner"), 
     by.y = c("seed", "task", "data_id", "learner_id"),
     all.x = TRUE, all.y = FALSE
   )
+  dt[, learner := "classif.xgboost"][, setting := NULL]
+  dt[, booster := as.factor(booster)]
   saveRDS(dt, gsub("_all_classif.(.*)_\\d_prep", paste0("_", i, "_\\1_full"), this_file[1]))
 }
 this_file = files[grepl("xgboost.*_\\d*_prep", files)]
@@ -126,51 +177,32 @@ mems = fread(memfile)[, V1 := NULL][, data_id := as.factor(data_id)]
 mems[setting == "gbtree", learner_id := "classif.xgboost.gbtree"]
 mems[setting == "gblinear", learner_id := "classif.xgboost.gblinear"]
 mems[setting == "dart", learner_id := "classif.xgboost.dart"]
-map_chunked(this_file, save_chunk, chunks = 10L)
+mems[, learner_id := factor(learner_id)]
+map_chunked(this_file, save_chunk, chunks = 3L)
 
-# And finally aggregate
+
 xgb_files = list.files(basepath, full.names = TRUE)
-xgb_files = xgb_files[grepl("xgboost", xgb_files) & endsWith(xgb_files, "full.rds")]
-mems = NULL
+xgb_files = xgb_files[grepl("xgboost", xgb_files) & grepl("full.rds", xgb_files)]
 
-# This does not fit memory, so will be left in three parts
-dt = NULL
-i = 0
-for (f in xgb_files) {
-  i = i+1
-  x = data.table(readRDS(f))[, setting := NULL][, learner := "classif.xgboost"]
-  dt = rbindlist(list(dt, x), fill=TRUE, use.names=TRUE)
-  if (i == 4){
-    saveRDS(dt, gsub("_full", "_full_p1", xgb_files[1]))
-    rm(dt)
-    dt = NULL
-  }
-  if (i == 8){
-    saveRDS(dt, gsub("_full", "_full_p2", xgb_files[1]))
-    rm(dt)
-    dt = NULL
-  }
-  if (i == 10){
-    saveRDS(dt, gsub("_full", "_full_p3", xgb_files[1]))
-  }
-  rm(x)
+dt = rbindlist(map(xgb_files, function(x) {
+  dt = readRDS(x)
+  dt[, booster := as.factor(booster)]
+  pars = c("booster", "nrounds", "eta", "gamma", "lambda", "alpha", "subsample",  "max_depth", "min_child_weight", "colsample_bytree", "colsample_bylevel",  "rate_drop", "skip_drop", "num.impute.selected.cpo")
+  pars = intersect(pars, colnames(dt))
+  dt = dt[, c(cols, pars, metrics), with=FALSE]
+  dt[, memory := M/1024][, M := NULL]
+  dt[, brier := ifelse(is.na(brier), multiclass.brier, brier)][, multiclass.brier := NULL]
+  dt[, auc := ifelse(is.na(auc ), multiclass.aunp, auc)][, multiclass.aunp := NULL]
   gc()
-}
+  return(dt)
+}), use.names = TRUE, fill = TRUE)
 
-xgb_files = list.files(basepath, full.names = TRUE)
-dt[, booster := as.factor(booster)]
-xgb_files = xgb_files[grepl("xgboost", xgb_files) & grepl("full_p\\d.rds", xgb_files)]
+fwrite(dt, paste0(csv_path, "rbv2_", learner, "/data.csv"))
 
-dt = rbindlist(map(xgb_files, readRDS), fill=TRUE, use.names = TRUE)
 
-# we also need a smaller version the other one might just be too big
-dt = readRDS(gsub(".arff", "_full.rds", cfg$data_path))
-dt = dt[!(task_id == "23517"), ]
-dt = dt[repl %in% 1:10, ]
-dt = dt[, sample_max(.SD, 10^5), by=task_id]
-saveRDS(dt, gsub(".arff", ".rds", cfg$data_path))
-
+##########################################################################################################
 # aknn
+learner = 'aknn'
 this_file = files[grepl("HNSW.*_\\d*_prep", files)]
 dt = rbindlist(map(this_file, readRDS), use.names = TRUE, fill = TRUE)
 dt[, distance := as.factor(distance)][, RcppHNSW.M := M][, M:= NULL]
@@ -179,42 +211,33 @@ memfile = memfiles[grepl("Rcpp", memfiles)]
 mems = fread(memfile)[, V1 := NULL][, data_id := as.factor(data_id)]
 dt = merge(dt, unique(mems), by.x =c("seed", "dataset", "task_id", "learner"), by.y = c("seed", "task", "data_id", "learner_id"), all.x = TRUE, all.y = FALSE)
 saveRDS(dt, gsub("_all_classif.(.*)_\\d_prep", "_\\1_full", this_file[1]))
+# Save csv
 
+pars = c("k", "RcppHNSW.M", "ef_construction", "ef", "distance", "num.impute.selected.cpo")
+# Decide on repl in 1:10 or repl mod 10 ...
+dt = dt[, c(cols, pars, metrics), with=FALSE]
+dt[, memory := M/1024][, M := NULL]
+dt[, M := RcppHNSW.M]
+dt[, brier := ifelse(is.na(brier), multiclass.brier, brier)][, multiclass.brier := NULL]
+dt[, auc := ifelse(is.na(auc ), multiclass.aunp, auc)][, multiclass.aunp := NULL]
+fwrite(dt, paste0(csv_path, "rbv2_", learner, "/data.csv"))
+
+
+##########################################################################################################
 # rpart
 this_file = files[grepl("rpart.*_\\d*_prep", files)]
 dt = rbindlist(map(this_file, readRDS), use.names = TRUE, fill = TRUE)
 memfile = memfiles[grepl("rpart", memfiles)]
 mems = fread(memfile)[, V1 := NULL][, data_id := as.factor(data_id)]
 dt = merge(dt, unique(mems), by.x =c("seed", "dataset", "task_id", "learner"), by.y = c("seed", "task", "data_id", "learner_id"), all.x = TRUE, all.y = FALSE)
+# Save full data
 saveRDS(dt, gsub("_all_classif.(.*)_\\d_prep", "_\\1_full", this_file[1]))
 
-##############################################################################
-## Prepare all files
-files = list.files(basepath, full.names = TRUE)
-files = files[grepl("_full", files)]
-metrics = c("timetrain", "timepredict", "acc", "bac", "auc", "multiclass.aunp", "brier", "multiclass.brier", "f1", "logloss", "M")
-cols = c("dataset", "task_id", "trainsize","repl")
-
+# Save csv for learning
 pars = c("cp","maxdepth","minbucket","minsplit","num.impute.selected.cpo")
-dt = readRDS(files[17])[as.integer(repl) %in% 1:10, c(cols, pars, metrics), with=FALSE]
+# Decide on repl in 1:10 or repl mod 10 ...
+dt = dt[as.integer(repl) %in% 1:10, c(cols, pars, metrics), with=FALSE]
 dt[, memory := M/1024][, M := NULL]
 dt[, brier := ifelse(is.na(brier), multiclass.brier, brier)][, multiclass.brier := NULL]
 dt[, auc := ifelse(is.na(auc ), multiclass.aunp, auc)][, multiclass.aunp := NULL]
-dt[, dataset := FALSE]
-fwrite(dt, "~/../LRZ Sync+Share/multifidelity_data/rbv2_rpart/data2.csv")
-
-pars = c("cp","maxdepth","minbucket","minsplit","num.impute.selected.cpo")
-dt = readRDS(files[17])[as.integer(repl) %in% 1:10, c(cols, pars, metrics), with=FALSE]
-dt[, memory := M/1024][, M := NULL]
-dt[, brier := ifelse(is.na(brier), multiclass.brier, brier)][, multiclass.brier := NULL]
-dt[, auc := ifelse(is.na(auc ), multiclass.aunp, auc)][, multiclass.aunp := NULL]
-dt[, dataset := FALSE]
-fwrite(dt, "~/../LRZ Sync+Share/multifidelity_data/rbv2_rpart/data2.csv")
-
-pars = c("cp","maxdepth","minbucket","minsplit","num.impute.selected.cpo")
-dt = readRDS(files[17])[as.integer(repl) %in% 1:10, c(cols, pars, metrics), with=FALSE]
-dt[, memory := M/1024][, M := NULL]
-dt[, brier := ifelse(is.na(brier), multiclass.brier, brier)][, multiclass.brier := NULL]
-dt[, auc := ifelse(is.na(auc ), multiclass.aunp, auc)][, multiclass.aunp := NULL]
-dt[, dataset := FALSE]
 fwrite(dt, "~/../LRZ Sync+Share/multifidelity_data/rbv2_rpart/data2.csv")
