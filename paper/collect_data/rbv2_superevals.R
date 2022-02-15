@@ -188,3 +188,33 @@ mems = fread(memfile)[, V1 := NULL][, data_id := as.factor(data_id)]
 dt = merge(dt, unique(mems), by.x =c("seed", "dataset", "task_id", "learner"), by.y = c("seed", "task", "data_id", "learner_id"), all.x = TRUE, all.y = FALSE)
 saveRDS(dt, gsub("_all_classif.(.*)_\\d_prep", "_\\1_full", this_file[1]))
 
+##############################################################################
+## Prepare all files
+files = list.files(basepath, full.names = TRUE)
+files = files[grepl("_full", files)]
+metrics = c("timetrain", "timepredict", "acc", "bac", "auc", "multiclass.aunp", "brier", "multiclass.brier", "f1", "logloss", "M")
+cols = c("dataset", "task_id", "trainsize","repl")
+
+pars = c("cp","maxdepth","minbucket","minsplit","num.impute.selected.cpo")
+dt = readRDS(files[17])[as.integer(repl) %in% 1:10, c(cols, pars, metrics), with=FALSE]
+dt[, memory := M/1024][, M := NULL]
+dt[, brier := ifelse(is.na(brier), multiclass.brier, brier)][, multiclass.brier := NULL]
+dt[, auc := ifelse(is.na(auc ), multiclass.aunp, auc)][, multiclass.aunp := NULL]
+dt[, dataset := FALSE]
+fwrite(dt, "~/../LRZ Sync+Share/multifidelity_data/rbv2_rpart/data2.csv")
+
+pars = c("cp","maxdepth","minbucket","minsplit","num.impute.selected.cpo")
+dt = readRDS(files[17])[as.integer(repl) %in% 1:10, c(cols, pars, metrics), with=FALSE]
+dt[, memory := M/1024][, M := NULL]
+dt[, brier := ifelse(is.na(brier), multiclass.brier, brier)][, multiclass.brier := NULL]
+dt[, auc := ifelse(is.na(auc ), multiclass.aunp, auc)][, multiclass.aunp := NULL]
+dt[, dataset := FALSE]
+fwrite(dt, "~/../LRZ Sync+Share/multifidelity_data/rbv2_rpart/data2.csv")
+
+pars = c("cp","maxdepth","minbucket","minsplit","num.impute.selected.cpo")
+dt = readRDS(files[17])[as.integer(repl) %in% 1:10, c(cols, pars, metrics), with=FALSE]
+dt[, memory := M/1024][, M := NULL]
+dt[, brier := ifelse(is.na(brier), multiclass.brier, brier)][, multiclass.brier := NULL]
+dt[, auc := ifelse(is.na(auc ), multiclass.aunp, auc)][, multiclass.aunp := NULL]
+dt[, dataset := FALSE]
+fwrite(dt, "~/../LRZ Sync+Share/multifidelity_data/rbv2_rpart/data2.csv")
