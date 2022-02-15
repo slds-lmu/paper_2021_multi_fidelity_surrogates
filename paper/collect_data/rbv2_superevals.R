@@ -83,7 +83,7 @@ files = files[endsWith(files, "_prep.rds")]
 
 # What do we keep for csv export?
 metrics = c("timetrain", "timepredict", "acc", "bac", "auc", "multiclass.aunp", "brier", "multiclass.brier", "f1", "logloss", "M")
-cols = c("dataset", "task_id", "trainsize","repl")
+cols = c("dataset", "task_id", "trainsize","repl", "seed")
 csv_path = "~/../LRZ Sync+Share/multifidelity_data/"
 
 ##########################################################################################################
